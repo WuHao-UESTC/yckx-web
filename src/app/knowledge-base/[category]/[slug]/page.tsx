@@ -29,8 +29,8 @@ export default async function ArticlePage({ params }: Props) {
 
   if (!post) notFound();
 
-  // 阅读量+1
-  await prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } });
+  // 阅读量+1（异步，不阻塞渲染）
+  prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8">

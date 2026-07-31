@@ -25,7 +25,7 @@ export default async function CompetitionArticlePage({ params }: Props) {
     },
   });
   if (!post) notFound();
-  await prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } });
+  prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8">

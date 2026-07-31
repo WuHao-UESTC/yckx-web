@@ -24,8 +24,8 @@ export async function GET(
     return NextResponse.json({ error: "文章不存在" }, { status: 404 });
   }
 
-  // 增加阅读量
-  await prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } });
+  // 阅读量+1（异步，不阻塞渲染）
+  prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
 
   return NextResponse.json(post);
 }
