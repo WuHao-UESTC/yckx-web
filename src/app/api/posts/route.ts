@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
   const columnId = searchParams.get("columnId");
   const authorId = searchParams.get("authorId");
 
-  const where: Record<string, unknown> = { status };
+  const where: Record<string, unknown> = {};
+  if (status !== "all") where.status = status;
   if (categoryId) where.categoryId = categoryId;
   if (postType) where.postType = postType;
   if (columnId) where.columnId = columnId;
