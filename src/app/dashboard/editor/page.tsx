@@ -17,6 +17,12 @@ export default function NewEditorPage() {
   const [message, setMessage] = useState("");
   const [ready, setReady] = useState(false);
   const [markdown, setMarkdown] = useState("");
+  const [categories, setCategories] = useState<{ id: string; name: string; type: string }[]>([]);
+
+  // 加载分类列表
+  useEffect(() => {
+    fetch("/api/categories").then(r => r.json()).then(setCategories).catch(console.error);
+  }, []);
 
   // 初始化 Milkdown Crepe 编辑器
   useEffect(() => {
@@ -39,18 +45,13 @@ export default function NewEditorPage() {
         [CrepeFeature.ListItem]: true,
       },
       featureConfigs: {
-        [CrepeFeature.Placeholder]: {
-          text: "开始写作…",
-          mode: "block",
-        },
+        [CrepeFeature.Placeholder]: { text: "开始写作…", mode: "block" },
       },
     });
 
     crepe.create().then(() => {
       crepeRef.current = crepe;
       setReady(true);
-
-      // 监听 Markdown 变化
       crepe.on((listener) => {
         listener.markdownUpdated((_ctx, md) => {
           setMarkdown(md);
@@ -68,7 +69,6 @@ export default function NewEditorPage() {
     if (!ready) return;
     setSaving(true);
     setMessage("");
-
     const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
 
     const res = await fetch("/api/posts", {
@@ -98,9 +98,9 @@ export default function NewEditorPage() {
     if (!ready) return;
     setSaving(true);
     setMessage("");
-
     const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
 
+    // 先创建
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -115,6 +115,7 @@ export default function NewEditorPage() {
 
     if (res.ok) {
       const post = await res.json();
+      // 再发布
       const pubRes = await fetch(`/api/posts/${post.slug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -134,11 +135,17 @@ export default function NewEditorPage() {
     }
   }, [ready, markdown, title, categoryId, tags, router]);
 
+  const groupedCategories: Record<string, typeof categories> = {};
+  for (const c of categories) {
+    if (!groupedCategories[c.type]) groupedCategories[c.type] = [];
+    groupedCategories[c.type].push(c);
+  }
+  const typeLabels: Record<string, string> = { KNOWLEDGE: "知识", COMPETITION: "竞赛", EVENT: "事件" };
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">写文章</h1>
 
-      {/* 标题 */}
       <input
         type="text"
         value={title}
@@ -147,18 +154,19 @@ export default function NewEditorPage() {
         className="w-full text-2xl font-bold text-[#1a1a1a] mb-4 px-4 py-2 border-b border-[#e8e0d5] focus:outline-none focus:border-[#8b5e3c] bg-transparent font-[family-name:var(--font-serif)]"
       />
 
-      {/* Milkdown 编辑器 */}
-      <div
-        ref={editorRef}
-        className="min-h-[500px] border border-[#e8e0d5] rounded-md mb-4 overflow-hidden"
-      />
-
-      {/* 配置区 */}
-      <div className="grid gap-4 sm:grid-cols-3 mb-6">
+      {/* 分类与标签 */}
+      <div className="grid gap-3 sm:grid-cols-2 mb-4">
         <div>
           <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">分类</label>
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="input-field w-full">
             <option value="">选择分类…</option>
+            {Object.entries(groupedCategories).map(([type, cats]) => (
+              <optgroup key={type} label={typeLabels[type] || type}>
+                {cats.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </optgroup>
+            ))}
           </select>
         </div>
         <div>
@@ -173,12 +181,15 @@ export default function NewEditorPage() {
         </div>
       </div>
 
-      {/* 操作 */}
+      {/* Milkdown 编辑器 */}
+      <div ref={editorRef} className="min-h-[500px] border border-[#e8e0d5] rounded-md mb-4 overflow-hidden" />
+
+      {/* 操作按钮 */}
       <div className="flex items-center gap-3">
         <button onClick={saveDraft} disabled={saving || !ready} className="btn-primary">
           {saving ? "保存中…" : "保存草稿"}
         </button>
-        <button onClick={publish} disabled={saving || !ready} className="btn-primary">
+        <button onClick={publish} disabled={saving || !ready} className="btn-primary bg-[#5a8a6a]">
           发布
         </button>
         {message && (

@@ -20,12 +20,17 @@ export default function EditPostPage() {
   const [markdown, setMarkdown] = useState("");
   const [loading, setLoading] = useState(true);
   const [postSlug, setPostSlug] = useState("");
+  const [postStatus, setPostStatus] = useState("DRAFT");
+  const [categories, setCategories] = useState<{ id: string; name: string; type: string }[]>([]);
+
+  // 加载分类列表
+  useEffect(() => {
+    fetch("/api/categories").then(r => r.json()).then(setCategories).catch(console.error);
+  }, []);
 
   // 加载文章
   useEffect(() => {
     async function load() {
-      // 通过 slug 查找文章 - 暂时用 posts API 遍历
-      // 更好的做法是有一个 GET /api/posts/by-id/[id] 端点
       const res = await fetch("/api/posts?status=all");
       const data = await res.json();
       const posts = data.items || [];
@@ -35,6 +40,7 @@ export default function EditPostPage() {
         setCategoryId(post.categoryId || "");
         setTags(post.tags?.map((pt: { tag: { name: string } }) => pt.tag.name).join(", ") || "");
         setPostSlug(post.slug);
+        setPostStatus(post.status);
         setMarkdown(post.content || "");
         setLoading(false);
       } else {
@@ -45,7 +51,7 @@ export default function EditPostPage() {
     load();
   }, [id]);
 
-  // 初始化编辑器（等文章数据加载后）
+  // 初始化编辑器
   useEffect(() => {
     if (loading || !editorRef.current || crepeRef.current) return;
 
@@ -82,31 +88,55 @@ export default function EditPostPage() {
     };
   }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (status?: string) => {
     if (!ready || !postSlug) return;
     setSaving(true);
+    setMessage("");
     const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
+
+    const body: Record<string, unknown> = {
+      title: title || "未命名文章",
+      content: markdown,
+      categoryId: categoryId || null,
+      tags: tagList,
+    };
+    if (status) body.status = status;
 
     const res = await fetch(`/api/posts/${postSlug}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: title || "未命名文章",
-        content: markdown,
-        categoryId: categoryId || null,
-        tags: tagList,
-      }),
+      body: JSON.stringify(body),
     });
     setSaving(false);
     if (res.ok) {
       const post = await res.json();
       setPostSlug(post.slug);
-      setMessage("已保存");
+      setPostStatus(post.status);
+      setMessage(status === "PUBLISHED" ? "已发布！" : "已保存");
     } else {
       const err = await res.json();
       setMessage(`保存失败: ${err.error}`);
     }
   }, [ready, postSlug, markdown, title, categoryId, tags]);
+
+  const deletePost = useCallback(async () => {
+    if (!confirm("确定要永久删除这篇文章吗？此操作不可撤销。")) return;
+    setSaving(true);
+    const res = await fetch(`/api/posts/${postSlug}`, { method: "DELETE" });
+    setSaving(false);
+    if (res.ok) {
+      router.push("/dashboard/posts");
+    } else {
+      setMessage("删除失败");
+    }
+  }, [postSlug, router]);
+
+  const groupedCategories: Record<string, typeof categories> = {};
+  for (const c of categories) {
+    if (!groupedCategories[c.type]) groupedCategories[c.type] = [];
+    groupedCategories[c.type].push(c);
+  }
+  const typeLabels: Record<string, string> = { KNOWLEDGE: "知识", COMPETITION: "竞赛", EVENT: "事件" };
 
   if (loading) {
     return <p className="text-[#6b6b6b] py-8 text-center">加载中…</p>;
@@ -124,17 +154,51 @@ export default function EditPostPage() {
         className="w-full text-2xl font-bold text-[#1a1a1a] mb-4 px-4 py-2 border-b border-[#e8e0d5] focus:outline-none focus:border-[#8b5e3c] bg-transparent font-[family-name:var(--font-serif)]"
       />
 
-      <div
-        ref={editorRef}
-        className="min-h-[500px] border border-[#e8e0d5] rounded-md mb-4 overflow-hidden"
-      />
+      {/* 分类与标签 */}
+      <div className="grid gap-3 sm:grid-cols-2 mb-4">
+        <div>
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">分类</label>
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="input-field w-full">
+            <option value="">选择分类…</option>
+            {Object.entries(groupedCategories).map(([type, cats]) => (
+              <optgroup key={type} label={typeLabels[type] || type}>
+                {cats.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">标签（逗号分隔）</label>
+          <input
+            type="text"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            placeholder="e.g. 信号与系统, DSP"
+            className="input-field w-full"
+          />
+        </div>
+      </div>
 
-      <div className="flex items-center gap-3">
-        <button onClick={save} disabled={saving || !ready} className="btn-primary">
-          {saving ? "保存中…" : "保存"}
+      {/* Milkdown 编辑器 */}
+      <div ref={editorRef} className="min-h-[500px] border border-[#e8e0d5] rounded-md mb-4 overflow-hidden" />
+
+      {/* 操作按钮 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <button onClick={() => save()} disabled={saving || !ready} className="btn-primary">
+          {saving ? "保存中…" : "保存草稿"}
         </button>
+        {postStatus !== "PUBLISHED" && (
+          <button onClick={() => save("PUBLISHED")} disabled={saving || !ready} className="btn-primary bg-[#5a8a6a]">
+            发布
+          </button>
+        )}
         <button onClick={() => router.push("/dashboard/posts")} className="btn-primary">
           返回列表
+        </button>
+        <button onClick={deletePost} disabled={saving} className="btn-primary bg-red-500 hover:bg-red-600">
+          删除
         </button>
         {message && (
           <span className="text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">{message}</span>
