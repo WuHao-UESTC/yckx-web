@@ -143,8 +143,8 @@ export default function NewEditorPage() {
   const typeLabels: Record<string, string> = { KNOWLEDGE: "知识", COMPETITION: "竞赛", EVENT: "事件" };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">写文章</h1>
+    <div className="flex flex-col" style={{ height: "calc(100vh - 100px)" }}>
+      <h1 className="text-xl font-bold text-[#1a1a1a] mb-2">写文章</h1>
 
       <input
         type="text"
@@ -181,8 +181,8 @@ export default function NewEditorPage() {
         </div>
       </div>
 
-      {/* Milkdown 编辑器 */}
-      <div ref={editorRef} className="min-h-[500px] border border-[#e8e0d5] rounded-md mb-4 overflow-hidden" />
+      {/* Milkdown 编辑器 — 占满剩余空间 */}
+      <div ref={editorRef} className="flex-1 border border-[#e8e0d5] rounded-md overflow-hidden" />
 
       {/* 操作按钮 */}
       <div className="flex items-center gap-3">
