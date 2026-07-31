@@ -1,4 +1,4 @@
-import type { Post, User, Category, Tag, Column, Comment } from "@prisma/client";
+import type { Post, User, Category, Tag, Column, Comment } from "@/generated/prisma";
 
 /** 文章列表项（含关联） */
 export type PostWithAuthor = Post & {
