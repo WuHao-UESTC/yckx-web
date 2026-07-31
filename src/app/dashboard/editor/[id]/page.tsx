@@ -133,9 +133,10 @@ export default function EditPostPage() {
 
   const insertTemplate = useCallback((tmpl: string) => {
     if (!crepeRef.current) return;
-    const editor = (crepeRef.current as unknown as { editor?: { chain: () => { insertContent: (c: string) => { run: () => void } } } }).editor;
-    editor?.chain().insertContent(tmpl).run();
-  }, []);
+    const updated = markdown + tmpl;
+    setMarkdown(updated);
+    crepeRef.current.setMarkdown(updated);
+  }, [markdown]);
 
   const groupedCategories: Record<string, typeof categories> = {};
   for (const c of categories) {
@@ -187,12 +188,21 @@ export default function EditPostPage() {
         </div>
       </div>
 
-      {/* 快捷插入工具栏 */}
-      <div className="flex flex-wrap gap-1.5 mb-2 font-[family-name:var(--font-sans)] text-xs">
+      {/* 工具栏：格式 + 插入 */}
+      <div className="flex flex-wrap gap-1 mb-2 font-[family-name:var(--font-sans)] text-xs">
+        <span className="text-[#6b6b6b] py-1 mr-1">格式：</span>
+        <button onClick={() => insertTemplate("****")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"><strong>B</strong></button>
+        <button onClick={() => insertTemplate("**")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"><em>I</em></button>
+        <button onClick={() => insertTemplate("~~~~")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"><s>S</s></button>
+        <span className="mx-1 border-r border-[#e8e0d5]" />
+        <button onClick={() => insertTemplate("> ")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">❝ 引用</button>
+        <button onClick={() => insertTemplate("\n| 列A | 列B |\n|-----|-----|\n|     |     |\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">⊞ 表格</button>
+        <button onClick={() => insertTemplate("$x^2$")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">ƒ 公式</button>
+        <span className="mx-1 border-r border-[#e8e0d5]" />
         <span className="text-[#6b6b6b] py-1 mr-1">插入：</span>
         <button onClick={() => insertTemplate("\n```markmap\n- 思维导图\n  - 分支一\n  - 分支二\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">🧠 思维导图</button>
-        <button onClick={() => insertTemplate("\n```mermaid\ngraph TD\n  A[开始] --> B[结束]\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">📊 Mermaid</button>
-        <button onClick={() => insertTemplate("\n```pdf\nhttps://example.com/document.pdf\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">📄 PDF</button>
+        <button onClick={() => insertTemplate("\n```mermaid\ngraph TD\n  A[开始] --> B[结束]\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">📊 图表</button>
+        <button onClick={() => insertTemplate("\n```pdf\nhttps://example.com/file.pdf\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">📄 PDF</button>
       </div>
 
       {/* Milkdown 编辑器 — 占满剩余空间 */}
