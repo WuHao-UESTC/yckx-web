@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ========== 用户与认证 ==========
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  username      String       @unique
+  displayName   String?
+  passwordHash  String
+  avatar        String?
+  role          Role         @default(MEMBER)
+  bio           String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  posts         Post[]
+  files         File[]
+  profile       Profile?
+  invitations   Invitation[]
+  photos        Photo[]
+  comments      Comment[]
+  stickyNotes   StickyNote[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model Invitation {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  maxUses   Int       @default(1)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
+  createdBy String
+  creator   User      @relation(fields: [createdBy], references: [id])
+  createdAt DateTime  @default(now())
+
+  @@map("invitations")
+}
+
+// ========== 用户资料 ==========
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  website   String?
+  github    String?
+  bilibili  String?
+  title     String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+// ========== 分类 ==========
+model Category {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  slug      String       @unique
+  type      CategoryType
+  parentId  String?
+  parent    Category?    @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[]   @relation("CategoryTree")
+  posts     Post[]
+  sortOrder Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  @@map("categories")
+}
+
+enum CategoryType {
+  COMPETITION
+  KNOWLEDGE
+  EVENT
+  COLUMN
+  ROUTINE
+}
+
+// ========== 专栏 ==========
+model Column {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  coverImage  String?
+  posts       Post[]
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("columns")
+}
+
+// ========== 文章 ==========
+model Post {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  content     String     @db.Text
+  excerpt     String?
+  coverImage  String?
+  status      PostStatus @default(DRAFT)
+  postType    PostType   @default(ARTICLE)
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id])
+  categoryId  String?
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  columnId    String?
+  column      Column?    @relation(fields: [columnId], references: [id])
+  tags        PostTag[]
+  files       File[]
+  comments    Comment[]
+  viewCount   Int        @default(0)
+  isPinned    Boolean    @default(false)
+  isFeatured  Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  publishedAt DateTime?
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([status, postType])
+  @@index([createdAt])
+  @@index([slug])
+  @@map("posts")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PostType {
+  ARTICLE
+  NOTE
+  PHOTO
+}
+
+// ========== 标签 ==========
+model Tag {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  slug  String    @unique
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+// ========== 评论 ==========
+model Comment {
+  id        String    @id @default(cuid())
+  content   String    @db.Text
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id])
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  createdAt DateTime  @default(now())
+
+  @@map("comments")
+}
+
+// ========== 文件 ==========
+model File {
+  id         String   @id @default(cuid())
+  filename   String
+  storedPath String
+  mimeType   String
+  size       Int
+  uploaderId String
+  uploader   User     @relation(fields: [uploaderId], references: [id])
+  postId     String?
+  post       Post?    @relation(fields: [postId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@map("files")
+}
+
+// ========== 照片墙 ==========
+model Photo {
+  id        String   @id @default(cuid())
+  imagePath String
+  caption   String?
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("photos")
+}
+
+// ========== 吐槽便签 ==========
+model StickyNote {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  isAnonymous Boolean @default(false)
+  color     String   @default("yellow")
+  createdAt DateTime @default(now())
+
+  @@map("sticky_notes")
+}
+
+// ========== 站点配置 ==========
+model SiteConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("site_configs")
+}
