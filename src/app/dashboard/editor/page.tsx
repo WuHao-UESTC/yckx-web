@@ -135,6 +135,12 @@ export default function NewEditorPage() {
     }
   }, [ready, markdown, title, categoryId, tags, router]);
 
+  const insertTemplate = useCallback((tmpl: string) => {
+    if (!crepeRef.current) return;
+    const editor = (crepeRef.current as unknown as { editor?: { chain: () => { insertContent: (c: string) => { run: () => void } } } }).editor;
+    editor?.chain().insertContent(tmpl).run();
+  }, []);
+
   const groupedCategories: Record<string, typeof categories> = {};
   for (const c of categories) {
     if (!groupedCategories[c.type]) groupedCategories[c.type] = [];
@@ -151,34 +157,55 @@ export default function NewEditorPage() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="文章标题…"
-        className="w-full text-2xl font-bold text-[#1a1a1a] mb-4 px-4 py-2 border-b border-[#e8e0d5] focus:outline-none focus:border-[#8b5e3c] bg-transparent font-[family-name:var(--font-serif)]"
+        className="w-full text-2xl font-bold text-[#1a1a1a] mb-2 px-4 py-2 border-b border-[#e8e0d5] focus:outline-none focus:border-[#8b5e3c] bg-transparent font-[family-name:var(--font-serif)]"
       />
 
       {/* 分类与标签 */}
-      <div className="grid gap-3 sm:grid-cols-2 mb-4">
+      <div className="grid gap-2 sm:grid-cols-2 mb-2">
         <div>
-          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">分类</label>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="input-field w-full">
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="input-field w-full text-sm">
             <option value="">选择分类…</option>
             {Object.entries(groupedCategories).map(([type, cats]) => (
               <optgroup key={type} label={typeLabels[type] || type}>
-                {cats.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+                {cats.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
               </optgroup>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">标签（逗号分隔）</label>
           <input
             type="text"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="e.g. 信号与系统, DSP"
-            className="input-field w-full"
+            placeholder="标签，逗号分隔"
+            className="input-field w-full text-sm"
           />
         </div>
+      </div>
+
+      {/* 快捷插入工具栏 */}
+      <div className="flex flex-wrap gap-1.5 mb-2 font-[family-name:var(--font-sans)] text-xs">
+        <span className="text-[#6b6b6b] py-1 mr-1">插入：</span>
+        <button
+          onClick={() => insertTemplate("\n```markmap\n- 思维导图\n  - 分支一\n  - 分支二\n```\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+          title="插入 Markmap 思维导图"
+        >🧠 思维导图</button>
+        <button
+          onClick={() => insertTemplate("\n```mermaid\ngraph TD\n  A[开始] --> B[结束]\n```\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+          title="插入 Mermaid 图表"
+        >📊 Mermaid 图表</button>
+        <button
+          onClick={() => insertTemplate("\n```pdf\nhttps://example.com/document.pdf\n```\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+          title="插入 PDF 文件链接"
+        >📄 嵌入 PDF</button>
+        <button
+          onClick={() => insertTemplate("\n```mermaid\nsequenceDiagram\n  A->>B: 消息\n  B-->>A: 回复\n```\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+          title="插入时序图"
+        >🔄 时序图</button>
       </div>
 
       {/* Milkdown 编辑器 — 占满剩余空间 */}
