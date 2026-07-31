@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Crepe, CrepeFeature } from "@milkdown/crepe";
+import { replaceAll } from "@milkdown/kit/utils";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 
@@ -137,10 +138,9 @@ export default function NewEditorPage() {
 
   const insertTemplate = useCallback((tmpl: string) => {
     if (!crepeRef.current) return;
-    const current = markdown;
-    const updated = current + tmpl;
+    const updated = markdown + tmpl;
     setMarkdown(updated);
-    crepeRef.current.setMarkdown(updated);
+    crepeRef.current.editor.action(replaceAll(updated));
   }, [markdown]);
 
   const groupedCategories: Record<string, typeof categories> = {};
