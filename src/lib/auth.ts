@@ -1,7 +1,5 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { compare } from "bcrypt";
-import { prisma } from "./prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -14,6 +12,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
+
+        // 动态导入，避免 Edge 运行时（middleware）加载 Node.js 模块
+        const { prisma } = await import("./prisma");
+        const { compare } = await import("bcrypt");
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
