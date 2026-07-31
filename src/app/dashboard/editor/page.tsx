@@ -1,69 +1,82 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import LinkExtension from "@tiptap/extension-link";
-import ImageExtension from "@tiptap/extension-image";
-import Placeholder from "@tiptap/extension-placeholder";
-import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { common, createLowlight } from "lowlight";
-import { Markdown } from "tiptap-markdown";
-
-const lowlight = createLowlight(common);
+import { Crepe, CrepeFeature } from "@milkdown/crepe";
+import "@milkdown/crepe/theme/common/style.css";
+import "@milkdown/crepe/theme/frame.css";
 
 export default function NewEditorPage() {
   const router = useRouter();
+  const editorRef = useRef<HTMLDivElement>(null);
+  const crepeRef = useRef<Crepe | null>(null);
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [ready, setReady] = useState(false);
+  const [markdown, setMarkdown] = useState("");
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ codeBlock: false }),
-      CodeBlockLowlight.configure({ lowlight }),
-      LinkExtension.configure({ openOnClick: false }),
-      ImageExtension,
-      Placeholder.configure({ placeholder: "开始写作…" }),
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableCell,
-      TableHeader,
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Markdown,
-    ],
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-stone max-w-none min-h-[400px] px-8 py-6 focus:outline-none font-[family-name:var(--font-serif)] text-[#2c2c2c]",
+  // 初始化 Milkdown Crepe 编辑器
+  useEffect(() => {
+    if (!editorRef.current || crepeRef.current) return;
+
+    const crepe = new Crepe({
+      root: editorRef.current,
+      defaultValue: "",
+      features: {
+        [CrepeFeature.CodeMirror]: true,
+        [CrepeFeature.ImageBlock]: true,
+        [CrepeFeature.Latex]: true,
+        [CrepeFeature.Table]: true,
+        [CrepeFeature.BlockEdit]: true,
+        [CrepeFeature.Placeholder]: true,
+        [CrepeFeature.Cursor]: true,
+        [CrepeFeature.Slash]: true,
+        [CrepeFeature.Toolbar]: true,
+        [CrepeFeature.LinkTooltip]: true,
+        [CrepeFeature.ListItem]: true,
       },
-    },
-  });
+      featureConfigs: {
+        [CrepeFeature.Placeholder]: {
+          text: "开始写作…",
+          mode: "block",
+        },
+      },
+    });
+
+    crepe.create().then(() => {
+      crepeRef.current = crepe;
+      setReady(true);
+
+      // 监听 Markdown 变化
+      crepe.on((listener) => {
+        listener.markdownUpdated((_ctx, md) => {
+          setMarkdown(md);
+        });
+      });
+    });
+
+    return () => {
+      crepe.destroy();
+      crepeRef.current = null;
+    };
+  }, []);
 
   const saveDraft = useCallback(async () => {
-    if (!editor) return;
+    if (!ready) return;
     setSaving(true);
     setMessage("");
 
-    const content = editor.storage.markdown?.getMarkdown() ?? "";
-    const tagList = tags
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
 
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: title || "未命名文章",
-        content,
+        content: markdown,
         categoryId: categoryId || null,
         tags: tagList,
         postType: "ARTICLE",
@@ -73,32 +86,27 @@ export default function NewEditorPage() {
     setSaving(false);
     if (res.ok) {
       const post = await res.json();
-      setMessage(`草稿已保存 (slug: ${post.slug})`);
+      setMessage("草稿已保存");
       router.push(`/dashboard/editor/${post.id}`);
     } else {
       const err = await res.json();
       setMessage(`保存失败: ${err.error}`);
     }
-  }, [editor, title, categoryId, tags, router]);
+  }, [ready, markdown, title, categoryId, tags, router]);
 
   const publish = useCallback(async () => {
-    if (!editor) return;
+    if (!ready) return;
     setSaving(true);
     setMessage("");
 
-    const content = editor.storage.markdown?.getMarkdown() ?? "";
-    const tagList = tags
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
 
-    // First create as draft
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: title || "未命名文章",
-        content,
+        content: markdown,
         categoryId: categoryId || null,
         tags: tagList,
         postType: "ARTICLE",
@@ -107,7 +115,6 @@ export default function NewEditorPage() {
 
     if (res.ok) {
       const post = await res.json();
-      // Then publish
       const pubRes = await fetch(`/api/posts/${post.slug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -125,9 +132,7 @@ export default function NewEditorPage() {
       const err = await res.json();
       setMessage(`保存失败: ${err.error}`);
     }
-  }, [editor, title, categoryId, tags, router]);
-
-  if (!editor) return null;
+  }, [ready, markdown, title, categoryId, tags, router]);
 
   return (
     <div>
@@ -142,38 +147,17 @@ export default function NewEditorPage() {
         className="w-full text-2xl font-bold text-[#1a1a1a] mb-4 px-4 py-2 border-b border-[#e8e0d5] focus:outline-none focus:border-[#8b5e3c] bg-transparent font-[family-name:var(--font-serif)]"
       />
 
-      {/* 工具栏 */}
-      <div className="flex flex-wrap gap-1 mb-4 p-2 bg-[#faf7f2] rounded-md">
-        <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")}>B</ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")}><em>I</em></ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")}><s>S</s></ToolBtn>
-        <span className="mx-1 border-r border-[#e8e0d5]" />
-        <ToolBtn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })}>H2</ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })}>H3</ToolBtn>
-        <span className="mx-1 border-r border-[#e8e0d5]" />
-        <ToolBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")}>•</ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")}>1.</ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleTaskList().run()} active={editor.isActive("taskList")}>☑</ToolBtn>
-        <span className="mx-1 border-r border-[#e8e0d5]" />
-        <ToolBtn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")}>❝</ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive("codeBlock")}>&lt;/&gt;</ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run()}>⊞</ToolBtn>
-      </div>
-
-      {/* 编辑器 */}
-      <div className="border border-[#e8e0d5] rounded-md mb-4 bg-white">
-        <EditorContent editor={editor} />
-      </div>
+      {/* Milkdown 编辑器 */}
+      <div
+        ref={editorRef}
+        className="min-h-[500px] border border-[#e8e0d5] rounded-md mb-4 overflow-hidden"
+      />
 
       {/* 配置区 */}
       <div className="grid gap-4 sm:grid-cols-3 mb-6">
         <div>
           <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">分类</label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="input-field w-full"
-          >
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="input-field w-full">
             <option value="">选择分类…</option>
           </select>
         </div>
@@ -191,10 +175,10 @@ export default function NewEditorPage() {
 
       {/* 操作 */}
       <div className="flex items-center gap-3">
-        <button onClick={saveDraft} disabled={saving} className="btn-primary">
+        <button onClick={saveDraft} disabled={saving || !ready} className="btn-primary">
           {saving ? "保存中…" : "保存草稿"}
         </button>
-        <button onClick={publish} disabled={saving} className="btn-primary">
+        <button onClick={publish} disabled={saving || !ready} className="btn-primary">
           发布
         </button>
         {message && (
@@ -202,27 +186,5 @@ export default function NewEditorPage() {
         )}
       </div>
     </div>
-  );
-}
-
-function ToolBtn({
-  onClick,
-  active,
-  children,
-}: {
-  onClick: () => void;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-2 py-1 text-xs rounded font-mono transition-colors ${
-        active ? "bg-[#8b5e3c] text-white" : "text-[#6b6b6b] hover:bg-[#f0ebe0]"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
