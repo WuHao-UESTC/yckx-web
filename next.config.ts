@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     "192.168.1.100",
     "localhost",
   ],
-  serverExternalPackages: ["bcrypt"],
+  serverExternalPackages: ["bcrypt", "@prisma/adapter-pg", "pg"],
 };
 
 export default nextConfig;
