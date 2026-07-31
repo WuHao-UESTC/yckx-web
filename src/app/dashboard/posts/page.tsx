@@ -8,10 +8,10 @@ export default async function MyPostsPage({ searchParams }: { searchParams: Prom
   const userId = (session?.user as { id: string }).id;
   const { sort } = await searchParams;
 
-  const orderBy: Record<string, unknown> = { updatedAt: "desc" };
-  if (sort === "title") orderBy.title = "asc" as const;
-  else if (sort === "created") orderBy.createdAt = "desc" as const;
-  else if (sort === "category") orderBy.categoryId = "asc" as const;
+  let orderBy: Record<string, string>[] = [{ updatedAt: "desc" }];
+  if (sort === "title") orderBy = [{ title: "asc" }];
+  else if (sort === "created") orderBy = [{ createdAt: "desc" }];
+  else if (sort === "category") orderBy = [{ categoryId: "asc" }];
 
   const posts = await prisma.post.findMany({
     where: { authorId: userId },
