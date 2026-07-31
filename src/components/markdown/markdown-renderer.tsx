@@ -13,7 +13,7 @@ export function MarkdownRenderer({ content }: Props) {
   return (
     <div className="prose max-w-none">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
+        remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: true }]]}
         rehypePlugins={[rehypeSanitize, rehypeKatex]}
         components={{
           // 代码块：使用 Shiki 的服务端高亮？这里先用简化方案

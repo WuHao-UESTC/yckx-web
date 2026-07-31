@@ -43,6 +43,7 @@ async function main() {
 
   // 创建知识类分类
   const knowledgeCategories = [
+    { name: "未分类", slug: "uncategorized", type: "KNOWLEDGE" as const },
     { name: "信号与系统", slug: "signals-and-systems", type: "KNOWLEDGE" as const },
     { name: "电子电路设计", slug: "circuit-design", type: "KNOWLEDGE" as const },
     { name: "射频电路设计", slug: "rf-design", type: "KNOWLEDGE" as const },
