@@ -26,9 +26,33 @@ importers:
       '@prisma/client':
         specifier: ^7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+      '@types/d3-drag':
+        specifier: ^3.0.7
+        version: 3.0.7
+      '@types/d3-force':
+        specifier: ^3.0.10
+        version: 3.0.10
+      '@types/d3-scale':
+        specifier: ^4.0.9
+        version: 4.0.9
+      '@types/d3-selection':
+        specifier: ^3.0.11
+        version: 3.0.11
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
+      d3-drag:
+        specifier: ^3.0.0
+        version: 3.0.0
+      d3-force:
+        specifier: ^3.0.0
+        version: 3.0.0
+      d3-scale:
+        specifier: ^4.0.2
+        version: 4.0.2
+      d3-selection:
+        specifier: ^3.0.0
+        version: 3.0.0
       framer-motion:
         specifier: ^12.43.0
         version: 12.43.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1238,6 +1262,9 @@ packages:
 
   '@types/d3-scale@4.0.2':
     resolution: {integrity: sha512-Yk4htunhPAwN0XGlIwArRomOjdoBFXC3+kCxK2Ubg7I9shQlVSJy/pG/Ht5ASN+gdMIalpk8TJ5xV74jFsetLA==}
+
+  '@types/d3-scale@4.0.9':
+    resolution: {integrity: sha512-dLmtwB8zkAeO/juAMfnV+sItKjlsw2lKdZVVy6LRr0cBmegxSABiLEpGVmSJJ8O08i4+sGR6qQtb6WtuwJdvVw==}
 
   '@types/d3-selection@3.0.11':
     resolution: {integrity: sha512-bhAXu23DJWsrI45xafYpkQ4NtcKMwWnAC/vKrd2l+nxMFuvOT3XMYTIj2opv8vq8AO5Yh7Qac/nSeP/3zjTK0w==}
@@ -5559,6 +5586,10 @@ snapshots:
     dependencies:
       '@types/d3-time': 3.0.0
 
+  '@types/d3-scale@4.0.9':
+    dependencies:
+      '@types/d3-time': 3.0.0
+
   '@types/d3-selection@3.0.11': {}
 
   '@types/d3-shape@3.1.7':
@@ -5603,7 +5634,7 @@ snapshots:
       '@types/d3-polygon': 3.0.2
       '@types/d3-quadtree': 3.0.6
       '@types/d3-random': 3.0.4
-      '@types/d3-scale': 4.0.2
+      '@types/d3-scale': 4.0.9
       '@types/d3-scale-chromatic': 3.1.0
       '@types/d3-selection': 3.0.11
       '@types/d3-shape': 3.1.7
