@@ -208,6 +208,17 @@ code {
   box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.1);
 }
 
+/* ── 全屏吸附滚动 ── */
+html {
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: 56px; /* SiteHeader 高度 */
+}
+
+.snap-section {
+  scroll-snap-align: start;
+  min-height: calc(100vh - 56px); /* 减去 header 高度 */
+}
+
 /* ── 纸张纹理 ── */
 .paper-texture {
   background-color: #fdfaf4;

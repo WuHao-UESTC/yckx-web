@@ -50,8 +50,8 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
     const svg = svgRef.current;
     if (!container || !svg) return;
 
-    const width = container.clientWidth;
-    const height = container.clientHeight || 400;
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 500;
 
     // 准备数据
     const simNodes: SimNode[] = nodes.map((n) => ({
@@ -209,8 +209,8 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
   }, [selectedId, hoveredId]);
 
   return (
-    <div ref={containerRef} className="w-full" style={{ minHeight: 380 }}>
-      <svg ref={svgRef} className="w-full" style={{ height: 380 }} />
+    <div ref={containerRef} className="w-full h-full" style={{ minHeight: 400 }}>
+      <svg ref={svgRef} className="w-full h-full" />
     </div>
   );
 }
