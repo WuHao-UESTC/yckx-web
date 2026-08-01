@@ -28,29 +28,22 @@ function MarkmapBlock({ content }: { content: string }) {
     let cancelled = false;
     (async () => {
       try {
-        const { Markmap, loadCSS, loadJS } = await import("markmap-lib");
-        const { Markmap: MarkmapView } = await import("markmap-view");
-        const { buildHTML } = Markmap;
+        const { Transformer } = await import("markmap-lib");
+        const { Markmap } = await import("markmap-view");
+        const transformer = new Transformer();
 
-        const root = buildHTML(content);
+        const { root } = transformer.transform(content);
         if (!root) throw new Error("无法解析思维导图内容");
 
-        // 确保 CSS/JS 加载
-        const style = document.createElement("style");
-        style.textContent = `
-          .markmap { width: 100%; min-height: 400px; }
-          .markmap svg { width: 100%; height: 100%; }
-        `;
-        document.head.appendChild(style);
-
         if (ref.current && !cancelled) {
-          const mm = MarkmapView.create(
-            "svg#markmap-" + Math.random().toString(36).slice(2),
-            {},
-            root
-          );
           ref.current.innerHTML = "";
-          ref.current.appendChild(mm);
+          const svgId = "markmap-" + Math.random().toString(36).slice(2);
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("id", svgId);
+          svg.style.width = "100%";
+          svg.style.minHeight = "400px";
+          ref.current.appendChild(svg);
+          Markmap.create(svg, {}, root);
         }
       } catch (e) {
         if (!cancelled) setError("思维导图渲染失败：" + (e as Error).message);
