@@ -3,18 +3,22 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { DeleteButton } from "./delete-btn";
 
-export default async function MyPostsPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
+export default async function MyPostsPage({ searchParams }: { searchParams: Promise<{ sort?: string; status?: string }> }) {
   const session = await auth();
   const userId = (session?.user as { id: string }).id;
-  const { sort } = await searchParams;
+  const { sort, status } = await searchParams;
 
   let orderBy: Record<string, string>[] = [{ updatedAt: "desc" }];
   if (sort === "title") orderBy = [{ title: "asc" }];
   else if (sort === "created") orderBy = [{ createdAt: "desc" }];
   else if (sort === "category") orderBy = [{ categoryId: "asc" }];
 
+  const statusFilter = status && ["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)
+    ? status as "DRAFT" | "PUBLISHED" | "ARCHIVED"
+    : undefined;
+
   const posts = await prisma.post.findMany({
-    where: { authorId: userId },
+    where: { authorId: userId, ...(statusFilter ? { status: statusFilter } : {}) },
     include: { category: true },
     orderBy,
   });
@@ -44,13 +48,32 @@ export default async function MyPostsPage({ searchParams }: { searchParams: Prom
         <Link href="/dashboard/editor" className="btn-primary text-sm">写新文章</Link>
       </div>
 
+      {/* 状态筛选 */}
+      <div className="flex gap-1.5 mb-3 font-[family-name:var(--font-sans)] text-sm">
+        <span className="text-[#6b6b6b] mr-1 self-center text-xs">状态：</span>
+        {[
+          { value: "", label: "全部" },
+          { value: "PUBLISHED", label: "已发布" },
+          { value: "DRAFT", label: "草稿" },
+          { value: "ARCHIVED", label: "已归档" },
+        ].map((opt) => (
+          <Link
+            key={opt.value}
+            href={`/dashboard/posts?${opt.value ? `status=${opt.value}` : ""}${sort ? `&sort=${sort}` : ""}`}
+            className={`px-2.5 py-1 rounded text-xs transition-colors ${(status || "") === opt.value ? "bg-[#8b5e3c] text-white" : "text-[#6b6b6b] hover:text-[#8b5e3c] hover:bg-[#f5f0e8]"}`}
+          >
+            {opt.label}
+          </Link>
+        ))}
+      </div>
+
       {/* 排序选项 */}
       <div className="flex gap-2 mb-4 font-[family-name:var(--font-sans)] text-sm">
         <span className="text-[#6b6b6b]">排序：</span>
         {sortOptions.map((opt) => (
           <Link
             key={opt.value}
-            href={`/dashboard/posts?sort=${opt.value}`}
+            href={`/dashboard/posts?sort=${opt.value}${status ? `&status=${status}` : ""}`}
             className={`px-2 py-0.5 rounded transition-colors ${(sort || "updated") === opt.value ? "bg-[#8b5e3c] text-white" : "text-[#6b6b6b] hover:text-[#8b5e3c]"}`}
           >
             {opt.label}
