@@ -200,9 +200,9 @@ export default function EditPostPage() {
 
       {/* 编辑区 + 大纲 */}
       <div className="flex gap-3 flex-1 min-h-0">
-        <div ref={editorRef} className="flex-1 border border-[#e8e0d5] rounded-md overflow-hidden min-w-0" />
+        <div ref={editorRef} className="flex-1 border border-[#e8e0d5] rounded-md overflow-auto min-w-0" />
         <div className="hidden lg:block w-48 shrink-0 border border-[#e8e0d5] rounded-md p-3 overflow-y-auto bg-white">
-          <OutlinePanel markdown={markdown} />
+          <OutlinePanel markdown={markdown} editorRef={editorRef} />
         </div>
       </div>
 

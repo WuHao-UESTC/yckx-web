@@ -2,21 +2,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import "katex/dist/katex.min.css";
 import { CodeBlock } from "./code-block";
-
-const katexSchema = {
-  ...defaultSchema,
-  attributes: {
-    ...defaultSchema.attributes,
-    span: [...(defaultSchema.attributes?.span || []), "className", "style"],
-    math: ["xmlns"],
-    annotation: ["encoding"],
-    "*": ["className", "aria-hidden", "style"],
-  },
-  tagNames: [...(defaultSchema.tagNames || []), "math", "semantics", "annotation", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mover", "munder", "mtable", "mtr", "mtd", "munderover", "mspace", "mpadded", "mphantom", "menclose"],
-};
 
 interface Props {
   content: string;
@@ -27,7 +14,7 @@ export function MarkdownRenderer({ content }: Props) {
     <div className="prose max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: true }]]}
-        rehypePlugins={[[rehypeKatex, { strict: false }], [rehypeSanitize, katexSchema]]}
+        rehypePlugins={[[rehypeKatex, { strict: false, output: "html" }]]}
         components={{
           pre: ({ children }) => <>{children}</>,
           code: ({ className, children, ...props }) => {
