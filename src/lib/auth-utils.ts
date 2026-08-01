@@ -45,11 +45,18 @@ export function generateExcerpt(markdown: string, maxLength = 200): string {
     : plainText;
 }
 
-/** 生成 URL 友好的 slug */
+/** 生成 URL 友好的 slug（仅 ASCII，中文用时间戳兜底） */
 export function slugify(text: string): string {
-  return text
+  const cleaned = text
     .toLowerCase()
-    .replace(/[^\w一-鿿]+/g, "-")
+    .replace(/[^\w]+/g, "-")      // 只保留字母数字和下划线
     .replace(/^-|-$/g, "")
-    .slice(0, 80);
+    .replace(/-+/g, "-")
+    .slice(0, 80)
+    .replace(/^-|-$/g, "");
+  // 如果清理后为空（纯中文标题），用时间戳生成 slug
+  if (!cleaned) {
+    return `post-${Date.now().toString(36)}`;
+  }
+  return cleaned;
 }

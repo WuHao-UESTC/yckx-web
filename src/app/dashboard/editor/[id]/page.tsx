@@ -222,13 +222,19 @@ export default function EditPostPage() {
 
       {/* 操作按钮 */}
       <div className="flex items-center gap-3 flex-wrap mt-2">
-        <button onClick={() => save()} disabled={saving || !ready} className="btn-primary">
-          {saving ? "保存中…" : "保存草稿"}
-        </button>
-        {postStatus !== "PUBLISHED" && (
-          <button onClick={() => save("PUBLISHED")} disabled={saving || !ready} className="btn-primary bg-[#5a8a6a]">
-            发布
+        {postStatus === "PUBLISHED" ? (
+          <button onClick={() => save()} disabled={saving || !ready} className="btn-primary bg-[#5a8a6a]">
+            {saving ? "保存中…" : "保存更新"}
           </button>
+        ) : (
+          <>
+            <button onClick={() => save()} disabled={saving || !ready} className="btn-primary">
+              {saving ? "保存中…" : "保存草稿"}
+            </button>
+            <button onClick={() => save("PUBLISHED")} disabled={saving || !ready} className="btn-primary bg-[#5a8a6a]">
+              发布
+            </button>
+          </>
         )}
         <button onClick={() => router.push("/dashboard/posts")} className="btn-primary">
           返回列表
