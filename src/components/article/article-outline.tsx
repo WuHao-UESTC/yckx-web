@@ -127,10 +127,6 @@ export function ArticleOutline({ content }: { content: string }) {
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
-      // 推一下页面，给固定头部留空间
-      setTimeout(() => {
-        window.scrollBy({ top: -80, behavior: "smooth" });
-      }, 100);
     }
   }, []);
 

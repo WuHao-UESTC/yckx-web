@@ -45,6 +45,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-serif);
   font-weight: 700;
   line-height: 1.4;
+  scroll-margin-top: 80px;
 }
 h1 { font-size: 2em; }
 h2 { font-size: 1.5em; }
@@ -85,16 +86,20 @@ code {
 .prose p {
   margin-bottom: 1em;
 }
+.prose h1 { scroll-margin-top: 80px; }
 .prose h2 {
   margin-top: 2.5em;
   margin-bottom: 0.6em;
   padding-left: 0.8rem;
   border-left: 3px solid var(--color-accent);
+  scroll-margin-top: 80px;
 }
 .prose h3 {
   margin-top: 2em;
   margin-bottom: 0.5em;
+  scroll-margin-top: 80px;
 }
+.prose h4 { scroll-margin-top: 80px; }
 .prose blockquote {
   border-left: 3px solid var(--color-accent-light);
   padding: 0.5em 1.2em;
