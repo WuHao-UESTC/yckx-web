@@ -93,13 +93,14 @@ export default async function AdminPostsPage({ searchParams }: { searchParams: P
                 </button>
               </form>
               {/* 状态切换 */}
-              <form action={changeStatus}>
+              <form action={changeStatus} className="flex items-center gap-1">
                 <input type="hidden" name="id" value={post.id} />
-                <select name="status" defaultValue={post.status} className="text-xs border border-[#e8e0d5] rounded px-1 py-0.5 bg-white font-[family-name:var(--font-sans)]" onChange={(e) => e.target.form?.requestSubmit()}>
+                <select name="status" defaultValue={post.status} className="text-xs border border-[#e8e0d5] rounded px-1 py-0.5 bg-white font-[family-name:var(--font-sans)]">
                   <option value="DRAFT">草稿</option>
                   <option value="PUBLISHED">已发布</option>
                   <option value="ARCHIVED">归档</option>
                 </select>
+                <button type="submit" className="text-[10px] text-[#8b5e3c] px-1 font-[family-name:var(--font-sans)]">✓</button>
               </form>
             </div>
           </div>
