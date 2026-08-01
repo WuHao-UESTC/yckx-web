@@ -32,19 +32,6 @@ export default function NewEditorPage() {
     const crepe = new Crepe({
       root: editorRef.current,
       defaultValue: "",
-      features: {
-        [CrepeFeature.CodeMirror]: true,
-        [CrepeFeature.ImageBlock]: true,
-        [CrepeFeature.Latex]: true,
-        [CrepeFeature.Table]: true,
-        [CrepeFeature.BlockEdit]: true,
-        [CrepeFeature.Placeholder]: true,
-        [CrepeFeature.Cursor]: true,
-        [CrepeFeature.Slash]: true,
-        [CrepeFeature.Toolbar]: true,
-        [CrepeFeature.LinkTooltip]: true,
-        [CrepeFeature.ListItem]: true,
-      },
       featureConfigs: {
         [CrepeFeature.Placeholder]: { text: "开始写作…", mode: "block" },
       },

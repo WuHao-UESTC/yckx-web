@@ -59,15 +59,6 @@ export default function EditPostPage() {
     const crepe = new Crepe({
       root: editorRef.current,
       defaultValue: markdown,
-      features: {
-        [CrepeFeature.CodeMirror]: true,
-        [CrepeFeature.ImageBlock]: true,
-        [CrepeFeature.Latex]: true,
-        [CrepeFeature.Table]: true,
-        [CrepeFeature.BlockEdit]: true,
-        [CrepeFeature.Placeholder]: true,
-        [CrepeFeature.Cursor]: true,
-      },
       featureConfigs: {
         [CrepeFeature.Placeholder]: { text: "继续写作…", mode: "block" },
       },
