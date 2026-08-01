@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Crepe, CrepeFeature } from "@milkdown/crepe";
 import { replaceAll } from "@milkdown/kit/utils";
+import { OutlinePanel } from "@/components/editor/outline-panel";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 
@@ -189,11 +190,18 @@ export default function NewEditorPage() {
         <button onClick={() => insertTemplate("\n```pdf\nhttps://example.com/file.pdf\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">📄 PDF</button>
       </div>
 
-      {/* Milkdown 编辑器 — 占满剩余空间 */}
-      <div ref={editorRef} className="flex-1 border border-[#e8e0d5] rounded-md overflow-hidden" />
+      {/* 编辑区 + 大纲 */}
+      <div className="flex gap-3 flex-1 min-h-0">
+        {/* Milkdown 编辑器 */}
+        <div ref={editorRef} className="flex-1 border border-[#e8e0d5] rounded-md overflow-hidden min-w-0" />
+        {/* 右侧大纲面板 */}
+        <div className="hidden lg:block w-48 shrink-0 border border-[#e8e0d5] rounded-md p-3 overflow-y-auto bg-white">
+          <OutlinePanel markdown={markdown} />
+        </div>
+      </div>
 
       {/* 操作按钮 */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mt-2">
         <button onClick={saveDraft} disabled={saving || !ready} className="btn-primary">
           {saving ? "保存中…" : "保存草稿"}
         </button>
