@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LazySection } from "@/components/shared/lazy-section";
+import { ImageCarousel } from "@/components/home/image-carousel";
 import { ArticleShowcase } from "@/components/home/article-showcase";
 import { KnowledgeGraphCanvas } from "@/components/home/knowledge-graph-canvas";
 import type { GraphNode, GraphLink } from "@/components/home/knowledge-graph";
@@ -152,6 +153,12 @@ export default async function Home() {
     .filter((p) => p.publishedAt)
     .map((p) => ({ date: p.publishedAt!.toISOString(), slug: p.slug, title: p.title }));
 
+  const carouselImages = recentPhotos.map((p) => ({
+    src: p.imagePath,
+    alt: p.caption ?? "科协照片",
+    caption: p.caption ?? undefined,
+  }));
+
   return (
     <>
       {/* ════════════════════════════════════════════════ */}
@@ -159,38 +166,47 @@ export default async function Home() {
       {/* ════════════════════════════════════════════════ */}
       <section className="snap-section paper-texture border-b border-[#e8e0d5]">
         <div className="w-full max-w-[1160px] mx-auto px-5 py-8">
-          {/* B1: LogoBlock — 横排: Logo左 | 标题+标语右 */}
-          <div className="flex items-center justify-center gap-5 mb-6 min-h-[90px]">
-            {/* Logo */}
-            <div className="w-16 h-16 rounded-full bg-[#f5f0e8] flex items-center justify-center border-2 border-[#e8e0d5] shrink-0">
-              <span className="text-xl font-bold text-[#8b5e3c] tracking-widest">科协</span>
+          {/* B1+B2 Row 1: LogoBlock | CarouselBlock — 增大高度 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* B1: LogoBlock — 横排，加大尺寸 */}
+            <div className="flex items-center justify-center gap-6 min-h-[200px] px-6">
+              <div className="w-24 h-24 rounded-full bg-[#f5f0e8] flex items-center justify-center border-2 border-[#e8e0d5] shrink-0">
+                <span className="text-3xl font-bold text-[#8b5e3c] tracking-widest">科协</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-[#1a1a1a] tracking-wide mb-1">英才科协</h1>
+                <p className="text-sm text-[#8b5e3c] tracking-[0.2em] font-[family-name:var(--font-sans)]">
+                  自由 · 创新 · 博学 · 精进
+                </p>
+              </div>
             </div>
-            {/* 标题 + 标语 */}
-            <div>
-              <h1 className="text-2xl font-bold text-[#1a1a1a] tracking-wide">英才科协</h1>
-              <p className="text-xs text-[#8b5e3c] tracking-[0.25em] font-[family-name:var(--font-sans)] mt-0.5">
-                自由 · 创新 · 博学 · 精进
-              </p>
+            {/* B2: CarouselBlock — 恢复 */}
+            <div className="min-h-[200px]">
+              <ImageCarousel images={carouselImages} interval={3500} />
             </div>
           </div>
 
-          {/* B3: NavBar — 五个快捷入口 */}
-          <div className="flex justify-center gap-1.5 mb-6 font-[family-name:var(--font-sans)] text-sm flex-wrap">
-            {[
-              { label: "技术支持", href: "/knowledge-base" },
-              { label: "竞赛", href: "/competition" },
-              { label: "大事记", href: "/events" },
-              { label: "科协日常", href: "/routine" },
-              { label: "友联", href: "/friends" },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="px-4 py-1.5 rounded-full border border-[#e8e0d5] text-[#6b6b6b] hover:text-[#8b5e3c] hover:border-[#c4a882] hover:bg-[#faf7f2] transition-colors text-xs"
-              >
-                {item.label}
-              </Link>
-            ))}
+          {/* B3: NavBar — 通栏分隔带，五张入口卡片均匀分布 */}
+          <div className="mb-8 py-5 px-2 rounded-md" style={{ backgroundColor: "#faf7f2" }}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 font-[family-name:var(--font-sans)]">
+              {[
+                { label: "技术支持", href: "/knowledge-base", desc: "嵌入式、信号处理、电子设计等方向的技术文章与学习笔记" },
+                { label: "竞赛", href: "/competition", desc: "电赛、集创赛、物联网等竞赛经验与资料汇总" },
+                { label: "大事记", href: "/events", desc: "科协历年工作日志、活动记录与重要事件" },
+                { label: "科协日常", href: "/routine", desc: "照片墙、吐槽便签，记录团队的点点滴滴" },
+                { label: "友联", href: "/friends", desc: "科协成员个人主页、技术博客与社交链接" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block rounded-md p-4 text-center transition-all duration-200 hover:shadow-md"
+                  style={{ backgroundColor: "#f0ebe0" }}
+                >
+                  <p className="text-sm font-bold text-[#1a1a1a] mb-1.5">{item.label}</p>
+                  <p className="text-[11px] text-[#6b6b6b] leading-relaxed">{item.desc}</p>
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* B4+B5: ArticleShowcase — 精选/日历联动 */}
