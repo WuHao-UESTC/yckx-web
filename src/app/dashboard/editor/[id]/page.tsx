@@ -20,6 +20,8 @@ export default function EditPostPage() {
   const [message, setMessage] = useState("");
   const [ready, setReady] = useState(false);
   const [markdown, setMarkdown] = useState("");
+  const mdRef = useRef(markdown);
+  useEffect(() => { mdRef.current = markdown; }, [markdown]);
   const [loading, setLoading] = useState(true);
   const [postSlug, setPostSlug] = useState("");
   const [postStatus, setPostStatus] = useState("DRAFT");
@@ -73,6 +75,18 @@ export default function EditPostPage() {
           setMarkdown(md);
         });
       });
+
+      const pasteHandler = (e: ClipboardEvent) => {
+        const text = e.clipboardData?.getData("text/plain");
+        if (text?.includes("$")) {
+          e.preventDefault();
+          e.stopPropagation();
+          const updated = mdRef.current + text;
+          setMarkdown(updated);
+          crepe.editor.action(replaceAll(updated));
+        }
+      };
+      editorRef.current?.addEventListener("paste", pasteHandler, true);
     });
 
     return () => {

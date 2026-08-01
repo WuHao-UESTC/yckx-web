@@ -19,6 +19,8 @@ export default function NewEditorPage() {
   const [message, setMessage] = useState("");
   const [ready, setReady] = useState(false);
   const [markdown, setMarkdown] = useState("");
+  const mdRef = useRef(markdown);
+  useEffect(() => { mdRef.current = markdown; }, [markdown]);
   const [categories, setCategories] = useState<{ id: string; name: string; type: string }[]>([]);
 
   // 加载分类列表
@@ -46,13 +48,26 @@ export default function NewEditorPage() {
           setMarkdown(md);
         });
       });
+
+      // 拦截粘贴事件：含 $ 的文本直接以纯文本方式插入，防止解析器消耗 $ 符号
+      const pasteHandler = (e: ClipboardEvent) => {
+        const text = e.clipboardData?.getData("text/plain");
+        if (text?.includes("$")) {
+          e.preventDefault();
+          e.stopPropagation();
+          const updated = mdRef.current + text;
+          setMarkdown(updated);
+          crepe.editor.action(replaceAll(updated));
+        }
+      };
+      editorRef.current?.addEventListener("paste", pasteHandler, true);
     });
 
     return () => {
       crepe.destroy();
       crepeRef.current = null;
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveDraft = useCallback(async () => {
     if (!ready) return;
