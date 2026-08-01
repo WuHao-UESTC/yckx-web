@@ -118,6 +118,14 @@ export default async function ArticlePage({ params }: Props) {
           )}
         </header>
 
+        {/* 封面图 */}
+        {post.coverImage && (
+          <div className="mb-6 rounded-md overflow-hidden bg-[#f5f0e8]">
+            <img src={post.coverImage} alt={post.title}
+              className="w-full h-auto object-cover max-h-[400px]" />
+          </div>
+        )}
+
         {/* 移动端折叠目录 */}
         <MobileTOC content={post.content} />
 

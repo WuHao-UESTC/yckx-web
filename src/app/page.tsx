@@ -12,6 +12,7 @@ import type { GraphNode, GraphLink } from "@/components/home/knowledge-graph";
 // ══════════════════════════════════════════════════════
 async function getHomeData() {
   const [
+    featuredPosts,
     latestPosts,
     recentPhotos,
     recentEvents,
@@ -19,7 +20,19 @@ async function getHomeData() {
     categories,
     stickyNotes,
     newsHeadline,
+    friendUsers,
   ] = await Promise.all([
+    // 精选文章
+    prisma.post.findMany({
+      where: { status: "PUBLISHED", isFeatured: true },
+      include: {
+        author: { select: { id: true, username: true, displayName: true, avatar: true } },
+        category: true,
+        tags: { include: { tag: true } },
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 3,
+    }),
     prisma.post.findMany({
       where: { status: "PUBLISHED" },
       include: {
@@ -32,7 +45,7 @@ async function getHomeData() {
     }),
     prisma.photo.findMany({
       orderBy: { createdAt: "desc" },
-      take: 5,
+      take: 8,
     }),
     prisma.post.findMany({
       where: { status: "PUBLISHED", category: { type: "EVENT" } },
@@ -63,9 +76,16 @@ async function getHomeData() {
       include: { author: { select: { displayName: true, username: true } }, category: true },
       orderBy: { publishedAt: "desc" },
     }),
+    // 友链成员
+    prisma.user.findMany({
+      where: { role: { not: "ADMIN" } },
+      include: { profile: true, _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
+      orderBy: { createdAt: "desc" },
+      take: 4,
+    }),
   ]);
 
-  return { latestPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline };
+  return { featuredPosts, latestPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers };
 }
 
 // ══════════════════════════════════════════════════════
@@ -122,7 +142,7 @@ const NOTE_COLORS = ["bg-[#fef9e7]", "bg-[#fdedec]", "bg-[#ebf5fb]", "bg-[#eafaf
 
 // ══════════════════════════════════════════════════════
 export default async function Home() {
-  const { latestPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline } = await getHomeData();
+  const { featuredPosts, latestPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers } = await getHomeData();
   const graphData = buildGraphData(categories);
 
   const calPosts = calendarPosts
@@ -140,23 +160,35 @@ export default async function Home() {
       {/* ════════════════════════════════════════════════ */}
       {/* Part 1 — 整体展示区   snap-section               */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="snap-section paper-texture border-b border-[#e8e0d5] flex items-center">
-        <div className="w-full max-w-[1160px] mx-auto px-5 py-10">
+      <section className="snap-section paper-texture border-b border-[#e8e0d5]">
+        <div className="w-full max-w-[1160px] mx-auto px-5 py-8">
           {/* Row 1: LOGO | 轮播图 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="flex flex-col items-center justify-center min-h-[200px] text-center px-6">
-              <div className="w-24 h-24 rounded-full bg-[#f5f0e8] flex items-center justify-center mb-4 border-2 border-[#e8e0d5]">
-                <span className="text-3xl font-bold text-[#8b5e3c] tracking-widest">科协</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="flex flex-col items-center justify-center min-h-[180px] text-center px-6">
+              <div className="w-20 h-20 rounded-full bg-[#f5f0e8] flex items-center justify-center mb-3 border-2 border-[#e8e0d5]">
+                <span className="text-2xl font-bold text-[#8b5e3c] tracking-widest">科协</span>
               </div>
-              <h1 className="text-3xl font-bold text-[#1a1a1a] mb-3 tracking-wide">英才科协</h1>
-              <p className="text-sm text-[#8b5e3c] tracking-[0.25em] font-[family-name:var(--font-sans)]">
+              <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2 tracking-wide">英才科协</h1>
+              <p className="text-xs text-[#8b5e3c] tracking-[0.25em] font-[family-name:var(--font-sans)]">
                 自由 · 创新 · 博学 · 精进
               </p>
             </div>
-            <div className="min-h-[200px]">
+            <div className="min-h-[180px]">
               <ImageCarousel images={carouselImages} interval={3500} />
             </div>
           </div>
+
+          {/* Row 2: 精选文章 */}
+          {featuredPosts.length > 0 && (
+            <div className="mb-6">
+              <SectionHeading>精选文章</SectionHeading>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {featuredPosts.map((post) => (
+                  <PostCard key={post.id} post={post} showExcerpt={false} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Row 3: 最新文章 | 日历 */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -200,31 +232,31 @@ export default async function Home() {
       {/* ════════════════════════════════════════════════ */}
       {/* Part 3 — 科协新闻与日常   snap-section             */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="snap-section paper-texture flex items-center">
-        <div className="w-full max-w-[1160px] mx-auto px-5 py-10">
+      <section className="snap-section paper-texture">
+        <div className="w-full max-w-[1160px] mx-auto px-5 py-8">
 
           {/* 新闻头条 */}
           {newsHeadline && (
-            <LazySection className="mb-8">
+            <LazySection className="mb-6">
               <SectionHeading href="/events">科协新闻</SectionHeading>
               <Link href={`/events/${newsHeadline.slug}`} className="block card group overflow-hidden">
-                <div className="flex flex-col sm:flex-row gap-5 items-start">
+                <div className="flex flex-col sm:flex-row gap-4 items-start">
                   {newsHeadline.coverImage && (
-                    <div className="w-full sm:w-56 shrink-0 rounded-md overflow-hidden bg-[#f5f0e8]">
+                    <div className="w-full sm:w-48 shrink-0 rounded-md overflow-hidden bg-[#f5f0e8]">
                       <img src={newsHeadline.coverImage} alt={newsHeadline.title}
-                        className="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300" />
+                        className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300" />
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h3 className="text-xl font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mb-2">
+                    <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mb-1">
                       {newsHeadline.title}
                     </h3>
                     {newsHeadline.excerpt && (
-                      <p className="text-sm text-[#6b6b6b] line-clamp-3 font-[family-name:var(--font-sans)]">
+                      <p className="text-xs text-[#6b6b6b] line-clamp-2 font-[family-name:var(--font-sans)]">
                         {newsHeadline.excerpt}
                       </p>
                     )}
-                    <p className="text-xs text-[#6b6b6b] mt-3 font-[family-name:var(--font-sans)]">
+                    <p className="text-[10px] text-[#6b6b6b] mt-2 font-[family-name:var(--font-sans)]">
                       {newsHeadline.author.displayName ?? newsHeadline.author.username}
                       {" · "}
                       {newsHeadline.publishedAt?.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
@@ -235,48 +267,63 @@ export default async function Home() {
             </LazySection>
           )}
 
-          {/* 大事记时间线 — 充足空间，不再截断 */}
-          {recentEvents.length > 0 && (
-            <LazySection className="mb-8">
-              <SectionHeading href="/events">大事记</SectionHeading>
-              <div className="relative border-l-2 border-[#e8e0d5] ml-3 pl-8 space-y-3">
-                {recentEvents.map((post) => (
-                  <div key={post.id} className="relative">
-                    <span className="absolute -left-[35px] top-2 w-3 h-3 bg-[#c4a882] rounded-full" />
-                    <Link href={`/events/${post.slug}`} className="block card group py-2.5 px-4">
-                      <time className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-                        {post.createdAt.toLocaleDateString("zh-CN")}
-                      </time>
-                      <h3 className="text-sm font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mt-0.5 line-clamp-1">
-                        {post.title}
-                      </h3>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </LazySection>
-          )}
+          {/* 大事记 + 照片预览 双栏 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {recentEvents.length > 0 && (
+              <LazySection>
+                <SectionHeading href="/events">大事记</SectionHeading>
+                <div className="relative border-l-2 border-[#e8e0d5] ml-3 pl-7 space-y-2">
+                  {recentEvents.slice(0, 5).map((post) => (
+                    <div key={post.id} className="relative">
+                      <span className="absolute -left-[31px] top-1.5 w-2.5 h-2.5 bg-[#c4a882] rounded-full" />
+                      <Link href={`/events/${post.slug}`} className="block hover:text-[#8b5e3c] transition-colors">
+                        <time className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+                          {post.createdAt.toLocaleDateString("zh-CN")}
+                        </time>
+                        <p className="text-xs text-[#1a1a1a] line-clamp-1 mt-0.5">{post.title}</p>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </LazySection>
+            )}
+
+            {/* 照片预览 */}
+            {recentPhotos.length > 0 && (
+              <LazySection>
+                <SectionHeading href="/routine" moreLabel="更多照片">最近照片</SectionHeading>
+                <div className="columns-2 gap-2 space-y-2">
+                  {recentPhotos.slice(0, 4).map((photo) => (
+                    <div key={photo.id} className="break-inside-avoid rounded-md overflow-hidden bg-[#f5f0e8]">
+                      <img src={photo.imagePath} alt={photo.caption ?? ""}
+                        className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300" loading="lazy" />
+                    </div>
+                  ))}
+                </div>
+              </LazySection>
+            )}
+          </div>
 
           {/* 便签卡片 */}
-          <LazySection>
+          <LazySection className="mb-6">
             <SectionHeading>便签</SectionHeading>
             {stickyNotes.length === 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                 {["公告", "贴士", "入口", "须知", "待定"].map((label, i) => (
-                  <div key={i} className={`${NOTE_COLORS[i]} rounded-sm p-4 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)] min-h-[80px] flex items-center justify-center`}>
+                  <div key={i} className={`${NOTE_COLORS[i]} rounded-sm p-3 text-center text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)] min-h-[60px] flex items-center justify-center`}>
                     {label}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                 {stickyNotes.map((note, i) => (
                   <div key={note.id}
-                    className={`${NOTE_COLORS[i % 5]} rounded-sm p-4 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 flex flex-col justify-between min-h-[80px]`}>
-                    <p className="text-xs text-[#2c2c2c] leading-relaxed line-clamp-3 font-[family-name:var(--font-sans)]">
+                    className={`${NOTE_COLORS[i % 5]} rounded-sm p-3 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 flex flex-col justify-between min-h-[60px]`}>
+                    <p className="text-[11px] text-[#2c2c2c] leading-relaxed line-clamp-2 font-[family-name:var(--font-sans)]">
                       {note.content}
                     </p>
-                    <p className="text-[10px] text-[#6b6b6b] mt-2 font-[family-name:var(--font-sans)]">
+                    <p className="text-[10px] text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
                       {note.isAnonymous ? "匿名" : (note.author.displayName ?? note.author.username)}
                     </p>
                   </div>
@@ -284,6 +331,32 @@ export default async function Home() {
               </div>
             )}
           </LazySection>
+
+          {/* 友链预览 */}
+          {friendUsers.length > 0 && (
+            <LazySection>
+              <SectionHeading href="/friends" moreLabel="查看全部成员">科协成员</SectionHeading>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {friendUsers.map((user) => (
+                  <Link key={user.id} href={`/friends/${user.username}`}
+                    className="card group flex items-center gap-3 py-3 px-4"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#f5f0e8] flex items-center justify-center text-base text-[#8b5e3c] font-bold shrink-0">
+                      {(user.displayName ?? user.username).charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors truncate">
+                        {user.displayName ?? user.username}
+                      </p>
+                      <p className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+                        {user.profile?.title || "科协成员"} · {user._count.posts} 篇
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </LazySection>
+          )}
 
         </div>
       </section>

@@ -87,10 +87,35 @@ export default async function CompetitionArticlePage({ params }: Props) {
             </div>
           )}
         </header>
+
+        {/* 封面图 */}
+        {post.coverImage && (
+          <div className="mb-6 rounded-md overflow-hidden bg-[#f5f0e8]">
+            <img src={post.coverImage} alt={post.title}
+              className="w-full h-auto object-cover max-h-[400px]" />
+          </div>
+        )}
+
         <MobileTOC content={post.content} />
         <MarkdownRenderer content={post.content} />
+
+        {/* 底部标签 */}
+        {post.tags.length > 0 && (
+          <div className="mt-8 flex flex-wrap gap-1.5">
+            {post.tags.map((pt) => (
+              <a key={pt.tag.id} href={`/tags/${pt.tag.slug}`} className="tag">{pt.tag.name}</a>
+            ))}
+          </div>
+        )}
+
         <PostNav prev={prevPost} next={nextPost} />
         <GiscusComments />
+
+        {/* 版权声明 */}
+        <div className="mt-8 pt-6 border-t border-[#e8e0d5] text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+          <p>© {post.author.displayName ?? post.author.username} · 英才科协</p>
+          <p className="mt-1">未经许可，禁止转载。</p>
+        </div>
       </div>
 
       {/* 右侧大纲 */}

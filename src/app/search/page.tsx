@@ -1,6 +1,4 @@
-import Link from "next/link";
-import { postUrl } from "@/components/article/post-card";
-import { HighlightText } from "@/components/search/highlight-text";
+import { SearchResultCard } from "@/components/search/search-result-card";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -34,24 +32,81 @@ export default async function SearchPage({ searchParams }: Props) {
 
 async function SearchResults({ query }: { query: string }) {
   const { prisma } = await import("@/lib/prisma");
-  const posts = await prisma.post.findMany({
-    where: {
-      status: "PUBLISHED",
-      OR: [
-        { title: { contains: query } },
-        { content: { contains: query } },
-      ],
-    },
-    include: {
-      author: { select: { id: true, username: true, displayName: true } },
-      category: true,
-    },
-    orderBy: { publishedAt: "desc" },
-    take: 20,
-  });
+
+  // PostgreSQL 全文搜索 + ILIKE 回退（中文兼容）
+  let posts: Array<{
+    slug: string; title: string; excerpt: string | null;
+    publishedAt: Date | null; authorUsername: string; authorDisplayName: string | null;
+    categoryName: string | null; categorySlug: string | null; categoryType: string | null;
+  }> = [];
+
+  try {
+    posts = await prisma.$queryRawUnsafe<
+      Array<{
+        slug: string; title: string; excerpt: string | null;
+        publishedAt: Date | null; authorUsername: string; authorDisplayName: string | null;
+        categoryName: string | null; categorySlug: string | null; categoryType: string | null;
+      }>
+    >(
+      `SELECT p.slug, p.title, p.excerpt, p."publishedAt",
+              u.username AS "authorUsername", u."displayName" AS "authorDisplayName",
+              c.name AS "categoryName", c.slug AS "categorySlug", c.type AS "categoryType"
+       FROM posts p
+       JOIN users u ON u.id = p."authorId"
+       LEFT JOIN categories c ON c.id = p."categoryId"
+       WHERE p.status = 'PUBLISHED'
+         AND (
+           p.search_vector @@ plainto_tsquery('simple', $1)
+           OR p.title ILIKE $2
+           OR p.content ILIKE $2
+         )
+       ORDER BY p."publishedAt" DESC
+       LIMIT 20`,
+      query,
+      `%${query}%`
+    );
+  } catch {
+    // tsvector 列不存在 → 回退 contains
+  }
 
   if (posts.length === 0) {
-    return <p className="text-[#6b6b6b]">未找到包含 "{query}" 的文章。</p>;
+    try {
+      const fallback = await prisma.post.findMany({
+        where: {
+          status: "PUBLISHED",
+          OR: [{ title: { contains: query } }, { content: { contains: query } }],
+        },
+        include: {
+          author: { select: { id: true, username: true, displayName: true } },
+          category: true,
+        },
+        orderBy: { publishedAt: "desc" },
+        take: 20,
+      });
+
+      if (fallback.length === 0) {
+        return <p className="text-[#6b6b6b]">未找到包含 "{query}" 的文章。</p>;
+      }
+
+      return (
+        <div>
+          <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">找到 {fallback.length} 篇相关文章</p>
+          <div className="space-y-4">
+            {fallback.map((p) => (
+              <SearchResultCard key={p.id} post={{
+                slug: p.slug, title: p.title, excerpt: p.excerpt,
+                publishedAt: p.publishedAt,
+                authorUsername: p.author.username, authorDisplayName: p.author.displayName,
+                categoryName: p.category?.name ?? null, categorySlug: p.category?.slug ?? null,
+                categoryType: p.category?.type ?? null,
+              }} query={query} />
+            ))}
+          </div>
+        </div>
+      );
+    } catch {
+      return <p className="text-[#6b6b6b]">搜索服务暂不可用。</p>;
+    }
   }
 
   return (
@@ -59,31 +114,7 @@ async function SearchResults({ query }: { query: string }) {
       <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">找到 {posts.length} 篇相关文章</p>
       <div className="space-y-4">
         {posts.map((post) => (
-          <article key={post.id} className="card group">
-            <Link href={postUrl(post)}>
-              <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors leading-snug">
-                <HighlightText text={post.title} query={query} />
-              </h3>
-              {post.excerpt && (
-                <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1.5 leading-relaxed font-[family-name:var(--font-sans)]">
-                  <HighlightText text={post.excerpt} query={query} />
-                </p>
-              )}
-              <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#6b6b6b] mt-2.5 font-[family-name:var(--font-sans)]">
-                <span>{post.author.displayName ?? post.author.username}</span>
-                <span>·</span>
-                <time dateTime={post.publishedAt?.toISOString()}>
-                  {post.publishedAt?.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
-                </time>
-                {post.category && (
-                  <>
-                    <span>·</span>
-                    <span className="tag">{post.category.name}</span>
-                  </>
-                )}
-              </div>
-            </Link>
-          </article>
+          <SearchResultCard key={post.slug} post={post} query={query} />
         ))}
       </div>
     </div>
