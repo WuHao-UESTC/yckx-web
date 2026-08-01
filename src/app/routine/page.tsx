@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { PhotoLightbox } from "@/components/gallery/photo-lightbox";
 
+export const revalidate = 300;
+
 export default async function RoutinePage() {
   const [photos, stickyNotes] = await Promise.all([
     prisma.photo.findMany({

@@ -140,6 +140,9 @@ function SectionHeading({ children, href, moreLabel }: { children: React.ReactNo
 // ══════════════════════════════════════════════════════
 const NOTE_COLORS = ["bg-[#fef9e7]", "bg-[#fdedec]", "bg-[#ebf5fb]", "bg-[#eafaf1]", "bg-[#f4ecf7]"];
 
+// ISR：每 5 分钟重新生成首页
+export const revalidate = 300;
+
 // ══════════════════════════════════════════════════════
 export default async function Home() {
   const { featuredPosts, latestPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers } = await getHomeData();

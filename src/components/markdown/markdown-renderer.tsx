@@ -4,6 +4,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { CodeBlock } from "./code-block";
+import { ImageLightbox } from "./image-lightbox";
 import { slugify } from "@/lib/slugify";
 
 interface Props {
@@ -52,14 +53,7 @@ export function MarkdownRenderer({ content }: Props) {
 
             return <CodeBlock language={language} children={codeStr} />;
           },
-          img: ({ src, alt }) => (
-            <img
-              src={src}
-              alt={alt}
-              className="rounded-md cursor-zoom-in hover:opacity-90 transition-opacity"
-              loading="lazy"
-            />
-          ),
+          img: ({ src, alt }) => <ImageLightbox src={src} alt={alt} />,
           a: ({ href, children }) => {
             const isExternal = href?.startsWith("http");
             return (

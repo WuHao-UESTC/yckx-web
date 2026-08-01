@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 300;
+
 export default async function KnowledgeBasePage() {
   const categories = await prisma.category.findMany({
     where: { type: "KNOWLEDGE" },

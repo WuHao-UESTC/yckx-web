@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
+import { MobileNav } from "./mobile-nav";
 
 export async function SiteHeader() {
   const session = await auth();
@@ -29,6 +30,9 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
+
+        {/* 移动端汉堡菜单 */}
+        <MobileNav />
 
         {/* 右侧：搜索 + 用户 */}
         <div className="flex items-center gap-2">
