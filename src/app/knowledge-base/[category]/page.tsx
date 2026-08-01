@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { POSTS_PER_PAGE } from "@/lib/constants";
+import { PostCard } from "@/components/article/post-card";
 
 interface Props {
   params: Promise<{ category: string }>;
@@ -44,26 +45,7 @@ export default async function KnowledgeCategoryPage({ params, searchParams }: Pr
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <article key={post.id} className="card group">
-              <Link href={`/knowledge-base/${slug}/${post.slug}`}>
-                <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors leading-snug">
-                  {post.title}
-                </h3>
-                {post.excerpt && (
-                  <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1 font-[family-name:var(--font-sans)]">
-                    {post.excerpt}
-                  </p>
-                )}
-                <div className="flex items-center gap-3 text-xs text-[#6b6b6b] mt-2 font-[family-name:var(--font-sans)]">
-                  <span>{post.author.displayName ?? post.author.username}</span>
-                  <span>·</span>
-                  <time>{post.publishedAt?.toLocaleDateString("zh-CN")}</time>
-                  {post.tags.slice(0, 2).map((pt) => (
-                    <span key={pt.tag.id} className="tag">{pt.tag.name}</span>
-                  ))}
-                </div>
-              </Link>
-            </article>
+            <PostCard key={post.id} post={post} showTags />
           ))}
         </div>
       )}

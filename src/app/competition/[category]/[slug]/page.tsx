@@ -2,16 +2,36 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { MarkdownRenderer } from "@/components/markdown/markdown-renderer";
 import { ArticleOutline } from "@/components/article/article-outline";
+import { MobileTOC } from "@/components/article/mobile-toc";
+import { PostNav } from "@/components/article/post-nav";
+import { GiscusComments } from "@/components/article/giscus-comments";
+import { SITE_NAME } from "@/lib/constants";
+import type { Metadata } from "next";
 
 interface Props {
   params: Promise<{ category: string; slug: string }>;
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = await prisma.post.findUnique({ where: { slug }, select: { title: true, excerpt: true } });
+  const post = await prisma.post.findUnique({ where: { slug }, select: { title: true, excerpt: true, coverImage: true } });
   if (!post) return { title: "未找到" };
-  return { title: post.title, description: post.excerpt };
+  return {
+    title: post.title,
+    description: post.excerpt ?? undefined,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      type: "article",
+      ...(post.coverImage ? { images: [post.coverImage] } : {}),
+      siteName: SITE_NAME,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt ?? undefined,
+    },
+  };
 }
 
 export default async function CompetitionArticlePage({ params }: Props) {
@@ -27,6 +47,24 @@ export default async function CompetitionArticlePage({ params }: Props) {
   });
   if (!post) notFound();
   prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
+
+  // 查询上/下篇（同分类，按发布时间）
+  const [prevPost, nextPost] = await Promise.all([
+    post.publishedAt
+      ? prisma.post.findFirst({
+          where: { status: "PUBLISHED", categoryId: post.categoryId, publishedAt: { lt: post.publishedAt } },
+          include: { author: { select: { id: true, username: true, displayName: true, avatar: true } }, category: true },
+          orderBy: { publishedAt: "desc" },
+        })
+      : null,
+    post.publishedAt
+      ? prisma.post.findFirst({
+          where: { status: "PUBLISHED", categoryId: post.categoryId, publishedAt: { gt: post.publishedAt } },
+          include: { author: { select: { id: true, username: true, displayName: true, avatar: true } }, category: true },
+          orderBy: { publishedAt: "asc" },
+        })
+      : null,
+  ]);
 
   return (
     <div className="mx-auto max-w-[1200px] px-5 py-8 flex justify-center gap-10">
@@ -49,7 +87,10 @@ export default async function CompetitionArticlePage({ params }: Props) {
             </div>
           )}
         </header>
+        <MobileTOC content={post.content} />
         <MarkdownRenderer content={post.content} />
+        <PostNav prev={prevPost} next={nextPost} />
+        <GiscusComments />
       </div>
 
       {/* 右侧大纲 */}

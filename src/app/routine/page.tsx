@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PhotoLightbox } from "@/components/gallery/photo-lightbox";
 
 export default async function RoutinePage() {
   const [photos, stickyNotes] = await Promise.all([
@@ -32,26 +33,7 @@ export default async function RoutinePage() {
         {photos.length === 0 ? (
           <p className="text-[#6b6b6b]">暂无照片。</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {photos.map((photo) => (
-              <div key={photo.id} className="group relative aspect-square rounded-md overflow-hidden bg-[#f5f0e8]">
-                <img
-                  src={photo.imagePath}
-                  alt={photo.caption ?? ""}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                {photo.caption && (
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-white text-xs font-[family-name:var(--font-sans)]">{photo.caption}</p>
-                    <p className="text-white/70 text-[10px] mt-0.5">
-                      {photo.author.displayName ?? photo.author.username}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <PhotoLightbox photos={photos} />
         )}
       </section>
 

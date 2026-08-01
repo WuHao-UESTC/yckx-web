@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { PostCard } from "@/components/article/post-card";
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -26,14 +27,7 @@ export default async function TagPage({ params }: Props) {
       <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">{posts.length} 篇文章</p>
       <div className="space-y-4">
         {posts.map((post) => (
-          <article key={post.id} className="card group">
-            <Link href={`/${post.category?.type === "COMPETITION" ? "competition" : "knowledge-base"}/${post.category?.slug ?? "uncategorized"}/${post.slug}`}>
-              <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors">{post.title}</h3>
-              <div className="text-xs text-[#6b6b6b] mt-2 font-[family-name:var(--font-sans)]">
-                {post.author.displayName ?? post.author.username} · {post.publishedAt?.toLocaleDateString("zh-CN")}
-              </div>
-            </Link>
-          </article>
+          <PostCard key={post.id} post={post} showExcerpt={false} />
         ))}
       </div>
     </div>

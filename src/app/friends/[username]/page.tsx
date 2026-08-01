@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { PostCard } from "@/components/article/post-card";
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -58,17 +59,7 @@ export default async function PersonalPage({ params }: Props) {
       ) : (
         <div className="space-y-3">
           {posts.map((post) => (
-            <article key={post.id} className="card group">
-              <Link href={`/${post.category?.type === "COMPETITION" ? "competition" : "knowledge-base"}/${post.category?.slug ?? "uncategorized"}/${post.slug}`}>
-                <h3 className="font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors">
-                  {post.title}
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-                  <time>{post.publishedAt?.toLocaleDateString("zh-CN")}</time>
-                  {post.category && <span className="tag">{post.category.name}</span>}
-                </div>
-              </Link>
-            </article>
+            <PostCard key={post.id} post={post} showExcerpt={false} />
           ))}
         </div>
       )}

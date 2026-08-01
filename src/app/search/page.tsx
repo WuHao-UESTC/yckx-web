@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { postUrl } from "@/components/article/post-card";
+import { HighlightText } from "@/components/search/highlight-text";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -58,17 +60,27 @@ async function SearchResults({ query }: { query: string }) {
       <div className="space-y-4">
         {posts.map((post) => (
           <article key={post.id} className="card group">
-            <Link href={`/${post.category?.type === "COMPETITION" ? "competition" : "knowledge-base"}/${post.category?.slug ?? "uncategorized"}/${post.slug}`}>
-              <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors">
-                {post.title}
+            <Link href={postUrl(post)}>
+              <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors leading-snug">
+                <HighlightText text={post.title} query={query} />
               </h3>
               {post.excerpt && (
-                <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1 font-[family-name:var(--font-sans)]">
-                  {post.excerpt}
+                <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1.5 leading-relaxed font-[family-name:var(--font-sans)]">
+                  <HighlightText text={post.excerpt} query={query} />
                 </p>
               )}
-              <div className="text-xs text-[#6b6b6b] mt-2 font-[family-name:var(--font-sans)]">
-                {post.author.displayName ?? post.author.username} · {post.publishedAt?.toLocaleDateString("zh-CN")}
+              <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#6b6b6b] mt-2.5 font-[family-name:var(--font-sans)]">
+                <span>{post.author.displayName ?? post.author.username}</span>
+                <span>·</span>
+                <time dateTime={post.publishedAt?.toISOString()}>
+                  {post.publishedAt?.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+                </time>
+                {post.category && (
+                  <>
+                    <span>·</span>
+                    <span className="tag">{post.category.name}</span>
+                  </>
+                )}
               </div>
             </Link>
           </article>

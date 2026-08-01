@@ -26,6 +26,7 @@ export default async function EventsPage() {
     if (!grouped.has(year)) grouped.set(year, []);
     grouped.get(year)!.push(p);
   }
+  const sortedYears = [...grouped.keys()].sort((a, b) => b - a);
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
@@ -33,7 +34,7 @@ export default async function EventsPage() {
 
       {/* 专栏入口 */}
       {columns.length > 0 && (
-        <div className="flex flex-wrap gap-3 mb-8 mt-4">
+        <div className="flex flex-wrap gap-3 mb-6 mt-4">
           {columns.map((col) => (
             <Link key={col.id} href={`/events/columns/${col.slug}`} className="btn-primary">
               {col.title} ({col._count.posts})
@@ -42,9 +43,24 @@ export default async function EventsPage() {
         </div>
       )}
 
+      {/* 年份快速跳转 */}
+      {sortedYears.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-8 font-[family-name:var(--font-sans)]">
+          {sortedYears.map((year) => (
+            <a
+              key={year}
+              href={`#year-${year}`}
+              className="text-sm px-3 py-1 rounded-full border border-[#e8e0d5] text-[#6b6b6b] hover:text-[#8b5e3c] hover:border-[#c4a882] hover:bg-[#faf7f2] transition-colors"
+            >
+              {year}
+            </a>
+          ))}
+        </div>
+      )}
+
       {/* 时间线 */}
       {[...grouped.entries()].sort((a, b) => b[0] - a[0]).map(([year, items]) => (
-        <section key={year} className="mb-8">
+        <section key={year} id={`year-${year}`} className="mb-8 scroll-mt-20">
           <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4 sticky top-14 bg-[#fdfcf9] py-2 z-10">
             {year}
           </h2>
