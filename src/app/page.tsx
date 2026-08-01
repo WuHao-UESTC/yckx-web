@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { PostCard } from "@/components/article/post-card";
 import { LazySection } from "@/components/shared/lazy-section";
-import { ImageCarousel } from "@/components/home/image-carousel";
-import { PostCalendar } from "@/components/home/post-calendar";
+import { ArticleShowcase } from "@/components/home/article-showcase";
 import { KnowledgeGraphCanvas } from "@/components/home/knowledge-graph-canvas";
 import type { GraphNode, GraphLink } from "@/components/home/knowledge-graph";
+import type { PostCardData } from "@/components/article/post-card";
 
 // ══════════════════════════════════════════════════════
 // 数据获取
@@ -13,7 +12,7 @@ import type { GraphNode, GraphLink } from "@/components/home/knowledge-graph";
 async function getHomeData() {
   const [
     featuredPosts,
-    latestPosts,
+    allPublishedPosts,
     recentPhotos,
     recentEvents,
     calendarPosts,
@@ -22,7 +21,7 @@ async function getHomeData() {
     newsHeadline,
     friendUsers,
   ] = await Promise.all([
-    // 精选文章
+    // 精选文章（供 ArticleShowcase 随机抽取）
     prisma.post.findMany({
       where: { status: "PUBLISHED", isFeatured: true },
       include: {
@@ -31,8 +30,9 @@ async function getHomeData() {
         tags: { include: { tag: true } },
       },
       orderBy: { publishedAt: "desc" },
-      take: 3,
+      take: 12,
     }),
+    // 全量已发布文章（供日期筛选，限制50条）
     prisma.post.findMany({
       where: { status: "PUBLISHED" },
       include: {
@@ -41,8 +41,8 @@ async function getHomeData() {
         tags: { include: { tag: true } },
       },
       orderBy: { publishedAt: "desc" },
-      take: 6,
-    }),
+      take: 50,
+    }) as unknown as PostCardData[],
     prisma.photo.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
@@ -85,7 +85,7 @@ async function getHomeData() {
     }),
   ]);
 
-  return { featuredPosts, latestPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers };
+  return { featuredPosts, allPublishedPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers };
 }
 
 // ══════════════════════════════════════════════════════
@@ -145,74 +145,60 @@ export const revalidate = 300;
 
 // ══════════════════════════════════════════════════════
 export default async function Home() {
-  const { featuredPosts, latestPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers } = await getHomeData();
+  const { featuredPosts, allPublishedPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers } = await getHomeData();
   const graphData = buildGraphData(categories);
 
   const calPosts = calendarPosts
     .filter((p) => p.publishedAt)
     .map((p) => ({ date: p.publishedAt!.toISOString(), slug: p.slug, title: p.title }));
 
-  const carouselImages = recentPhotos.map((p) => ({
-    src: p.imagePath,
-    alt: p.caption ?? "科协照片",
-    caption: p.caption ?? undefined,
-  }));
-
   return (
     <>
       {/* ════════════════════════════════════════════════ */}
-      {/* Part 1 — 整体展示区   snap-section               */}
+      {/* S1 — 整体展示区                                    */}
       {/* ════════════════════════════════════════════════ */}
       <section className="snap-section paper-texture border-b border-[#e8e0d5]">
         <div className="w-full max-w-[1160px] mx-auto px-5 py-8">
-          {/* Row 1: LOGO | 轮播图 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="flex flex-col items-center justify-center min-h-[180px] text-center px-6">
-              <div className="w-20 h-20 rounded-full bg-[#f5f0e8] flex items-center justify-center mb-3 border-2 border-[#e8e0d5]">
-                <span className="text-2xl font-bold text-[#8b5e3c] tracking-widest">科协</span>
-              </div>
-              <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2 tracking-wide">英才科协</h1>
-              <p className="text-xs text-[#8b5e3c] tracking-[0.25em] font-[family-name:var(--font-sans)]">
+          {/* B1: LogoBlock — 横排: Logo左 | 标题+标语右 */}
+          <div className="flex items-center justify-center gap-5 mb-6 min-h-[90px]">
+            {/* Logo */}
+            <div className="w-16 h-16 rounded-full bg-[#f5f0e8] flex items-center justify-center border-2 border-[#e8e0d5] shrink-0">
+              <span className="text-xl font-bold text-[#8b5e3c] tracking-widest">科协</span>
+            </div>
+            {/* 标题 + 标语 */}
+            <div>
+              <h1 className="text-2xl font-bold text-[#1a1a1a] tracking-wide">英才科协</h1>
+              <p className="text-xs text-[#8b5e3c] tracking-[0.25em] font-[family-name:var(--font-sans)] mt-0.5">
                 自由 · 创新 · 博学 · 精进
               </p>
             </div>
-            <div className="min-h-[180px]">
-              <ImageCarousel images={carouselImages} interval={3500} />
-            </div>
           </div>
 
-          {/* Row 2: 精选文章 */}
-          {featuredPosts.length > 0 && (
-            <div className="mb-6">
-              <SectionHeading>精选文章</SectionHeading>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {featuredPosts.map((post) => (
-                  <PostCard key={post.id} post={post} showExcerpt={false} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Row 3: 最新文章 | 日历 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <SectionHeading>最新文章</SectionHeading>
-              {latestPosts.length === 0 ? (
-                <p className="text-[#6b6b6b] text-sm font-[family-name:var(--font-sans)]">还没有文章发布。</p>
-              ) : (
-                <div className="space-y-3">
-                  {latestPosts.map((post) => (
-                    <PostCard key={post.id} post={post} showExcerpt />
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="lg:col-span-1">
-              <div className="card">
-                <PostCalendar posts={calPosts} />
-              </div>
-            </div>
+          {/* B3: NavBar — 五个快捷入口 */}
+          <div className="flex justify-center gap-1.5 mb-6 font-[family-name:var(--font-sans)] text-sm flex-wrap">
+            {[
+              { label: "技术支持", href: "/knowledge-base" },
+              { label: "竞赛", href: "/competition" },
+              { label: "大事记", href: "/events" },
+              { label: "科协日常", href: "/routine" },
+              { label: "友联", href: "/friends" },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="px-4 py-1.5 rounded-full border border-[#e8e0d5] text-[#6b6b6b] hover:text-[#8b5e3c] hover:border-[#c4a882] hover:bg-[#faf7f2] transition-colors text-xs"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
+
+          {/* B4+B5: ArticleShowcase — 精选/日历联动 */}
+          <ArticleShowcase
+            featuredPosts={featuredPosts}
+            calendarPosts={calPosts}
+            allPosts={allPublishedPosts}
+          />
         </div>
       </section>
 

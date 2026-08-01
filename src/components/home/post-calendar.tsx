@@ -109,16 +109,6 @@ export function PostCalendar({ posts, onSelectDate }: Props) {
         </div>
       ))}
 
-      {/* 选中日期的文章列表 */}
-      {selected && monthPosts.filter(p => p.date.startsWith(selected)).length > 0 && (
-        <div className="mt-2 pt-2 border-t border-[#e8e0d5] space-y-1 max-h-28 overflow-y-auto">
-          {monthPosts.filter(p => p.date.startsWith(selected)).slice(0, 3).map((p) => (
-            <a key={p.slug} href={`/events/${p.slug}`} className="block text-xs text-[#8b5e3c] hover:text-[#5a3a22] truncate">
-              {p.title}
-            </a>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
