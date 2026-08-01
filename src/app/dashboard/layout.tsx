@@ -29,6 +29,7 @@ export default async function DashboardLayout({
             <SidebarLink href="/dashboard/editor">写文章</SidebarLink>
             <SidebarLink href="/dashboard/posts">我的文章</SidebarLink>
             <SidebarLink href="/dashboard/drafts">草稿箱</SidebarLink>
+            <SidebarLink href="/dashboard/files">文件管理</SidebarLink>
             <SidebarLink href="/dashboard/profile">个人资料</SidebarLink>
             {isAdmin && (
               <>

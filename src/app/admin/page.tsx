@@ -20,10 +20,13 @@ export default async function AdminPage() {
           <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">文章总数</p>
         </div>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Link href="/admin/invitations" className="btn-primary">邀请码管理</Link>
         <Link href="/admin/users" className="btn-primary">用户管理</Link>
         <Link href="/admin/categories" className="btn-primary">分类管理</Link>
+        <Link href="/admin/photos" className="btn-primary">照片墙管理</Link>
+        <Link href="/admin/posts" className="btn-primary">文章管理</Link>
+        <Link href="/admin/config" className="btn-primary">站点配置</Link>
       </div>
     </div>
   );

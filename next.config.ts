@@ -6,9 +6,32 @@ const nextConfig: NextConfig = {
     "192.168.1.100",
     "localhost",
   ],
-  serverExternalPackages: ["bcrypt", "@prisma/adapter-pg", "pg"],
-  // 关闭 StrictMode 以消除 React 19 开发模式下的 Performance 测量报错
-  // 生产环境不受影响，该报错仅为开发环境已知问题
+
+  // Docker standalone 部署模式
+  output: "standalone",
+
+  // 图片优化
+  images: {
+    formats: ["image/webp", "image/avif"],
+    deviceSizes: [640, 768, 1024, 1280, 1536],
+    minimumCacheTTL: 86400,
+  },
+
+  // 安全头
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+        ],
+      },
+    ];
+  },
+
+  serverExternalPackages: ["bcrypt", "@prisma/adapter-pg", "pg", "sharp"],
   reactStrictMode: false,
 };
 
