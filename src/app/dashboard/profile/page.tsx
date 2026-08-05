@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { compare } from "bcrypt";
 import { changePasswordFormSchema, profileFormSchema } from "@/modules/users/profile.schemas";
 import { hashPassword } from "@/modules/auth/server/password";
+import { AvatarUploader } from "@/modules/users/components/avatar-uploader";
 import { requireUser } from "@/server/auth/guards";
 import { ForbiddenError } from "@/server/http/errors";
 import { parseFormData } from "@/server/http/validation";
@@ -26,7 +27,6 @@ export default async function ProfilePage() {
       data: {
         displayName: input.displayName,
         bio: input.bio,
-        avatar: input.avatar,
         profile: {
           upsert: {
             create: {
@@ -71,28 +71,13 @@ export default async function ProfilePage() {
     <div>
       <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">个人资料</h1>
 
+      <AvatarUploader initialAvatar={user.avatar ?? user.profile?.avatarUrl ?? null} />
+
       {/* ── 基本信息 ── */}
       <form action={updateProfile} className="max-w-md space-y-4 mb-10">
         <h2 className="text-base font-bold text-[#1a1a1a] pb-2 border-b border-[#e8e0d5]">
           基本信息
         </h2>
-
-        <div>
-          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
-            头像 URL
-          </label>
-          <input
-            name="avatar"
-            defaultValue={user.avatar ?? ""}
-            className="input-field w-full"
-            placeholder="https://..."
-          />
-          {user.avatar && (
-            <div className="mt-2 w-16 h-16 rounded-full overflow-hidden bg-[#f5f0e8] border border-[#e8e0d5]">
-              <img src={user.avatar} alt="头像预览" className="w-full h-full object-cover" />
-            </div>
-          )}
-        </div>
 
         <div>
           <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">

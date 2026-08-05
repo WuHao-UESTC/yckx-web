@@ -9,6 +9,7 @@ export const POSTS_PER_PAGE = 10;
 
 /** 文件上传限制 */
 export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+export const MAX_AVATAR_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export const MAX_USER_STORAGE = 200 * 1024 * 1024; // 200MB
 
 /** 允许的文件类型 */

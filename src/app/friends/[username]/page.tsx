@@ -36,6 +36,7 @@ export default async function PersonalPage({ params }: Props) {
 
   const copy = HOME_CHAPTER_COPY.routine;
   const name = user.displayName ?? user.username;
+  const avatar = user.avatar ?? user.profile?.avatarUrl;
 
   return (
     <InteriorPage
@@ -48,7 +49,11 @@ export default async function PersonalPage({ params }: Props) {
     >
       <section className="friend-profile">
         <div className="friend-profile__avatar">
-          {(user.displayName ?? user.username).charAt(0)}
+          {avatar ? (
+            <img src={avatar} alt={`${name}的头像`} />
+          ) : (
+            (user.displayName ?? user.username).charAt(0)
+          )}
         </div>
         <div className="friend-profile__readout">
           <span>

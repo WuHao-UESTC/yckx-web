@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { resourceIdSchema } from "@/modules/admin/admin.schemas";
+import { parseResourceIds, resourceIdSchema } from "@/modules/admin/admin.schemas";
+import {
+  AdminBatchCheckbox,
+  AdminBatchToolbar,
+} from "@/modules/admin/components/admin-batch-toolbar";
+import { ConfirmDeleteButton } from "@/modules/admin/components/confirm-delete-button";
+import { deleteAdminUsers } from "@/modules/admin/server/admin-delete-service";
 import { requireAdmin } from "@/server/auth/guards";
 import { ConflictError } from "@/server/http/errors";
 
@@ -9,7 +15,7 @@ interface Props {
 }
 
 export default async function AdminUsersPage({ searchParams }: Props) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const { q } = await searchParams;
 
   const users = await prisma.user.findMany({
@@ -49,6 +55,22 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     revalidatePath("/admin/users");
   }
 
+  async function deleteUsers(formData: FormData) {
+    "use server";
+    const currentAdmin = await requireAdmin();
+    await deleteAdminUsers(parseResourceIds(formData), currentAdmin.id);
+    revalidatePath("/admin/users");
+    revalidatePath("/");
+    revalidatePath("/friends");
+    revalidatePath("/knowledge-base");
+    revalidatePath("/competition");
+    revalidatePath("/archive");
+    revalidatePath("/routine");
+    revalidatePath("/search");
+  }
+
+  const selectableUserCount = users.filter((user) => user.id !== admin.id).length;
+
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
       <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">用户管理</h1>
@@ -76,15 +98,37 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       </form>
 
       {/* 用户列表 */}
+      <AdminBatchToolbar
+        action={deleteUsers}
+        formId="admin-users-batch-delete"
+        group="admin-users"
+        itemCount={selectableUserCount}
+        noun="用户"
+      />
       {users.length === 0 ? (
         <p className="text-[#6b6b6b]">未找到匹配的用户。</p>
       ) : (
         <div className="space-y-2">
           {users.map((user) => (
             <div key={user.id} className="card flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3 min-w-0">
+              <AdminBatchCheckbox
+                formId="admin-users-batch-delete"
+                group="admin-users"
+                id={user.id}
+                disabled={user.id === admin.id}
+                label={user.id === admin.id ? "当前管理员不能删除" : `选择用户：${user.username}`}
+              />
+              <div className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#f5f0e8] flex items-center justify-center text-base text-[#8b5e3c] font-bold shrink-0">
-                  {(user.displayName ?? user.username).charAt(0)}
+                  {(user.avatar ?? user.profile?.avatarUrl) ? (
+                    <img
+                      src={user.avatar ?? user.profile?.avatarUrl ?? ""}
+                      alt=""
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    (user.displayName ?? user.username).charAt(0)
+                  )}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#1a1a1a] flex items-center gap-2">
@@ -101,17 +145,24 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                   </p>
                 </div>
               </div>
-              {/* 角色切换 */}
-              <form action={toggleRole} className="shrink-0">
-                <input type="hidden" name="userId" value={user.id} />
-                <input type="hidden" name="currentRole" value={user.role} />
-                <button
-                  type="submit"
-                  className={`text-xs px-3 py-1 rounded font-[family-name:var(--font-sans)] transition-colors ${user.role === "ADMIN" ? "bg-amber-50 text-amber-700 hover:bg-amber-100" : "bg-stone-50 text-stone-600 hover:bg-stone-100"}`}
-                >
-                  {user.role === "ADMIN" ? "降为成员" : "升为管理员"}
-                </button>
-              </form>
+              <div className="flex shrink-0 items-center gap-2">
+                <form action={toggleRole}>
+                  <input type="hidden" name="userId" value={user.id} />
+                  <input type="hidden" name="currentRole" value={user.role} />
+                  <button
+                    type="submit"
+                    className={`text-xs px-3 py-1 rounded font-[family-name:var(--font-sans)] transition-colors ${user.role === "ADMIN" ? "bg-amber-50 text-amber-700 hover:bg-amber-100" : "bg-stone-50 text-stone-600 hover:bg-stone-100"}`}
+                  >
+                    {user.role === "ADMIN" ? "降为成员" : "升为管理员"}
+                  </button>
+                </form>
+                {user.id !== admin.id && (
+                  <form action={deleteUsers}>
+                    <input type="hidden" name="ids" value={user.id} />
+                    <ConfirmDeleteButton noun="用户" />
+                  </form>
+                )}
+              </div>
             </div>
           ))}
         </div>

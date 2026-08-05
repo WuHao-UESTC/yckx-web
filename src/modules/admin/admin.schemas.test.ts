@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCategoryFormSchema, milestoneFormSchema } from "./admin.schemas";
+import { createCategoryFormSchema, milestoneFormSchema, resourceIdsSchema } from "./admin.schemas";
 
 describe("admin schemas", () => {
   it("accepts the news category type", () => {
@@ -34,6 +34,14 @@ describe("admin schemas", () => {
         title: "新节点",
         description: "不存在的日期。",
       })
+    ).toThrow();
+  });
+
+  it("validates bounded batch resource ids", () => {
+    expect(resourceIdsSchema.parse(["first", "second"])).toEqual(["first", "second"]);
+    expect(() => resourceIdsSchema.parse([])).toThrow();
+    expect(() =>
+      resourceIdsSchema.parse(Array.from({ length: 101 }, (_, index) => `${index}`))
     ).toThrow();
   });
 });

@@ -15,6 +15,7 @@ export default async function FilesPage() {
     include: {
       post: { select: { title: true, slug: true, status: true } },
       photo: { select: { id: true, isVisible: true } },
+      avatarFor: { select: { id: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -35,6 +36,7 @@ export default async function FilesPage() {
         storedPath: true,
         post: { select: { status: true } },
         photo: { select: { id: true } },
+        avatarFor: { select: { id: true } },
       },
     });
     if (!file) throw new NotFoundError("文件不存在");
@@ -43,6 +45,7 @@ export default async function FilesPage() {
       throw new BadRequestError("请先在文章编辑器中解除已发布附件的关联");
     }
     if (file.photo) throw new BadRequestError("请先删除对应的日常照片");
+    if (file.avatarFor) throw new BadRequestError("请先在个人资料中移除当前头像");
 
     await prisma.file.delete({ where: { id } });
     await removeStoredFile(file.storedPath).catch((error) => {
@@ -87,6 +90,7 @@ export default async function FilesPage() {
                   {f.createdAt.toLocaleDateString("zh-CN")}
                   {f.post && <span className="ml-2">附件：{f.post.title}</span>}
                   {f.photo && <span className="ml-2">日常照片</span>}
+                  {f.avatarFor && <span className="ml-2">当前头像</span>}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">

@@ -2,6 +2,11 @@ import { z } from "zod";
 import { postStatusSchema } from "../posts/posts.schemas";
 
 export const resourceIdSchema = z.string().trim().min(1).max(191);
+export const resourceIdsSchema = z.array(resourceIdSchema).min(1).max(100);
+
+export function parseResourceIds(formData: FormData): string[] {
+  return resourceIdsSchema.parse(formData.getAll("ids"));
+}
 
 export const createCategoryFormSchema = z.object({
   name: z.string().trim().min(1).max(80),

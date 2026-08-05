@@ -15,6 +15,8 @@ model User {
   displayName  String?
   passwordHash String
   avatar       String?
+  avatarFileId String?  @unique
+  avatarFile   File?    @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
   role         Role     @default(MEMBER)
   bio          String?
   createdAt    DateTime @default(now())
@@ -46,7 +48,7 @@ model Invitation {
   expiresAt DateTime?
   isActive  Boolean   @default(true)
   createdBy String
-  creator   User      @relation(fields: [createdBy], references: [id])
+  creator   User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
 
   @@map("invitations")
@@ -56,7 +58,7 @@ model Invitation {
 model Profile {
   id        String   @id @default(cuid())
   userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   website   String?
   github    String?
   bilibili  String?
@@ -147,7 +149,7 @@ model Post {
   status      PostStatus @default(DRAFT)
   kind        PostKind   @default(TECHNICAL)
   authorId    String
-  author      User       @relation(fields: [authorId], references: [id])
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   categoryId  String?
   category    Category?  @relation(fields: [categoryId], references: [id])
   columnId    String?
@@ -209,7 +211,7 @@ model Comment {
   id        String    @id @default(cuid())
   content   String    @db.Text
   authorId  String
-  author    User      @relation(fields: [authorId], references: [id])
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   postId    String
   post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
   parentId  String?
@@ -230,10 +232,11 @@ model File {
   purpose    FilePurpose @default(GENERAL)
   sortOrder  Int         @default(0)
   uploaderId String
-  uploader   User        @relation(fields: [uploaderId], references: [id])
+  uploader   User        @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
   postId     String?
   post       Post?       @relation(fields: [postId], references: [id], onDelete: SetNull)
   photo      Photo?
+  avatarFor  User?       @relation("UserAvatar")
   createdAt  DateTime    @default(now())
 
   @@index([uploaderId, createdAt])
@@ -245,6 +248,7 @@ enum FilePurpose {
   GENERAL
   ATTACHMENT
   PHOTO
+  AVATAR
 }
 
 // ========== 照片墙 ==========
@@ -255,7 +259,7 @@ model Photo {
   fileId    String?  @unique
   file      File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   isVisible Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -270,7 +274,7 @@ model StickyNote {
   id          String   @id @default(cuid())
   content     String   @db.Text
   authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   isAnonymous Boolean  @default(false)
   color       String   @default("yellow")
   createdAt   DateTime @default(now())

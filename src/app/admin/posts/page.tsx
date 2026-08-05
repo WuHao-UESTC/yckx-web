@@ -2,7 +2,17 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import type { Prisma } from "@/generated/prisma/client";
-import { changePostStatusFormSchema, resourceIdSchema } from "@/modules/admin/admin.schemas";
+import {
+  changePostStatusFormSchema,
+  parseResourceIds,
+  resourceIdSchema,
+} from "@/modules/admin/admin.schemas";
+import {
+  AdminBatchCheckbox,
+  AdminBatchToolbar,
+} from "@/modules/admin/components/admin-batch-toolbar";
+import { ConfirmDeleteButton } from "@/modules/admin/components/confirm-delete-button";
+import { deleteAdminPosts } from "@/modules/admin/server/admin-delete-service";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
 import { updatePost } from "@/modules/posts/server/post-service";
@@ -69,6 +79,19 @@ export default async function AdminPostsPage({
     revalidatePath("/admin/posts");
   }
 
+  async function deletePosts(formData: FormData) {
+    "use server";
+    await requireAdmin();
+    await deleteAdminPosts(parseResourceIds(formData));
+    revalidatePath("/admin/posts");
+    revalidatePath("/");
+    revalidatePath("/knowledge-base");
+    revalidatePath("/competition");
+    revalidatePath("/archive");
+    revalidatePath("/routine");
+    revalidatePath("/search");
+  }
+
   const statusLabel: Record<string, string> = {
     DRAFT: "草稿",
     PUBLISHED: "已发布",
@@ -96,12 +119,26 @@ export default async function AdminPostsPage({
         共 {total} 篇文章
       </p>
 
+      <AdminBatchToolbar
+        action={deletePosts}
+        formId="admin-posts-batch-delete"
+        group="admin-posts"
+        itemCount={posts.length}
+        noun="文章"
+      />
+
       <div className="space-y-1">
         {posts.map((post) => (
           <div
             key={post.id}
             className="card flex items-center justify-between flex-wrap gap-2 text-sm"
           >
+            <AdminBatchCheckbox
+              formId="admin-posts-batch-delete"
+              group="admin-posts"
+              id={post.id}
+              label={`选择文章：${post.title}`}
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Link
@@ -167,6 +204,10 @@ export default async function AdminPostsPage({
                 >
                   ✓
                 </button>
+              </form>
+              <form action={deletePosts}>
+                <input type="hidden" name="ids" value={post.id} />
+                <ConfirmDeleteButton noun="文章" />
               </form>
             </div>
           </div>

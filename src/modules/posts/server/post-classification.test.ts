@@ -55,14 +55,14 @@ describe("post classification", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("requires daily posts to use a daily column", async () => {
+  it("allows standalone daily posts and validates optional daily columns", async () => {
     await expect(
       assertValidPostClassification(createClient({}), {
         kind: "DAILY",
         categoryId: null,
         columnId: null,
       })
-    ).rejects.toMatchObject({ status: 400, code: "BAD_REQUEST" });
+    ).resolves.toBeUndefined();
 
     const client = createClient({
       column: { id: "daily", title: "Daily", type: "DAILY", isActive: true },
@@ -74,6 +74,17 @@ describe("post classification", () => {
         columnId: "daily",
       })
     ).resolves.toBeUndefined();
+
+    const newsColumnClient = createClient({
+      column: { id: "news", title: "News", type: "NEWS", isActive: true },
+    });
+    await expect(
+      assertValidPostClassification(newsColumnClient, {
+        kind: "DAILY",
+        categoryId: null,
+        columnId: "news",
+      })
+    ).rejects.toMatchObject({ status: 400, code: "BAD_REQUEST" });
   });
 
   it("allows an existing post to retain a disabled taxonomy but blocks new use", async () => {

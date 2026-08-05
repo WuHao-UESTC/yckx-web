@@ -61,7 +61,7 @@ export async function assertValidPostClassification(
   if (category && category.type !== "ROUTINE") {
     throw new BadRequestError("日常文章不能使用技术或新闻分类");
   }
-  if (!column || column.type !== "DAILY") {
-    throw new BadRequestError("日常文章必须选择日常专栏");
+  if (column && column.type !== "DAILY") {
+    throw new BadRequestError("日常文章只能加入日常专栏");
   }
 }

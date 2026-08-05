@@ -226,7 +226,7 @@ async function getHomeData(): Promise<OceanHomeData> {
       username: member.username,
       name: member.displayName ?? member.username,
       title: member.profile?.title ?? "科协成员",
-      avatar: member.profile?.avatarUrl ?? member.avatar,
+      avatar: member.avatar ?? member.profile?.avatarUrl ?? null,
       bio: member.bio,
       postCount: member._count.posts,
     })),

@@ -19,7 +19,6 @@ const optionalLink = z.preprocess(
 export const profileFormSchema = z.object({
   displayName: optionalText(80),
   bio: optionalText(1_000),
-  avatar: optionalLink,
   website: optionalLink,
   github: optionalText(100),
   bilibili: optionalText(100),

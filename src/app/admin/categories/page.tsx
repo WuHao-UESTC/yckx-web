@@ -1,6 +1,12 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { toggleTaxonomyFormSchema } from "@/modules/admin/admin.schemas";
+import { parseResourceIds, toggleTaxonomyFormSchema } from "@/modules/admin/admin.schemas";
+import {
+  AdminBatchCheckbox,
+  AdminBatchToolbar,
+} from "@/modules/admin/components/admin-batch-toolbar";
+import { ConfirmDeleteButton } from "@/modules/admin/components/confirm-delete-button";
+import { deleteAdminTaxonomies } from "@/modules/admin/server/admin-delete-service";
 import {
   createMemberCategory,
   createMemberColumn,
@@ -73,6 +79,28 @@ export default async function AdminCategoriesPage() {
     revalidatePath("/routine");
   }
 
+  async function deleteCategories(formData: FormData) {
+    "use server";
+    await requireAdmin();
+    await deleteAdminTaxonomies("category", parseResourceIds(formData));
+    revalidatePath("/admin/categories");
+    revalidatePath("/dashboard/taxonomies");
+    revalidatePath("/");
+    revalidatePath("/knowledge-base");
+    revalidatePath("/competition");
+    revalidatePath("/archive");
+  }
+
+  async function deleteColumns(formData: FormData) {
+    "use server";
+    await requireAdmin();
+    await deleteAdminTaxonomies("column", parseResourceIds(formData));
+    revalidatePath("/admin/categories");
+    revalidatePath("/dashboard/taxonomies");
+    revalidatePath("/archive");
+    revalidatePath("/routine");
+  }
+
   return (
     <div className="admin-taxonomies">
       <header className="workspace-panel-heading">
@@ -109,28 +137,60 @@ export default async function AdminCategoriesPage() {
 
       <section className="admin-taxonomies__register" aria-labelledby="category-register-title">
         <h2 id="category-register-title">分类登记</h2>
+        <AdminBatchToolbar
+          action={deleteCategories}
+          formId="admin-categories-batch-delete"
+          group="admin-categories"
+          itemCount={categories.length}
+          noun="分类"
+        />
         {categories.map((category) => (
           <div key={category.id}>
+            <AdminBatchCheckbox
+              formId="admin-categories-batch-delete"
+              group="admin-categories"
+              id={category.id}
+              label={`选择分类：${category.name}`}
+            />
             <span>{TYPE_LABELS[category.type] ?? category.type}</span>
             <strong>{category.name}</strong>
             <small>{category._count.posts} 篇</small>
             <small>
               {category.creator?.displayName ?? category.creator?.username ?? "系统记录"}
             </small>
-            <form action={toggleTaxonomy}>
-              <input type="hidden" name="id" value={category.id} />
-              <input type="hidden" name="resource" value="category" />
-              <input type="hidden" name="isActive" value={String(!category.isActive)} />
-              <button type="submit">{category.isActive ? "停用" : "恢复"}</button>
-            </form>
+            <div className="admin-taxonomies__actions">
+              <form action={toggleTaxonomy}>
+                <input type="hidden" name="id" value={category.id} />
+                <input type="hidden" name="resource" value="category" />
+                <input type="hidden" name="isActive" value={String(!category.isActive)} />
+                <button type="submit">{category.isActive ? "停用" : "恢复"}</button>
+              </form>
+              <form action={deleteCategories}>
+                <input type="hidden" name="ids" value={category.id} />
+                <ConfirmDeleteButton noun="分类" />
+              </form>
+            </div>
           </div>
         ))}
       </section>
 
       <section className="admin-taxonomies__register" aria-labelledby="column-register-title">
         <h2 id="column-register-title">专栏登记</h2>
+        <AdminBatchToolbar
+          action={deleteColumns}
+          formId="admin-columns-batch-delete"
+          group="admin-columns"
+          itemCount={columns.length}
+          noun="专栏"
+        />
         {columns.map((column) => (
           <div key={column.id}>
+            <AdminBatchCheckbox
+              formId="admin-columns-batch-delete"
+              group="admin-columns"
+              id={column.id}
+              label={`选择专栏：${column.title}`}
+            />
             <span>{TYPE_LABELS[column.type]}</span>
             <strong>{column.title}</strong>
             <small>{column._count.posts} 篇</small>
@@ -140,12 +200,18 @@ export default async function AdminCategoriesPage() {
                 admin.displayName ??
                 admin.username}
             </small>
-            <form action={toggleTaxonomy}>
-              <input type="hidden" name="id" value={column.id} />
-              <input type="hidden" name="resource" value="column" />
-              <input type="hidden" name="isActive" value={String(!column.isActive)} />
-              <button type="submit">{column.isActive ? "停用" : "恢复"}</button>
-            </form>
+            <div className="admin-taxonomies__actions">
+              <form action={toggleTaxonomy}>
+                <input type="hidden" name="id" value={column.id} />
+                <input type="hidden" name="resource" value="column" />
+                <input type="hidden" name="isActive" value={String(!column.isActive)} />
+                <button type="submit">{column.isActive ? "停用" : "恢复"}</button>
+              </form>
+              <form action={deleteColumns}>
+                <input type="hidden" name="ids" value={column.id} />
+                <ConfirmDeleteButton noun="专栏" />
+              </form>
+            </div>
           </div>
         ))}
       </section>

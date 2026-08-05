@@ -1,7 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import { generateInviteCode } from "@/modules/auth/server/invite-code";
 import { revalidatePath } from "next/cache";
-import { invitationFormSchema, resourceIdSchema } from "@/modules/admin/admin.schemas";
+import {
+  invitationFormSchema,
+  parseResourceIds,
+  resourceIdSchema,
+} from "@/modules/admin/admin.schemas";
+import {
+  AdminBatchCheckbox,
+  AdminBatchToolbar,
+} from "@/modules/admin/components/admin-batch-toolbar";
+import { ConfirmDeleteButton } from "@/modules/admin/components/confirm-delete-button";
+import { deleteAdminInvitations } from "@/modules/admin/server/admin-delete-service";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
 
@@ -45,6 +55,13 @@ export default async function InvitationsPage() {
     revalidatePath("/admin/invitations");
   }
 
+  async function deleteInvitations(formData: FormData) {
+    "use server";
+    await requireAdmin();
+    await deleteAdminInvitations(parseResourceIds(formData));
+    revalidatePath("/admin/invitations");
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
       <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">邀请码管理</h1>
@@ -83,26 +100,45 @@ export default async function InvitationsPage() {
       </form>
 
       {/* 邀请码列表 */}
+      <AdminBatchToolbar
+        action={deleteInvitations}
+        formId="admin-invitations-batch-delete"
+        group="admin-invitations"
+        itemCount={invitations.length}
+        noun="邀请码"
+      />
       <div className="space-y-2">
         {invitations.map((inv) => (
           <div key={inv.id} className="card flex items-center justify-between flex-wrap gap-2">
-            <div>
+            <AdminBatchCheckbox
+              formId="admin-invitations-batch-delete"
+              group="admin-invitations"
+              id={inv.id}
+              label={`选择邀请码：${inv.code}`}
+            />
+            <div className="min-w-0 flex-1">
               <code className="text-sm font-mono">{inv.code}</code>
               <div className="text-xs text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
                 已用 {inv.usedCount}/{inv.maxUses} · 创建者 {inv.creator.username} · 过期{" "}
                 {inv.expiresAt?.toLocaleDateString("zh-CN") || "无"}
               </div>
             </div>
-            <form action={toggleInvitation}>
-              <input type="hidden" name="id" value={inv.id} />
-              <input type="hidden" name="isActive" value={String(inv.isActive)} />
-              <button
-                type="submit"
-                className={`text-xs px-3 py-1 rounded font-[family-name:var(--font-sans)] ${inv.isActive ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}
-              >
-                {inv.isActive ? "禁用" : "启用"}
-              </button>
-            </form>
+            <div className="flex items-center gap-2">
+              <form action={toggleInvitation}>
+                <input type="hidden" name="id" value={inv.id} />
+                <input type="hidden" name="isActive" value={String(inv.isActive)} />
+                <button
+                  type="submit"
+                  className={`text-xs px-3 py-1 rounded font-[family-name:var(--font-sans)] ${inv.isActive ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}
+                >
+                  {inv.isActive ? "禁用" : "启用"}
+                </button>
+              </form>
+              <form action={deleteInvitations}>
+                <input type="hidden" name="ids" value={inv.id} />
+                <ConfirmDeleteButton noun="邀请码" />
+              </form>
+            </div>
           </div>
         ))}
       </div>

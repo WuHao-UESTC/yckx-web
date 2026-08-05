@@ -356,7 +356,7 @@ export function PostEditor({
             <span>{kind === "NEWS" ? "新闻专栏" : "日常专栏"}</span>
             <select value={columnId} onChange={(event) => setColumnId(event.target.value)}>
               {kind === "NEWS" && <option value="">普通新闻，不加入专栏</option>}
-              {kind === "DAILY" && <option value="">选择日常专栏</option>}
+              {kind === "DAILY" && <option value="">不加入专栏，仅收录到日常文章</option>}
               {columns.map((column) => (
                 <option key={column.id} value={column.id}>
                   {column.title}

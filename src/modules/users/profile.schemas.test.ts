@@ -6,7 +6,6 @@ describe("profile schemas", () => {
     const result = profileFormSchema.parse({
       displayName: "",
       bio: "",
-      avatar: "",
       website: "",
       github: "",
       bilibili: "",
