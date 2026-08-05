@@ -405,9 +405,9 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
 
       <header className="competition-radar__heading">
         <div className="chapter-label">
-          <span>HYDROACOUSTIC STATION</span>
+          <span>300m</span>
           <i aria-hidden="true" />
-          <strong>竞赛信号</strong>
+          <strong>竞赛航线</strong>
         </div>
         <Trophy
           className="chapter-icon chapter-icon--gold"
@@ -415,15 +415,8 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
           strokeWidth={1.35}
           aria-hidden="true"
         />
-        <h2 id="competition-title">
-          <span>300M</span>
-          <i aria-hidden="true">—</i>
-          竞赛航线
-        </h2>
-        <p>
-          <strong>把未知拆成问题，把问题变成可以抵达的坐标。</strong>
-          <span>声纳捕获竞赛方向，星座航图记录经验、资料与成果。</span>
-        </p>
+        <h2 id="competition-title">把未知拆成问题，把问题变成可以抵达的坐标。</h2>
+        <p>声纳捕获竞赛方向，星座航图记录经验、资料与成果。</p>
       </header>
 
       <section
