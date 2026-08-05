@@ -3964,7 +3964,7 @@ code {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-rows: minmax(0, 40%) minmax(0, 34%) minmax(145px, 26%);
+  grid-template-rows: minmax(0, 44%) minmax(0, 31%) minmax(140px, 25%);
   width: min(100% - 120px, 1240px);
   height: 100%;
   min-height: 0;
@@ -4023,13 +4023,13 @@ code {
 
 .routine-whale {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   width: 100%;
-  aspect-ratio: 1200 / 520;
+  aspect-ratio: 2 / 1;
   align-self: center;
   overflow: hidden;
-  gap: 3px;
+  gap: 2px;
   background: rgba(203, 232, 230, 0.055);
   filter: drop-shadow(0 12px 22px rgba(232, 169, 106, 0.13));
   mask-image: url("/images/ocean/routine-whale-mask.svg");
@@ -7002,7 +7002,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 
 @media (max-width: 820px) {
   .routine-lights {
-    grid-template-rows: minmax(0, 36%) minmax(0, 38%) minmax(132px, 26%);
+    grid-template-rows: minmax(0, 41%) minmax(0, 35%) minmax(126px, 24%);
     width: calc(100% - 42px);
   }
 
@@ -7183,7 +7183,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 
 @media (max-width: 520px) {
   .routine-lights {
-    grid-template-rows: minmax(0, 35%) minmax(0, 39%) minmax(126px, 26%);
+    grid-template-rows: minmax(0, 40%) minmax(0, 36%) minmax(122px, 24%);
     width: calc(100% - 28px);
   }
 

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { ArrowUpRight, Camera, ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
 import type { HomeMember, HomeNote, HomePhoto } from "../home.types";
 
-const PHOTO_BATCH_SIZE = 12;
+const PHOTO_BATCH_SIZE = 24;
 const NOTE_BATCH_SIZE = 5;
 
 type FishStyle = CSSProperties & {
