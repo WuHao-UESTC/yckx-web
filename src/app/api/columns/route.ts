@@ -9,7 +9,10 @@ import { parseJson } from "@/server/http/validation";
 export async function GET() {
   const columns = await prisma.column.findMany({
     where: { isActive: true },
-    include: { _count: { select: { posts: true } } },
+    include: {
+      category: { select: { id: true, name: true, slug: true, type: true } },
+      _count: { select: { posts: true, technicalPosts: true } },
+    },
     orderBy: [{ type: "asc" }, { sortOrder: "asc" }],
   });
   return NextResponse.json(columns);

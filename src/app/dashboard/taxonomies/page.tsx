@@ -3,15 +3,17 @@ import { TaxonomyManager } from "@/modules/taxonomies/components/taxonomy-manage
 import { requireUser } from "@/server/auth/guards";
 
 export default async function DashboardTaxonomiesPage() {
-  await requireUser();
+  const user = await requireUser();
   const [categories, columns] = await Promise.all([
     prisma.category.findMany({
       where: { type: { in: ["KNOWLEDGE", "COMPETITION"] } },
       select: {
         id: true,
         name: true,
+        slug: true,
         type: true,
         isActive: true,
+        createdById: true,
         _count: { select: { posts: true } },
       },
       orderBy: [{ type: "asc" }, { sortOrder: "asc" }],
@@ -20,10 +22,13 @@ export default async function DashboardTaxonomiesPage() {
       select: {
         id: true,
         title: true,
+        slug: true,
         description: true,
         type: true,
+        categoryId: true,
         isActive: true,
-        _count: { select: { posts: true } },
+        createdById: true,
+        _count: { select: { posts: true, technicalPosts: true } },
       },
       orderBy: [{ type: "asc" }, { sortOrder: "asc" }],
     }),
@@ -38,8 +43,9 @@ export default async function DashboardTaxonomiesPage() {
       }))}
       columns={columns.map(({ _count, ...column }) => ({
         ...column,
-        postCount: _count.posts,
+        postCount: column.type === "TECHNICAL" ? _count.technicalPosts : _count.posts,
       }))}
+      currentUser={{ id: user.id, role: user.role }}
     />
   );
 }

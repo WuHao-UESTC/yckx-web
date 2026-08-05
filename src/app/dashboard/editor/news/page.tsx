@@ -6,7 +6,7 @@ export default async function NewNewsPostPage() {
   await requireUser();
   const columns = await prisma.column.findMany({
     where: { type: "NEWS", isActive: true },
-    select: { id: true, title: true, type: true, isActive: true },
+    select: { id: true, title: true, type: true, categoryId: true, isActive: true },
     orderBy: { sortOrder: "asc" },
   });
 

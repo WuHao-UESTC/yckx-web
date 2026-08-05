@@ -34,6 +34,7 @@ type ColumnOption = {
   id: string;
   title: string;
   type: string;
+  categoryId: string | null;
   isActive: boolean;
 };
 
@@ -53,6 +54,8 @@ export type EditorInitialPost = {
   kind: EditorPostKind;
   categoryId: string | null;
   columnId: string | null;
+  technicalColumnIds: string[];
+  renderStyle: "DEFAULT" | "TECHNICAL" | "PAPER";
   tags: string[];
   files: Attachment[];
 };
@@ -99,6 +102,12 @@ export function PostEditor({
   const [title, setTitle] = useState(initialPost?.title ?? "");
   const [categoryId, setCategoryId] = useState(initialPost?.categoryId ?? "");
   const [columnId, setColumnId] = useState(initialPost?.columnId ?? "");
+  const [technicalColumnIds, setTechnicalColumnIds] = useState<string[]>(
+    initialPost?.technicalColumnIds ?? []
+  );
+  const [renderStyle, setRenderStyle] = useState<"DEFAULT" | "TECHNICAL" | "PAPER">(
+    initialPost?.renderStyle ?? "DEFAULT"
+  );
   const [tags, setTags] = useState(initialPost?.tags.join(", ") ?? "");
   const [attachments, setAttachments] = useState<Attachment[]>(initialPost?.files ?? []);
   const [saving, setSaving] = useState(false);
@@ -205,6 +214,8 @@ export function PostEditor({
         content: markdown,
         categoryId: categoryId || null,
         columnId: columnId || null,
+        technicalColumnIds,
+        renderStyle,
         tags: tags
           .split(",")
           .map((tag) => tag.trim())
@@ -263,8 +274,10 @@ export function PostEditor({
       markdown,
       postSlug,
       ready,
+      renderStyle,
       router,
       tags,
+      technicalColumnIds,
       title,
     ]
   );
@@ -327,7 +340,13 @@ export function PostEditor({
         {kind === "TECHNICAL" && (
           <label>
             <span>文章分类</span>
-            <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+            <select
+              value={categoryId}
+              onChange={(event) => {
+                setCategoryId(event.target.value);
+                setTechnicalColumnIds([]);
+              }}
+            >
               <option value="">选择知识分类或竞赛类别</option>
               <optgroup label="知识库">
                 {categories
@@ -367,6 +386,20 @@ export function PostEditor({
         )}
 
         <label>
+          <span>渲染风格</span>
+          <select
+            value={renderStyle}
+            onChange={(event) =>
+              setRenderStyle(event.target.value as "DEFAULT" | "TECHNICAL" | "PAPER")
+            }
+          >
+            <option value="DEFAULT">默认阅读</option>
+            <option value="TECHNICAL">技术文档</option>
+            <option value="PAPER">论文阅读</option>
+          </select>
+        </label>
+
+        <label>
           <span>标签</span>
           <input
             type="text"
@@ -376,6 +409,36 @@ export function PostEditor({
           />
         </label>
       </div>
+
+      {kind === "TECHNICAL" && categoryId && (
+        <fieldset className="workspace-editor__technical-columns">
+          <legend>所属专栏（可多选）</legend>
+          <div>
+            {columns
+              .filter((column) => column.type === "TECHNICAL" && column.categoryId === categoryId)
+              .map((column) => (
+                <label key={column.id}>
+                  <input
+                    type="checkbox"
+                    checked={technicalColumnIds.includes(column.id)}
+                    onChange={(event) =>
+                      setTechnicalColumnIds((current) =>
+                        event.target.checked
+                          ? [...current, column.id]
+                          : current.filter((id) => id !== column.id)
+                      )
+                    }
+                  />
+                  <span>{column.title}</span>
+                  {!column.isActive && <small>已停用</small>}
+                </label>
+              ))}
+            {columns.filter(
+              (column) => column.type === "TECHNICAL" && column.categoryId === categoryId
+            ).length === 0 && <p>当前分类还没有专栏，可在“分类与专栏”中创建。</p>}
+          </div>
+        </fieldset>
+      )}
 
       <div className="workspace-editor__toolbar" aria-label="编辑工具">
         {toolButtons.map(({ label, icon: Icon, template }) => (

@@ -21,6 +21,8 @@ describe("post schemas", () => {
     expect(result.tags).toEqual(["标签"]);
     expect(result.kind).toBe("TECHNICAL");
     expect(result.attachmentIds).toEqual([]);
+    expect(result.technicalColumnIds).toEqual([]);
+    expect(result.renderStyle).toBe("DEFAULT");
   });
 
   it("rejects empty updates", () => {

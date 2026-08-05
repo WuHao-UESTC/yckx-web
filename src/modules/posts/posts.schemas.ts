@@ -6,9 +6,11 @@ const nullablePathSchema = z.union([z.string().trim().max(2048), z.null()]).opti
 
 const tagNameSchema = z.string().trim().min(1).max(40);
 const attachmentIdsSchema = z.array(z.string().trim().min(1).max(191)).max(20);
+const technicalColumnIdsSchema = z.array(z.string().trim().min(1).max(191)).max(20);
 
 export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
 export const postKindSchema = z.enum(["TECHNICAL", "NEWS", "DAILY"]);
+export const markdownStyleSchema = z.enum(["DEFAULT", "TECHNICAL", "PAPER"]);
 
 export const postListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -29,6 +31,8 @@ export const createPostSchema = z.object({
   columnId: nullableReferenceSchema,
   kind: postKindSchema.default("TECHNICAL"),
   attachmentIds: attachmentIdsSchema.default([]),
+  technicalColumnIds: technicalColumnIdsSchema.default([]),
+  renderStyle: markdownStyleSchema.default("DEFAULT"),
 });
 
 export const updatePostSchema = z
@@ -41,6 +45,8 @@ export const updatePostSchema = z
     columnId: nullableReferenceSchema,
     kind: postKindSchema.optional(),
     attachmentIds: attachmentIdsSchema.optional(),
+    technicalColumnIds: technicalColumnIdsSchema.optional(),
+    renderStyle: markdownStyleSchema.optional(),
     status: postStatusSchema.optional(),
   })
   .refine((value) => Object.values(value).some((item) => item !== undefined), {

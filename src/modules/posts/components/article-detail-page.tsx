@@ -96,6 +96,12 @@ const ARTICLE_PRESENTATION: Record<
   },
 };
 
+const MARKDOWN_STYLE_LABEL = {
+  DEFAULT: "默认阅读",
+  TECHNICAL: "技术文档",
+  PAPER: "论文阅读",
+} as const;
+
 export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: ArticleKind }) {
   const post = await findPublishedArticle(slug, kind);
   if (!post) notFound();
@@ -132,6 +138,7 @@ export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: Ar
           <header className="article-reading-sheet__header">
             <span>{presentation.recordLabel}</span>
             <small>YCKX / {post.slug}</small>
+            <small>{MARKDOWN_STYLE_LABEL[post.renderStyle]}</small>
             {post.tags.length > 0 && (
               <div className="article-reading-sheet__tags">
                 {post.tags.map(({ tag }) => (
@@ -150,7 +157,22 @@ export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: Ar
           )}
 
           <MobileTOC content={post.content} />
-          <MarkdownRenderer content={post.content} />
+          <MarkdownRenderer content={post.content} style={post.renderStyle} />
+
+          {post.technicalColumns.length > 0 && post.category && (
+            <nav className="article-technical-columns" aria-label="所属专栏">
+              <span>所属专栏</span>
+              {post.technicalColumns.map(({ column }) => {
+                const root =
+                  post.category?.type === "COMPETITION" ? "/competition" : "/knowledge-base";
+                return (
+                  <a key={column.id} href={`${root}/${post.category?.slug}/columns/${column.slug}`}>
+                    {column.title}
+                  </a>
+                );
+              })}
+            </nav>
+          )}
 
           {options.showAttachments && post.files.length > 0 && (
             <section className="article-attachments" aria-labelledby="article-attachments-title">

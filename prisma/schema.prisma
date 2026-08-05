@@ -72,20 +72,21 @@ model Profile {
 
 // ========== 分类 ==========
 model Category {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  slug        String       @unique
-  type        CategoryType
-  parentId    String?
-  parent      Category?    @relation("CategoryTree", fields: [parentId], references: [id])
-  children    Category[]   @relation("CategoryTree")
-  posts       Post[]
-  createdById String?
-  creator     User?        @relation("CategoryCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  isActive    Boolean      @default(true)
-  sortOrder   Int          @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id               String       @id @default(cuid())
+  name             String       @unique
+  slug             String       @unique
+  type             CategoryType
+  parentId         String?
+  parent           Category?    @relation("CategoryTree", fields: [parentId], references: [id])
+  children         Category[]   @relation("CategoryTree")
+  posts            Post[]
+  technicalColumns Column[]     @relation("TechnicalColumnCategory")
+  createdById      String?
+  creator          User?        @relation("CategoryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  isActive         Boolean      @default(true)
+  sortOrder        Int          @default(0)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   @@index([type, isActive, sortOrder])
   @@map("categories")
@@ -115,54 +116,61 @@ model Milestone {
 
 // ========== 专栏 ==========
 model Column {
-  id          String     @id @default(cuid())
-  title       String
-  slug        String     @unique
-  description String?
-  coverImage  String?
-  type        ColumnType @default(NEWS)
-  posts       Post[]
-  createdById String?
-  creator     User?      @relation("ColumnCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  isActive    Boolean    @default(true)
-  sortOrder   Int        @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id             String                @id @default(cuid())
+  title          String
+  slug           String                @unique
+  description    String?
+  coverImage     String?
+  type           ColumnType            @default(NEWS)
+  posts          Post[]
+  categoryId     String?
+  category       Category?             @relation("TechnicalColumnCategory", fields: [categoryId], references: [id], onDelete: Cascade)
+  technicalPosts PostTechnicalColumn[]
+  createdById    String?
+  creator        User?                 @relation("ColumnCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  isActive       Boolean               @default(true)
+  sortOrder      Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
 
   @@index([type, isActive, sortOrder])
+  @@index([categoryId, isActive, sortOrder])
   @@map("columns")
 }
 
 enum ColumnType {
   NEWS
   DAILY
+  TECHNICAL
 }
 
 // ========== 文章 ==========
 model Post {
-  id          String     @id @default(cuid())
-  title       String
-  slug        String     @unique
-  content     String     @db.Text
-  excerpt     String?
-  coverImage  String?
-  status      PostStatus @default(DRAFT)
-  kind        PostKind   @default(TECHNICAL)
-  authorId    String
-  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  categoryId  String?
-  category    Category?  @relation(fields: [categoryId], references: [id])
-  columnId    String?
-  column      Column?    @relation(fields: [columnId], references: [id])
-  tags        PostTag[]
-  files       File[]
-  comments    Comment[]
-  viewCount   Int        @default(0)
-  isPinned    Boolean    @default(false)
-  isFeatured  Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  publishedAt DateTime?
+  id               String                @id @default(cuid())
+  title            String
+  slug             String                @unique
+  content          String                @db.Text
+  excerpt          String?
+  coverImage       String?
+  status           PostStatus            @default(DRAFT)
+  kind             PostKind              @default(TECHNICAL)
+  authorId         String
+  author           User                  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categoryId       String?
+  category         Category?             @relation(fields: [categoryId], references: [id])
+  columnId         String?
+  column           Column?               @relation(fields: [columnId], references: [id])
+  technicalColumns PostTechnicalColumn[]
+  renderStyle      MarkdownStyle         @default(DEFAULT)
+  tags             PostTag[]
+  files            File[]
+  comments         Comment[]
+  viewCount        Int                   @default(0)
+  isPinned         Boolean               @default(false)
+  isFeatured       Boolean               @default(false)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  publishedAt      DateTime?
 
   @@index([authorId])
   @@index([categoryId])
@@ -184,6 +192,24 @@ enum PostKind {
   TECHNICAL
   NEWS
   DAILY
+}
+
+enum MarkdownStyle {
+  DEFAULT
+  TECHNICAL
+  PAPER
+}
+
+model PostTechnicalColumn {
+  postId    String
+  columnId  String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  column    Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([postId, columnId])
+  @@index([columnId, createdAt])
+  @@map("post_technical_columns")
 }
 
 // ========== 标签 ==========

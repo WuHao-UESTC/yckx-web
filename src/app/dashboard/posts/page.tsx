@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DeleteButton } from "./delete-btn";
 import { requireUser } from "@/server/auth/guards";
 import { postUrl } from "@/lib/post-url";
+import { PostColumnManager } from "@/modules/posts/components/post-column-manager";
 
 export default async function MyPostsPage({
   searchParams,
@@ -28,15 +29,26 @@ export default async function MyPostsPage({
       ? (kind as "TECHNICAL" | "NEWS" | "DAILY")
       : undefined;
 
-  const posts = await prisma.post.findMany({
-    where: {
-      authorId: userId,
-      ...(statusFilter ? { status: statusFilter } : {}),
-      ...(kindFilter ? { kind: kindFilter } : {}),
-    },
-    include: { category: true, column: true },
-    orderBy,
-  });
+  const [posts, technicalColumns] = await Promise.all([
+    prisma.post.findMany({
+      where: {
+        authorId: userId,
+        ...(statusFilter ? { status: statusFilter } : {}),
+        ...(kindFilter ? { kind: kindFilter } : {}),
+      },
+      include: {
+        category: true,
+        column: true,
+        technicalColumns: { select: { columnId: true } },
+      },
+      orderBy,
+    }),
+    prisma.column.findMany({
+      where: { type: "TECHNICAL" },
+      select: { id: true, title: true, categoryId: true, isActive: true },
+      orderBy: [{ categoryId: "asc" }, { sortOrder: "asc" }],
+    }),
+  ]);
 
   // 计算字数
   function wordCount(content: string) {
@@ -151,6 +163,14 @@ export default async function MyPostsPage({
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {post.kind === "TECHNICAL" && (
+                  <PostColumnManager
+                    slug={post.slug}
+                    categoryId={post.categoryId}
+                    selectedIds={post.technicalColumns.map(({ columnId }) => columnId)}
+                    columns={technicalColumns}
+                  />
+                )}
                 {post.status === "PUBLISHED" && (
                   <Link
                     href={postUrl(post)}

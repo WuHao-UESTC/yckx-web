@@ -9,14 +9,20 @@ export type PostClassification = {
   kind: PostKind;
   categoryId: string | null;
   columnId: string | null;
+  technicalColumnIds?: string[];
 };
 
 export async function assertValidPostClassification(
   client: ClassificationClient,
   classification: PostClassification,
-  previous?: { categoryId: string | null; columnId: string | null }
-): Promise<void> {
-  const [category, column] = await Promise.all([
+  previous?: {
+    categoryId: string | null;
+    columnId: string | null;
+    technicalColumnIds?: string[];
+  }
+): Promise<string[]> {
+  const technicalColumnIds = [...new Set(classification.technicalColumnIds ?? [])];
+  const [category, column, technicalColumns] = await Promise.all([
     classification.categoryId
       ? client.category.findUnique({
           where: { id: classification.categoryId },
@@ -29,6 +35,18 @@ export async function assertValidPostClassification(
           select: { id: true, title: true, type: true, isActive: true },
         })
       : null,
+    technicalColumnIds.length > 0
+      ? client.column.findMany({
+          where: { id: { in: technicalColumnIds } },
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            categoryId: true,
+            isActive: true,
+          },
+        })
+      : [],
   ]);
 
   if (classification.categoryId && !category) throw new BadRequestError("所选分类不存在");
@@ -45,8 +63,33 @@ export async function assertValidPostClassification(
       throw new BadRequestError("技术文章必须选择知识分类或竞赛类别");
     }
     if (column) throw new BadRequestError("技术文章不能加入新闻或日常专栏");
-    return;
+    if (technicalColumns.length !== technicalColumnIds.length) {
+      throw new BadRequestError("部分技术专栏不存在");
+    }
+
+    const validIds: string[] = [];
+    for (const technicalColumn of technicalColumns) {
+      if (technicalColumn.type !== "TECHNICAL") {
+        throw new BadRequestError(`“${technicalColumn.title}”不是技术专栏`);
+      }
+      if (technicalColumn.categoryId !== category.id) {
+        const isPreviousRelation = previous?.technicalColumnIds?.includes(technicalColumn.id);
+        const didChangeCategory = previous?.categoryId !== classification.categoryId;
+        if (isPreviousRelation && didChangeCategory) continue;
+        throw new BadRequestError(`专栏“${technicalColumn.title}”不属于当前文章分类`);
+      }
+      if (
+        !technicalColumn.isActive &&
+        !previous?.technicalColumnIds?.includes(technicalColumn.id)
+      ) {
+        throw new BadRequestError(`专栏“${technicalColumn.title}”已停用`);
+      }
+      validIds.push(technicalColumn.id);
+    }
+    return validIds;
   }
+
+  if (technicalColumnIds.length > 0) throw new BadRequestError("只有技术文章可以加入技术专栏");
 
   if (classification.kind === "NEWS") {
     if (category && !["NEWS", "EVENT", "COLUMN"].includes(category.type)) {
@@ -55,7 +98,7 @@ export async function assertValidPostClassification(
     if (column?.type !== undefined && column.type !== "NEWS") {
       throw new BadRequestError("新闻只能加入新闻专栏");
     }
-    return;
+    return [];
   }
 
   if (category && category.type !== "ROUTINE") {
@@ -64,4 +107,5 @@ export async function assertValidPostClassification(
   if (column && column.type !== "DAILY") {
     throw new BadRequestError("日常文章只能加入日常专栏");
   }
+  return [];
 }

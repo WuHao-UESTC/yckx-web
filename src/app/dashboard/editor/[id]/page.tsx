@@ -18,6 +18,8 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
       authorId: true,
       categoryId: true,
       columnId: true,
+      renderStyle: true,
+      technicalColumns: { select: { columnId: true } },
       tags: { select: { tag: { select: { name: true } } } },
       files: {
         orderBy: { sortOrder: "asc" },
@@ -39,11 +41,17 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
     }),
     prisma.column.findMany({
       where: {
-        type: post.kind === "DAILY" ? "DAILY" : "NEWS",
-        OR: [{ isActive: true }, ...(post.columnId ? [{ id: post.columnId }] : [])],
+        type: post.kind === "TECHNICAL" ? "TECHNICAL" : post.kind === "DAILY" ? "DAILY" : "NEWS",
+        OR: [
+          { isActive: true },
+          ...(post.columnId ? [{ id: post.columnId }] : []),
+          ...(post.kind === "TECHNICAL" && post.technicalColumns.length > 0
+            ? [{ id: { in: post.technicalColumns.map(({ columnId }) => columnId) } }]
+            : []),
+        ],
       },
-      select: { id: true, title: true, type: true, isActive: true },
-      orderBy: { sortOrder: "asc" },
+      select: { id: true, title: true, type: true, categoryId: true, isActive: true },
+      orderBy: [{ categoryId: "asc" }, { sortOrder: "asc" }],
     }),
   ]);
 
@@ -56,6 +64,8 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
     kind: post.kind,
     categoryId: post.categoryId,
     columnId: post.columnId,
+    technicalColumnIds: post.technicalColumns.map(({ columnId }) => columnId),
+    renderStyle: post.renderStyle,
     tags: post.tags.map(({ tag }) => tag.name),
     files: post.files,
   };

@@ -81,7 +81,12 @@ export async function createPost(input: CreatePostInput, authorId: string) {
   return prisma.$transaction(async (tx) => {
     const categoryId = input.categoryId || null;
     const columnId = input.columnId || null;
-    await assertValidPostClassification(tx, { kind: input.kind, categoryId, columnId });
+    const technicalColumnIds = await assertValidPostClassification(tx, {
+      kind: input.kind,
+      categoryId,
+      columnId,
+      technicalColumnIds: input.technicalColumnIds,
+    });
     const slug = await createUniqueSlug(tx, input.title);
 
     const post = await tx.post.create({
@@ -93,12 +98,22 @@ export async function createPost(input: CreatePostInput, authorId: string) {
         coverImage: input.coverImage || null,
         categoryId,
         columnId,
+        renderStyle: input.renderStyle,
         kind: input.kind,
         authorId,
         tags: createTagRelations(input.tags),
       },
       select: { id: true },
     });
+
+    if (technicalColumnIds.length > 0) {
+      await tx.postTechnicalColumn.createMany({
+        data: technicalColumnIds.map((technicalColumnId) => ({
+          postId: post.id,
+          columnId: technicalColumnId,
+        })),
+      });
+    }
 
     await syncPostAttachments(tx, post.id, input.attachmentIds, authorId);
     return tx.post.findUniqueOrThrow({ where: { id: post.id }, select: postApiSelect });
@@ -119,6 +134,7 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
         kind: true,
         categoryId: true,
         columnId: true,
+        technicalColumns: { select: { columnId: true } },
       },
     });
 
@@ -129,10 +145,13 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
       kind: input.kind ?? post.kind,
       categoryId: input.categoryId === undefined ? post.categoryId : input.categoryId,
       columnId: input.columnId === undefined ? post.columnId : input.columnId,
+      technicalColumnIds:
+        input.technicalColumnIds ?? post.technicalColumns.map(({ columnId }) => columnId),
     };
-    await assertValidPostClassification(tx, classification, {
+    const technicalColumnIds = await assertValidPostClassification(tx, classification, {
       categoryId: post.categoryId,
       columnId: post.columnId,
+      technicalColumnIds: post.technicalColumns.map(({ columnId }) => columnId),
     });
 
     const nextStatus = input.status ?? post.status;
@@ -158,6 +177,7 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
     }
     if (input.coverImage !== undefined) data.coverImage = input.coverImage || null;
     if (input.kind !== undefined) data.kind = input.kind;
+    if (input.renderStyle !== undefined) data.renderStyle = input.renderStyle;
     if (input.status !== undefined) {
       data.status = input.status;
       if (input.status === "PUBLISHED" && !post.publishedAt) data.publishedAt = new Date();
@@ -171,6 +191,15 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
 
     if (Object.keys(data).length > 0) {
       await tx.post.update({ where: { id: post.id }, data });
+    }
+    await tx.postTechnicalColumn.deleteMany({ where: { postId: post.id } });
+    if (technicalColumnIds.length > 0) {
+      await tx.postTechnicalColumn.createMany({
+        data: technicalColumnIds.map((technicalColumnId) => ({
+          postId: post.id,
+          columnId: technicalColumnId,
+        })),
+      });
     }
     if (input.attachmentIds !== undefined) {
       await syncPostAttachments(tx, post.id, input.attachmentIds, user.id);

@@ -16,6 +16,7 @@ import { deleteAdminPosts } from "@/modules/admin/server/admin-delete-service";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
 import { updatePost } from "@/modules/posts/server/post-service";
+import { PostColumnManager } from "@/modules/posts/components/post-column-manager";
 
 export default async function AdminPostsPage({
   searchParams,
@@ -31,19 +32,25 @@ export default async function AdminPostsPage({
     ? { OR: [{ title: { contains: q } }, { content: { contains: q } }] }
     : {};
 
-  const [posts, total] = await Promise.all([
+  const [posts, total, technicalColumns] = await Promise.all([
     prisma.post.findMany({
       where,
       include: {
         author: { select: { displayName: true, username: true } },
         category: true,
         column: true,
+        technicalColumns: { select: { columnId: true } },
       },
       orderBy: { updatedAt: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
     }),
     prisma.post.count({ where }),
+    prisma.column.findMany({
+      where: { type: "TECHNICAL" },
+      select: { id: true, title: true, categoryId: true, isActive: true },
+      orderBy: [{ categoryId: "asc" }, { sortOrder: "asc" }],
+    }),
   ]);
 
   async function togglePin(formData: FormData) {
@@ -166,6 +173,14 @@ export default async function AdminPostsPage({
               </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
+              {post.kind === "TECHNICAL" && (
+                <PostColumnManager
+                  slug={post.slug}
+                  categoryId={post.categoryId}
+                  selectedIds={post.technicalColumns.map(({ columnId }) => columnId)}
+                  columns={technicalColumns}
+                />
+              )}
               {/* 置顶 */}
               <form action={togglePin}>
                 <input type="hidden" name="id" value={post.id} />

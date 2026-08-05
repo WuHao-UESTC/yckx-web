@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import type { MarkdownStyle } from "@/generated/prisma/client";
 import "katex/dist/katex.min.css";
 import { CodeBlock } from "./code-block";
 import { ImageLightbox } from "./image-lightbox";
@@ -9,6 +10,7 @@ import { slugify } from "@/lib/slugify";
 
 interface Props {
   content: string;
+  style?: MarkdownStyle;
 }
 
 /** 从 children 中提取纯文本，用于生成标题 id */
@@ -26,9 +28,13 @@ function headingId(children: React.ReactNode, level: number): string {
   return `h${level}-${slugify(text)}`;
 }
 
-export function MarkdownRenderer({ content }: Props) {
+export function MarkdownRenderer({ content, style = "DEFAULT" }: Props) {
   return (
-    <div className="prose max-w-none" id="article-content">
+    <div
+      className="prose markdown-body max-w-none"
+      id="article-content"
+      data-markdown-style={style.toLowerCase()}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: true }]]}
         rehypePlugins={[[rehypeKatex, { strict: false, output: "html" }]]}
@@ -53,6 +59,16 @@ export function MarkdownRenderer({ content }: Props) {
               {children}
             </h4>
           ),
+          h5: ({ children, ...props }) => (
+            <h5 id={headingId(children, 5)} {...props}>
+              {children}
+            </h5>
+          ),
+          h6: ({ children, ...props }) => (
+            <h6 id={headingId(children, 6)} {...props}>
+              {children}
+            </h6>
+          ),
           pre: ({ children }) => <>{children}</>,
           code: ({ className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || "");
@@ -61,10 +77,7 @@ export function MarkdownRenderer({ content }: Props) {
 
             if (!className) {
               return (
-                <code
-                  className="bg-[#f5f0e8] px-1.5 py-0.5 rounded text-[0.88em] text-[#8b5e3c]"
-                  {...props}
-                >
+                <code className="markdown-inline-code" {...props}>
                   {children}
                 </code>
               );
@@ -86,7 +99,7 @@ export function MarkdownRenderer({ content }: Props) {
             );
           },
           table: ({ children }) => (
-            <div className="overflow-x-auto">
+            <div className="markdown-table-scroll">
               <table>{children}</table>
             </div>
           ),

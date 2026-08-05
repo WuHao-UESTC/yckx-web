@@ -9,13 +9,24 @@ type ClassificationClient = Parameters<typeof assertValidPostClassification>[0];
 function createClient({
   category = null,
   column = null,
+  technicalColumns = [],
 }: {
   category?: { id: string; name: string; type: string; isActive: boolean } | null;
   column?: { id: string; title: string; type: string; isActive: boolean } | null;
+  technicalColumns?: Array<{
+    id: string;
+    title: string;
+    type: string;
+    categoryId: string | null;
+    isActive: boolean;
+  }>;
 }): ClassificationClient {
   return {
     category: { findUnique: vi.fn().mockResolvedValue(category) },
-    column: { findUnique: vi.fn().mockResolvedValue(column) },
+    column: {
+      findUnique: vi.fn().mockResolvedValue(column),
+      findMany: vi.fn().mockResolvedValue(technicalColumns),
+    },
   } as unknown as ClassificationClient;
 }
 
@@ -31,7 +42,7 @@ describe("post classification", () => {
         categoryId: "knowledge",
         columnId: null,
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual([]);
   });
 
   it("accepts ordinary news and legacy column categories", async () => {
@@ -41,7 +52,7 @@ describe("post classification", () => {
         categoryId: null,
         columnId: null,
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual([]);
 
     const legacyClient = createClient({
       category: { id: "legacy", name: "Legacy", type: "COLUMN", isActive: true },
@@ -52,7 +63,7 @@ describe("post classification", () => {
         categoryId: "legacy",
         columnId: null,
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual([]);
   });
 
   it("allows standalone daily posts and validates optional daily columns", async () => {
@@ -62,7 +73,7 @@ describe("post classification", () => {
         categoryId: null,
         columnId: null,
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual([]);
 
     const client = createClient({
       column: { id: "daily", title: "Daily", type: "DAILY", isActive: true },
@@ -73,7 +84,7 @@ describe("post classification", () => {
         categoryId: null,
         columnId: "daily",
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual([]);
 
     const newsColumnClient = createClient({
       column: { id: "news", title: "News", type: "NEWS", isActive: true },
@@ -106,6 +117,69 @@ describe("post classification", () => {
         categoryId: "disabled",
         columnId: null,
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual([]);
+  });
+
+  it("accepts multiple technical columns from the selected category", async () => {
+    const client = createClient({
+      category: { id: "competition", name: "Competition", type: "COMPETITION", isActive: true },
+      technicalColumns: [
+        {
+          id: "guide",
+          title: "Guide",
+          type: "TECHNICAL",
+          categoryId: "competition",
+          isActive: true,
+        },
+        {
+          id: "review",
+          title: "Review",
+          type: "TECHNICAL",
+          categoryId: "competition",
+          isActive: true,
+        },
+      ],
+    });
+
+    await expect(
+      assertValidPostClassification(client, {
+        kind: "TECHNICAL",
+        categoryId: "competition",
+        columnId: null,
+        technicalColumnIds: ["guide", "review"],
+      })
+    ).resolves.toEqual(["guide", "review"]);
+  });
+
+  it("removes old technical columns when the article changes category", async () => {
+    const client = createClient({
+      category: { id: "knowledge", name: "Knowledge", type: "KNOWLEDGE", isActive: true },
+      technicalColumns: [
+        {
+          id: "old-column",
+          title: "Old",
+          type: "TECHNICAL",
+          categoryId: "competition",
+          isActive: true,
+        },
+      ],
+    });
+
+    await expect(
+      assertValidPostClassification(
+        client,
+        {
+          kind: "TECHNICAL",
+          categoryId: "knowledge",
+          columnId: null,
+          technicalColumnIds: ["old-column"],
+        },
+        {
+          categoryId: "competition",
+          columnId: null,
+          technicalColumnIds: ["old-column"],
+        }
+      )
+    ).resolves.toEqual([]);
   });
 });

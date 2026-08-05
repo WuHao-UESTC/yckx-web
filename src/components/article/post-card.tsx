@@ -3,8 +3,11 @@ import { ArrowUpRight } from "lucide-react";
 import type { Category, Column, Post, Tag, User } from "@/generated/prisma/client";
 import { postUrl } from "@/lib/post-url";
 
-/** 文章卡片最小所需字段 */
-export type PostCardData = Post & {
+/** 文章列表只读取展示与路由所需字段，避免加载完整 Markdown 正文。 */
+export type PostCardData = Pick<
+  Post,
+  "id" | "title" | "slug" | "excerpt" | "publishedAt" | "createdAt" | "kind"
+> & {
   author: Pick<User, "id" | "username" | "displayName"> & Partial<Pick<User, "avatar">>;
   category?: Pick<Category, "id" | "name" | "slug" | "type"> | null;
   column?: Pick<Column, "id" | "title" | "slug" | "type"> | null;

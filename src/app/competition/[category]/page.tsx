@@ -1,45 +1,49 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DomainIndexItem } from "@/components/interior/domain-index-item";
 import { PostCard } from "@/components/article/post-card";
 import {
   InteriorEmpty,
   InteriorPage,
   InteriorSectionHeading,
 } from "@/components/interior/interior-page";
-import { POSTS_PER_PAGE } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
+import { PublicPostToolbar } from "@/modules/posts/components/public-post-toolbar";
+import {
+  findPublicPostPage,
+  parsePublicPostQuery,
+  publicPostListHref,
+} from "@/modules/posts/server/public-post-list";
 
 interface Props {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ q?: string; sort?: string; page?: string }>;
 }
 
 export default async function CompetitionCategoryPage({ params, searchParams }: Props) {
   const { category: slug } = await params;
-  const { page: pageStr } = await searchParams;
-  const page = Math.max(1, Number(pageStr) || 1);
-
+  const query = parsePublicPostQuery(await searchParams);
   const category = await prisma.category.findUnique({ where: { slug, type: "COMPETITION" } });
   if (!category) notFound();
 
-  const [posts, total] = await Promise.all([
-    prisma.post.findMany({
-      where: { categoryId: category.id, status: "PUBLISHED", kind: "TECHNICAL" },
+  const [columns, articlePage] = await Promise.all([
+    prisma.column.findMany({
+      where: { type: "TECHNICAL", categoryId: category.id, isActive: true },
       include: {
-        author: { select: { id: true, username: true, displayName: true } },
-        tags: { include: { tag: true } },
+        _count: {
+          select: { technicalPosts: { where: { post: { status: "PUBLISHED" } } } },
+        },
       },
-      orderBy: { publishedAt: "desc" },
-      skip: (page - 1) * POSTS_PER_PAGE,
-      take: POSTS_PER_PAGE,
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
-    prisma.post.count({
-      where: { categoryId: category.id, status: "PUBLISHED", kind: "TECHNICAL" },
+    findPublicPostPage({
+      scope: { categoryId: category.id, kind: "TECHNICAL" },
+      ...query,
     }),
   ]);
-
   const copy = HOME_CHAPTER_COPY.competition;
+  const pathname = `/competition/${slug}`;
 
   return (
     <InteriorPage
@@ -50,26 +54,54 @@ export default async function CompetitionCategoryPage({ params, searchParams }: 
       description={copy.title}
       contentWidth="reading"
     >
-      <InteriorSectionHeading title="已捕获信号" meta={`共 ${total} 篇 · 第 ${page} 页`} />
-      {posts.length === 0 ? (
-        <InteriorEmpty>这条航线还没有公开记录。</InteriorEmpty>
+      {columns.length > 0 && (
+        <section className="technical-column-directory">
+          <InteriorSectionHeading title="专栏" meta={`${columns.length} 个专题入口`} />
+          <div className="domain-index domain-index--columns">
+            {columns.map((column, index) => (
+              <DomainIndexItem
+                key={column.id}
+                href={`${pathname}/columns/${column.slug}`}
+                index={index}
+                title={column.title}
+                description={column.description}
+                count={column._count.technicalPosts}
+                countLabel="篇文章"
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <InteriorSectionHeading title="文章列表" meta={`共 ${articlePage.total} 篇文章`} />
+      <PublicPostToolbar query={query.q} sort={query.sort} placeholder="搜索当前竞赛分类" />
+      {articlePage.posts.length === 0 ? (
+        <InteriorEmpty>
+          {query.q ? `没有找到“${query.q}”相关的文章。` : "这个分类还没有公开文章。"}
+        </InteriorEmpty>
       ) : (
         <div className="post-signal-list">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+          {articlePage.posts.map((post) => (
+            <PostCard key={post.id} post={post} showTags />
           ))}
         </div>
       )}
 
-      {total > POSTS_PER_PAGE && (
+      {articlePage.totalPages > 1 && (
         <nav className="interior-pager" aria-label="竞赛文章分页">
-          {page > 1 && (
-            <Link href={`/competition/${slug}?page=${page - 1}`} className="btn-primary">
+          {query.page > 1 && (
+            <Link
+              href={publicPostListHref(pathname, { ...query, page: query.page - 1 })}
+              className="btn-primary"
+            >
               上一页
             </Link>
           )}
-          {page * POSTS_PER_PAGE < total && (
-            <Link href={`/competition/${slug}?page=${page + 1}`} className="btn-primary">
+          {query.page < articlePage.totalPages && (
+            <Link
+              href={publicPostListHref(pathname, { ...query, page: query.page + 1 })}
+              className="btn-primary"
+            >
               下一页
             </Link>
           )}

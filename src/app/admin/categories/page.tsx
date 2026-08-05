@@ -10,8 +10,15 @@ import { deleteAdminTaxonomies } from "@/modules/admin/server/admin-delete-servi
 import {
   createMemberCategory,
   createMemberColumn,
+  renameMemberCategory,
+  renameMemberColumn,
 } from "@/modules/taxonomies/server/taxonomy-service";
-import { createCategorySchema, createColumnSchema } from "@/modules/taxonomies/taxonomy.schemas";
+import {
+  createCategorySchema,
+  createColumnSchema,
+  renameCategoryFormSchema,
+  renameColumnFormSchema,
+} from "@/modules/taxonomies/taxonomy.schemas";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
 
@@ -20,6 +27,7 @@ const TYPE_LABELS: Record<string, string> = {
   COMPETITION: "竞赛类别",
   NEWS: "新闻专栏",
   DAILY: "日常专栏",
+  TECHNICAL: "技术专栏",
   EVENT: "旧事件分类",
   ROUTINE: "旧日常分类",
   COLUMN: "旧专栏分类",
@@ -38,7 +46,8 @@ export default async function AdminCategoriesPage() {
     prisma.column.findMany({
       include: {
         creator: { select: { username: true, displayName: true } },
-        _count: { select: { posts: true } },
+        category: { select: { name: true } },
+        _count: { select: { posts: true, technicalPosts: true } },
       },
       orderBy: [{ type: "asc" }, { sortOrder: "asc" }],
     }),
@@ -71,6 +80,30 @@ export default async function AdminCategoriesPage() {
     } else {
       await prisma.column.update({ where: { id: input.id }, data: { isActive: input.isActive } });
     }
+    revalidatePath("/admin/categories");
+    revalidatePath("/dashboard/taxonomies");
+    revalidatePath("/knowledge-base");
+    revalidatePath("/competition");
+    revalidatePath("/archive");
+    revalidatePath("/routine");
+  }
+
+  async function renameCategory(formData: FormData) {
+    "use server";
+    const user = await requireAdmin();
+    const input = parseFormData(formData, renameCategoryFormSchema);
+    await renameMemberCategory(input.slug, { name: input.name }, user);
+    revalidatePath("/admin/categories");
+    revalidatePath("/dashboard/taxonomies");
+    revalidatePath("/knowledge-base");
+    revalidatePath("/competition");
+  }
+
+  async function renameColumn(formData: FormData) {
+    "use server";
+    const user = await requireAdmin();
+    const input = parseFormData(formData, renameColumnFormSchema);
+    await renameMemberColumn(input.slug, { title: input.title }, user);
     revalidatePath("/admin/categories");
     revalidatePath("/dashboard/taxonomies");
     revalidatePath("/knowledge-base");
@@ -133,6 +166,24 @@ export default async function AdminCategoriesPage() {
             创建
           </button>
         </form>
+        <form action={createColumn}>
+          <strong>新建技术专栏</strong>
+          <input name="title" required maxLength={100} placeholder="专栏标题" />
+          <input name="description" maxLength={300} placeholder="专栏说明，可选" />
+          <input type="hidden" name="type" value="TECHNICAL" />
+          <select name="categoryId" required>
+            {categories
+              .filter((category) => ["KNOWLEDGE", "COMPETITION"].includes(category.type))
+              .map((category) => (
+                <option key={category.id} value={category.id}>
+                  {TYPE_LABELS[category.type]} · {category.name}
+                </option>
+              ))}
+          </select>
+          <button type="submit" className="btn-primary">
+            创建
+          </button>
+        </form>
       </div>
 
       <section className="admin-taxonomies__register" aria-labelledby="category-register-title">
@@ -159,6 +210,11 @@ export default async function AdminCategoriesPage() {
               {category.creator?.displayName ?? category.creator?.username ?? "系统记录"}
             </small>
             <div className="admin-taxonomies__actions">
+              <form action={renameCategory} className="admin-taxonomies__rename">
+                <input type="hidden" name="slug" value={category.slug} />
+                <input name="name" defaultValue={category.name} required maxLength={80} />
+                <button type="submit">改名</button>
+              </form>
               <form action={toggleTaxonomy}>
                 <input type="hidden" name="id" value={category.id} />
                 <input type="hidden" name="resource" value="category" />
@@ -193,7 +249,10 @@ export default async function AdminCategoriesPage() {
             />
             <span>{TYPE_LABELS[column.type]}</span>
             <strong>{column.title}</strong>
-            <small>{column._count.posts} 篇</small>
+            <small>
+              {column.type === "TECHNICAL" ? column._count.technicalPosts : column._count.posts} 篇
+            </small>
+            {column.category && <small>{column.category.name}</small>}
             <small>
               {column.creator?.displayName ??
                 column.creator?.username ??
@@ -201,6 +260,11 @@ export default async function AdminCategoriesPage() {
                 admin.username}
             </small>
             <div className="admin-taxonomies__actions">
+              <form action={renameColumn} className="admin-taxonomies__rename">
+                <input type="hidden" name="slug" value={column.slug} />
+                <input name="title" defaultValue={column.title} required maxLength={100} />
+                <button type="submit">改名</button>
+              </form>
               <form action={toggleTaxonomy}>
                 <input type="hidden" name="id" value={column.id} />
                 <input type="hidden" name="resource" value="column" />
