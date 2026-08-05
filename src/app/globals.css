@@ -2446,18 +2446,18 @@ code {
 .ocean-events::after {
   position: absolute;
   z-index: -1;
+  top: -26%;
   right: -8%;
-  bottom: -26%;
   width: 82%;
   aspect-ratio: 1.7;
   background: repeating-radial-gradient(
-    ellipse at 100% 100%,
+    ellipse at 100% 0%,
     transparent 0 43px,
     rgba(150, 228, 239, 0.12) 44px 46px
   );
   content: "";
   filter: drop-shadow(0 0 12px rgba(104, 206, 222, 0.08));
-  transform: rotate(-4deg);
+  transform: rotate(4deg);
 }
 
 .ocean-events__glow {
@@ -2520,23 +2520,23 @@ code {
 .time-echo-workbench {
   position: absolute;
   z-index: 6;
-  right: max(15%, 200px);
-  bottom: 22%;
+  bottom: 8%;
   left: max(60px, calc((100vw - 1240px) / 2));
   display: grid;
-  grid-template-columns: 268px minmax(0, 820px);
+  grid-template-columns: 268px minmax(0, 1fr);
   align-items: end;
   justify-content: start;
-  height: 365px;
-  gap: 18px;
+  width: min(calc(100vw - 120px), 1240px);
+  height: clamp(340px, 46vh, 400px);
+  gap: 44px;
 }
 
 .echo-timeline {
   position: absolute;
   z-index: auto;
   right: -1.5%;
-  bottom: -12%;
-  width: min(49vw, 720px);
+  top: 0;
+  width: min(44vw, 76vh, 680px);
   aspect-ratio: 1.64;
   pointer-events: none;
 }
@@ -2581,8 +2581,8 @@ code {
 .echo-readout {
   position: absolute;
   z-index: 7;
-  top: 29%;
-  left: -30%;
+  top: 48%;
+  left: -16%;
   width: 280px;
   min-height: 120px;
   border: 1px solid rgba(201, 164, 92, 0.62);
@@ -3302,13 +3302,13 @@ code {
   position: absolute;
   z-index: 6;
   top: auto;
-  right: max(15%, 200px);
-  bottom: 22%;
+  right: max(10%, 140px);
+  bottom: 8%;
   display: grid;
-  grid-template-rows: 42px 74px 56px minmax(120px, 1fr);
-  width: min(55vw, 820px);
-  height: min(40vh, 365px);
-  min-height: 310px;
+  grid-template-rows: 44px 78px 58px minmax(145px, 1fr);
+  width: min(60vw, 940px);
+  height: clamp(340px, 46vh, 400px);
+  min-height: 340px;
   overflow: hidden;
   border: 1px solid rgba(201, 164, 92, 0.42);
   border-radius: 3px;
@@ -3646,7 +3646,7 @@ code {
 
 .time-echo-workbench > .site-activity-console {
   width: 100%;
-  height: 365px;
+  height: 100%;
 }
 
 @keyframes echo-flow {
@@ -5018,12 +5018,13 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
   }
 
   .time-echo-workbench {
-    right: 200px;
-    bottom: 22%;
+    right: 32px;
+    bottom: 8%;
     left: 32px;
     grid-template-columns: 200px minmax(0, 1fr);
-    height: 310px;
-    gap: 16px;
+    width: auto;
+    height: clamp(310px, 42vh, 340px);
+    gap: 32px;
   }
 
   .time-echo-workbench > .archive-folder--closed {
@@ -5033,11 +5034,19 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 
   .time-echo-workbench > .site-activity-console {
     width: 100%;
-    height: 310px;
+    height: 100%;
+    min-height: 310px;
+  }
+
+  .echo-timeline {
+    top: 2%;
+    right: -2%;
+    width: min(48vw, 70vh, 560px);
   }
 
   .echo-readout {
-    top: 21%;
+    top: 48%;
+    left: -12%;
   }
 }
 
@@ -5064,9 +5073,10 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
   }
 
   .time-echo-workbench {
-    right: 200px;
+    right: 24px;
     left: 20px;
     grid-template-columns: 130px minmax(0, 1fr);
+    gap: 24px;
   }
 
   .time-echo-workbench > .archive-folder--closed {
@@ -5075,8 +5085,9 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
   }
 
   .echo-readout {
-    top: 12%;
-    left: -40%;
+    top: 48%;
+    left: -8%;
+    width: 240px;
   }
 }
 

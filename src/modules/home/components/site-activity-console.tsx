@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Eye, FolderTree, Radio, Users } from "lucide-react";
+import { ACTIVITY_CHART as CHART, activityChartIndexFromClientX } from "../activity-chart-geometry";
 import type { HomeActivityPoint, HomeSiteActivity } from "../home.types";
 
 type Period = keyof HomeSiteActivity["series"];
@@ -11,15 +12,6 @@ const PERIODS: Array<{ key: Period; label: string; description: string }> = [
   { key: "month", label: "月", description: "最近 30 天" },
   { key: "year", label: "年", description: "最近 12 个月" },
 ];
-
-const CHART = {
-  width: 720,
-  height: 250,
-  left: 48,
-  right: 18,
-  top: 18,
-  bottom: 34,
-};
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("zh-CN", { notation: "compact", maximumFractionDigits: 1 }).format(
@@ -69,8 +61,7 @@ export function SiteActivityConsole({ activity }: { activity: HomeSiteActivity }
 
   const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    const chartRatio = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
-    setHoveredIndex(Math.round(chartRatio * Math.max(0, points.length - 1)));
+    setHoveredIndex(activityChartIndexFromClientX(event.clientX, bounds, points.length));
   };
 
   return (

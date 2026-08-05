@@ -37,10 +37,10 @@ type Particle = {
 };
 
 const ECHO_RINGS = [
-  { capacity: 4, radiusX: 650, radiusY: 350, start: 196, end: 262 },
-  { capacity: 3, radiusX: 545, radiusY: 293, start: 204, end: 258 },
-  { capacity: 3, radiusX: 440, radiusY: 236, start: 194, end: 254 },
-  { capacity: 2, radiusX: 335, radiusY: 179, start: 218, end: 258 },
+  { capacity: 4, radiusX: 650, radiusY: 350, start: 164, end: 98 },
+  { capacity: 3, radiusX: 545, radiusY: 293, start: 156, end: 102 },
+  { capacity: 3, radiusX: 440, radiusY: 236, start: 166, end: 106 },
+  { capacity: 2, radiusX: 335, radiusY: 179, start: 142, end: 102 },
 ] as const;
 
 const PARTICLE_COLORS = ["221,248,250", "117,226,223", "117,174,232", "156,145,217", "242,198,109"];
@@ -68,7 +68,7 @@ function layoutMilestones(milestones: HomeMilestone[]): EchoMarker[] {
       const angle = ring.start + (ring.end - ring.start) * progress;
       const radians = (angle * Math.PI) / 180;
       const x = 720 + Math.cos(radians) * ring.radiusX;
-      const y = 440 + Math.sin(radians) * ring.radiusY;
+      const y = Math.sin(radians) * ring.radiusY;
       const rawTangentX = -ring.radiusX * Math.sin(radians);
       const rawTangentY = ring.radiusY * Math.cos(radians);
       const tangentLength = Math.hypot(rawTangentX, rawTangentY);
@@ -136,7 +136,7 @@ function EchoParticles({ marker }: { marker: EchoMarker | null }) {
       for (let index = 0; index < 2 && particles.length < 70; index += 1) {
         const sinksInward = Math.random() < 0.24;
         const inwardX = width - originX;
-        const inwardY = height - originY;
+        const inwardY = -originY;
         const inwardLength = Math.max(1, Math.hypot(inwardX, inwardY));
         const directionX = sinksInward ? inwardX / inwardLength : activeMarker.tangentX;
         const directionY = sinksInward ? inwardY / inwardLength : activeMarker.tangentY;
@@ -287,14 +287,14 @@ export function TimeEcho({
               <ellipse
                 className="echo-ring echo-ring--base"
                 cx="720"
-                cy="440"
+                cy="0"
                 rx={ring.radiusX}
                 ry={ring.radiusY}
               />
               <ellipse
                 className="echo-ring echo-ring--flow"
                 cx="720"
-                cy="440"
+                cy="0"
                 rx={ring.radiusX}
                 ry={ring.radiusY}
                 pathLength="100"
@@ -316,9 +316,9 @@ export function TimeEcho({
             <svg className="echo-readout__connector" viewBox="0 0 720 440" aria-hidden="true">
               <polyline
                 points={`${activeMarker.x * 7.2},${activeMarker.y * 4.4} ${Math.max(
-                  80,
+                  190,
                   activeMarker.x * 7.2 - 62
-                )},${Math.max(150, activeMarker.y * 4.4 - 38)} 70,165`}
+                )},${Math.min(270, activeMarker.y * 4.4 + 42)} 164,270`}
               />
             </svg>
             <article className="echo-readout" aria-live="polite">
