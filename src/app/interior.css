@@ -373,6 +373,78 @@ button.friend-profile__contact {
   }
 }
 
+/* Keep every communication value readable, including long email and website text. */
+.friend-profile--observatory .friend-profile__contact-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.friend-profile--observatory .friend-profile__contact {
+  min-height: 62px;
+  align-items: flex-start;
+  gap: 11px;
+  border: 1px solid rgba(174, 205, 196, 0.14);
+  border-radius: 4px;
+  background: rgba(7, 31, 32, 0.38);
+  padding: 11px 12px;
+  line-height: 1.4;
+}
+
+.friend-profile--observatory button.friend-profile__contact {
+  text-align: left;
+}
+
+.friend-profile--observatory .friend-profile__contact > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.friend-profile--observatory .friend-profile__contact > span {
+  align-self: stretch;
+  gap: 4px;
+}
+
+.friend-profile--observatory .friend-profile__contact small {
+  font-size: 0.54rem;
+  line-height: 1.2;
+}
+
+.friend-profile--observatory .friend-profile__contact strong,
+.friend-profile--observatory .friend-profile__contact--text strong {
+  display: block;
+  overflow: visible;
+  max-width: none;
+  color: inherit;
+  font-size: 0.73rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.friend-profile--observatory .friend-profile__contact:hover,
+.friend-profile--observatory .friend-profile__contact:focus-visible {
+  border-color: rgba(237, 201, 121, 0.6);
+  background: rgba(237, 201, 121, 0.08);
+}
+
+.friend-profile--observatory .friend-profile__contact-grid > a {
+  text-decoration: none;
+}
+
+@media (max-width: 980px) {
+  .friend-profile--observatory .friend-profile__contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .friend-profile--observatory .friend-profile__contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .interior-page[data-interior-theme="surface"] {
   --interior-bg: #0b3760;
   --interior-bg-deep: #061a3a;
