@@ -128,7 +128,7 @@ async function getHomeData(): Promise<OceanHomeData> {
     prisma.photo.findMany({
       select: { id: true, imagePath: true, caption: true },
       orderBy: { createdAt: "desc" },
-      take: 48,
+      take: 232,
     }),
     prisma.stickyNote.findMany({
       select: {

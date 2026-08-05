@@ -4023,13 +4023,14 @@ code {
 
 .routine-whale {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  grid-template-rows: repeat(15, minmax(0, 1fr));
   width: 100%;
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 5 / 3;
   align-self: center;
+  justify-self: end;
   overflow: hidden;
-  gap: 2px;
+  gap: 1px;
   background: rgba(203, 232, 230, 0.055);
   filter: drop-shadow(0 12px 22px rgba(232, 169, 106, 0.13));
   mask-image: url("/images/ocean/routine-whale-mask.svg");
@@ -4044,6 +4045,8 @@ code {
 
 .routine-whale-photo {
   position: relative;
+  grid-column: var(--whale-column);
+  grid-row: var(--whale-row);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -7048,7 +7051,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
   }
 
   .routine-whale {
-    gap: 2px;
+    gap: 0.5px;
   }
 
   .routine-whale-stage__controls {

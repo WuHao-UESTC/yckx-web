@@ -5,8 +5,54 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { ArrowUpRight, Camera, ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
 import type { HomeMember, HomeNote, HomePhoto } from "../home.types";
 
-const PHOTO_BATCH_SIZE = 24;
 const NOTE_BATCH_SIZE = 5;
+
+const WHALE_SLOT_ROWS = [
+  { row: 1, ranges: [[7, 7]] },
+  { row: 2, ranges: [[5, 10]] },
+  { row: 3, ranges: [[5, 11]] },
+  { row: 4, ranges: [[5, 12]] },
+  { row: 5, ranges: [[6, 19]] },
+  { row: 6, ranges: [[6, 21]] },
+  { row: 7, ranges: [[7, 18]] },
+  { row: 8, ranges: [[6, 15]] },
+  { row: 9, ranges: [[6, 16]] },
+  {
+    row: 10,
+    ranges: [
+      [5, 8],
+      [12, 17],
+    ],
+  },
+  {
+    row: 11,
+    ranges: [
+      [4, 7],
+      [16, 22],
+    ],
+  },
+  {
+    row: 12,
+    ranges: [
+      [4, 4],
+      [18, 21],
+    ],
+  },
+  { row: 13, ranges: [[18, 19]] },
+  { row: 14, ranges: [[19, 20]] },
+  { row: 15, ranges: [[20, 20]] },
+] as const;
+
+const WHALE_PHOTO_SLOTS = WHALE_SLOT_ROWS.flatMap(({ row, ranges }) =>
+  ranges.flatMap(([start, end]) =>
+    Array.from({ length: end - start + 1 }, (_, offset) => ({
+      column: start + offset,
+      row,
+    }))
+  )
+);
+
+const PHOTO_BATCH_SIZE = WHALE_PHOTO_SLOTS.length;
 
 type FishStyle = CSSProperties & {
   "--fish-delay": string;
@@ -14,6 +60,11 @@ type FishStyle = CSSProperties & {
   "--fish-lane": string;
   "--fish-mobile-lane": string;
   "--fish-scale": string;
+};
+
+type WhalePhotoStyle = CSSProperties & {
+  "--whale-column": string;
+  "--whale-row": string;
 };
 
 function pageCount(items: unknown[], size: number) {
@@ -148,13 +199,18 @@ export function RoutineLights({
 
         <div className="routine-whale-stage">
           <div className="routine-whale" role="group" aria-label="由科协日常照片拼成的跃起座头鲸">
-            {Array.from({ length: PHOTO_BATCH_SIZE }, (_, index) => {
+            {WHALE_PHOTO_SLOTS.map((slot, index) => {
               const photo = visiblePhotos[index];
+              const photoStyle: WhalePhotoStyle = {
+                "--whale-column": String(slot.column),
+                "--whale-row": String(slot.row),
+              };
               return photo ? (
                 <button
                   key={photo.id}
                   type="button"
                   className="routine-whale-photo"
+                  style={photoStyle}
                   onClick={() => setSelectedPhotoIndex(index)}
                   aria-label={`查看照片：${photo.caption ?? `科协日常照片 ${index + 1}`}`}
                 >
@@ -163,8 +219,9 @@ export function RoutineLights({
                 </button>
               ) : (
                 <span
-                  key={`empty-photo-${index}`}
+                  key={`empty-photo-${slot.row}-${slot.column}`}
                   className="routine-whale-photo routine-whale-photo--empty"
+                  style={photoStyle}
                   aria-hidden="true"
                 />
               );
