@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import { HighlightText } from "./highlight-text";
 
 interface SearchResult {
@@ -11,6 +12,14 @@ interface SearchResult {
   categoryName: string | null;
   categorySlug: string | null;
   categoryType: string | null;
+}
+
+function resultUrl(result: SearchResult): string {
+  if (result.categoryType === "COMPETITION") {
+    return `/competition/${result.categorySlug ?? "uncategorized"}/${result.slug}`;
+  }
+  if (result.categoryType === "EVENT") return `/events/${result.slug}`;
+  return `/knowledge-base/${result.categorySlug ?? "uncategorized"}/${result.slug}`;
 }
 
 export function SearchDialog() {
@@ -23,42 +32,42 @@ export function SearchDialog() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ⌘K / Ctrl+K 唤起
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setOpen((prev) => !prev);
+    const handler = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setOpen((current) => !current);
         setQuery("");
         setResults([]);
         setSelectedIdx(0);
       }
-      if (e.key === "Escape") setOpen(false);
+      if (event.key === "Escape") setOpen(false);
     };
+
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  // 自动聚焦
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+    if (open) window.setTimeout(() => inputRef.current?.focus(), 50);
   }, [open]);
 
-  // 防抖搜索
-  const doSearch = useCallback(async (q: string) => {
-    if (q.trim().length < 1) {
+  const doSearch = useCallback(async (value: string) => {
+    if (value.trim().length < 1) {
       setResults([]);
       return;
     }
+
     setLoading(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
+      const response = await fetch(`/api/search?q=${encodeURIComponent(value)}`);
+      const data = await response.json();
       setResults(data.results || []);
     } catch {
       setResults([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -69,124 +78,83 @@ export function SearchDialog() {
     };
   }, [query, doSearch]);
 
-  // 键盘导航
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedIdx((i) => Math.min(i + 1, results.length - 1));
+  const openResult = (result: SearchResult) => {
+    router.push(resultUrl(result));
+    setOpen(false);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setSelectedIdx((index) => Math.min(index + 1, results.length - 1));
     }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedIdx((i) => Math.max(i - 1, 0));
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSelectedIdx((index) => Math.max(index - 1, 0));
     }
-    if (e.key === "Enter" && results[selectedIdx]) {
-      const r = results[selectedIdx];
-      const url =
-        r.categoryType === "COMPETITION"
-          ? `/competition/${r.categorySlug ?? "uncategorized"}/${r.slug}`
-          : r.categoryType === "EVENT"
-            ? `/events/${r.slug}`
-            : `/knowledge-base/${r.categorySlug ?? "uncategorized"}/${r.slug}`;
-      router.push(url);
-      setOpen(false);
+    if (event.key === "Enter" && results[selectedIdx]) {
+      openResult(results[selectedIdx]);
     }
   };
 
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh]"
-      onClick={() => setOpen(false)}
-    >
-      {/* 遮罩 */}
-      <div className="absolute inset-0 bg-black/40" />
-      {/* 对话框 */}
-      <div
-        className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl border border-[#e8e0d5] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 输入框 */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#e8e0d5]">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#6b6b6b"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+    <div className="search-dialog" role="dialog" aria-modal="true" aria-label="搜索站内内容">
+      <button
+        type="button"
+        className="search-dialog__backdrop"
+        onClick={() => setOpen(false)}
+        aria-label="关闭搜索"
+      />
+      <div className="search-dialog__panel">
+        <div className="search-dialog__input-row">
+          <Search size={18} aria-hidden="true" />
           <input
             ref={inputRef}
-            type="text"
+            type="search"
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
+            onChange={(event) => {
+              setQuery(event.target.value);
               setSelectedIdx(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="搜索文章…"
-            className="flex-1 text-sm outline-none bg-transparent font-[family-name:var(--font-sans)]"
+            placeholder="搜索知识、竞赛或活动"
+            aria-label="搜索关键词"
           />
-          <kbd className="text-[10px] text-[#6b6b6b] bg-[#f5f0e8] px-1.5 py-0.5 rounded font-mono">
-            ESC
-          </kbd>
+          <kbd>ESC</kbd>
         </div>
 
-        {/* 结果列表 */}
-        <div className="max-h-[360px] overflow-y-auto">
-          {loading && (
-            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-              搜索中…
-            </p>
-          )}
+        <div className="search-dialog__results">
+          {loading && <p className="search-dialog__state">正在探测内容...</p>}
           {!loading && query && results.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-              未找到结果
-            </p>
+            <p className="search-dialog__state">没有找到相关内容</p>
           )}
-          {!loading && !query && (
-            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-              输入关键词开始搜索
-            </p>
-          )}
-          {results.map((r, i) => (
+          {!loading && !query && <p className="search-dialog__state">输入关键词开始搜索</p>}
+          {results.map((result, index) => (
             <button
-              key={r.slug}
-              className={`w-full text-left px-4 py-2.5 hover:bg-[#f5f0e8] transition-colors border-b border-[#e8e0d5] last:border-b-0 ${i === selectedIdx ? "bg-[#f0ebe0]" : ""}`}
-              onClick={() => {
-                const url =
-                  r.categoryType === "COMPETITION"
-                    ? `/competition/${r.categorySlug ?? "uncategorized"}/${r.slug}`
-                    : r.categoryType === "EVENT"
-                      ? `/events/${r.slug}`
-                      : `/knowledge-base/${r.categorySlug ?? "uncategorized"}/${r.slug}`;
-                router.push(url);
-                setOpen(false);
-              }}
-              onMouseEnter={() => setSelectedIdx(i)}
+              key={`${result.categoryType}-${result.slug}`}
+              type="button"
+              className={`search-dialog__result ${index === selectedIdx ? "is-selected" : ""}`}
+              onClick={() => openResult(result)}
+              onMouseEnter={() => setSelectedIdx(index)}
             >
-              <p className="text-sm font-bold text-[#1a1a1a] line-clamp-1">
-                <HighlightText text={r.title} query={query} />
+              <p>
+                <HighlightText text={result.title} query={query} />
               </p>
-              {r.excerpt && (
-                <p className="text-xs text-[#6b6b6b] line-clamp-1 mt-0.5 font-[family-name:var(--font-sans)]">
-                  <HighlightText text={r.excerpt} query={query} />
+              {result.excerpt && (
+                <p>
+                  <HighlightText text={result.excerpt} query={query} />
                 </p>
               )}
             </button>
           ))}
         </div>
 
-        {/* 底部提示 */}
-        <div className="px-4 py-2 border-t border-[#e8e0d5] flex gap-4 text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-          <span>↑↓ 导航</span>
-          <span>↵ 打开</span>
-          <span>ESC 关闭</span>
+        <div className="search-dialog__footer">
+          <span>↑↓ 选择</span>
+          <span>Enter 打开</span>
+          <span>Esc 关闭</span>
         </div>
       </div>
     </div>

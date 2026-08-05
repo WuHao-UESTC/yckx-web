@@ -1,46 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChevronRight, Menu, X } from "lucide-react";
 import { NAV_LINKS } from "@/lib/constants";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
   return (
-    <div className="md:hidden">
-      {/* 汉堡按钮 */}
+    <div>
       <button
-        onClick={() => setOpen(!open)}
-        className="flex flex-col gap-1 p-2 -mr-1"
-        aria-label="菜单"
+        type="button"
+        className="mobile-menu-button"
+        onClick={() => setOpen((current) => !current)}
+        aria-label={open ? "关闭菜单" : "打开菜单"}
+        aria-expanded={open}
+        aria-controls="mobile-navigation"
       >
-        <span
-          className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "rotate-45 translate-y-[6px]" : ""}`}
-        />
-        <span
-          className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "opacity-0" : ""}`}
-        />
-        <span
-          className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "-rotate-45 -translate-y-[6px]" : ""}`}
-        />
+        {open ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
       </button>
 
-      {/* 下拉导航 */}
       {open && (
         <>
-          {/* 遮罩 */}
-          <div className="fixed inset-0 top-14 z-40 bg-black/20" onClick={() => setOpen(false)} />
-          {/* 菜单面板 */}
-          <nav className="absolute top-14 left-0 right-0 z-50 bg-[#fdfcf9] border-b border-[#e8e0d5] shadow-lg py-2 px-5 font-[family-name:var(--font-sans)]">
+          <button
+            type="button"
+            className="mobile-menu-overlay"
+            onClick={() => setOpen(false)}
+            aria-label="关闭菜单"
+          />
+          <nav id="mobile-navigation" className="mobile-menu-panel" aria-label="移动端导航">
             {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="block py-3 text-sm text-[#6b6b6b] hover:text-[#8b5e3c] border-b border-[#e8e0d5] last:border-b-0 transition-colors"
-                onClick={() => setOpen(false)}
-              >
-                {link.label}
+              <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>
+                <span>{link.label}</span>
+                <ChevronRight size={15} aria-hidden="true" />
               </Link>
             ))}
           </nav>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LayoutDashboard, LogIn, LogOut, Search } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import { MobileNav } from "./mobile-nav";
@@ -8,63 +9,34 @@ export async function SiteHeader() {
   const user = session?.user;
 
   return (
-    <header className="sticky top-0 z-50 bg-[#fdfcf9]/90 backdrop-blur border-b border-[#e8e0d5]">
-      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-5">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="text-lg font-bold tracking-wide text-[#1a1a1a] no-underline font-[family-name:var(--font-serif)] hover:text-[#8b5e3c] transition-colors"
-        >
-          {SITE_NAME}
+    <header className="site-header">
+      <div className="site-header__inner">
+        <Link href="/" className="site-brand" aria-label={`${SITE_NAME}首页`}>
+          <span className="site-brand__mark" aria-hidden="true" />
+          <span className="site-brand__copy">
+            <strong>{SITE_NAME}</strong>
+            <small>UESTC · HONORS COLLEGE</small>
+          </span>
         </Link>
 
-        {/* 主导航 */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="site-nav" aria-label="主导航">
           {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="px-3 py-1.5 text-sm text-[#6b6b6b] rounded hover:text-[#8b5e3c] hover:bg-[#f5f0e8] transition-colors font-[family-name:var(--font-sans)]"
-            >
+            <Link key={link.href} href={link.href}>
               {link.label}
             </Link>
           ))}
         </nav>
 
-        {/* 移动端汉堡菜单 */}
-        <MobileNav />
-
-        {/* 右侧：搜索 + 用户 */}
-        <div className="flex items-center gap-2">
-          {/* 搜索入口 */}
-          <Link
-            href="/search"
-            className="text-sm text-[#6b6b6b] hover:text-[#8b5e3c] transition-colors px-2 py-1 font-[family-name:var(--font-sans)]"
-            aria-label="搜索"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
+        <div className="site-actions">
+          <Link href="/search" className="site-icon-button" aria-label="搜索站内内容" title="搜索">
+            <Search size={17} aria-hidden="true" />
           </Link>
 
-          {/* 用户状态 */}
           {user ? (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/dashboard"
-                className="text-sm text-[#6b6b6b] hover:text-[#8b5e3c] transition-colors font-[family-name:var(--font-sans)]"
-              >
-                {user.name || "后台"}
+            <>
+              <Link href="/dashboard" className="site-user-link" title="进入工作台">
+                <LayoutDashboard size={15} aria-hidden="true" />
+                <span>{user.name || "工作台"}</span>
               </Link>
               <form
                 action={async () => {
@@ -72,22 +44,20 @@ export async function SiteHeader() {
                   await signOut({ redirectTo: "/" });
                 }}
               >
-                <button
-                  type="submit"
-                  className="text-sm text-[#8b5e3c] hover:text-[#5a3a22] transition-colors font-[family-name:var(--font-sans)]"
-                >
-                  退出
+                <button type="submit" className="site-signout" title="退出登录">
+                  <LogOut size={15} aria-hidden="true" />
+                  <span>退出</span>
                 </button>
               </form>
-            </div>
+            </>
           ) : (
-            <Link
-              href="/login"
-              className="text-sm text-[#8b5e3c] hover:text-[#5a3a22] transition-colors font-[family-name:var(--font-sans)]"
-            >
-              登录
+            <Link href="/login" className="site-user-link" title="登录">
+              <LogIn size={15} aria-hidden="true" />
+              <span>登录</span>
             </Link>
           )}
+
+          <MobileNav />
         </div>
       </div>
     </header>

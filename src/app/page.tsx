@@ -1,462 +1,176 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { LazySection } from "@/components/shared/lazy-section";
-import { ImageCarousel } from "@/components/home/image-carousel";
-import { ArticleShowcase } from "@/components/home/article-showcase";
-import { KnowledgeGraphCanvas } from "@/components/home/knowledge-graph-canvas";
-import type { GraphNode, GraphLink } from "@/components/home/knowledge-graph";
-import type { PostCardData } from "@/components/article/post-card";
+import { OceanHome } from "@/modules/home/components/ocean-home";
+import type { HomePost, OceanHomeData } from "@/modules/home/home.types";
 
-// ══════════════════════════════════════════════════════
-// 数据获取
-// ══════════════════════════════════════════════════════
-async function getHomeData() {
-  const [
-    featuredPosts,
-    allPublishedPosts,
-    recentPhotos,
-    recentEvents,
-    calendarPosts,
-    categories,
-    stickyNotes,
-    newsHeadline,
-    friendUsers,
-  ] = await Promise.all([
-    // 精选文章（供 ArticleShowcase 随机抽取）
-    prisma.post.findMany({
-      where: { status: "PUBLISHED", isFeatured: true },
-      include: {
-        author: { select: { id: true, username: true, displayName: true, avatar: true } },
-        category: true,
-        tags: { include: { tag: true } },
-      },
-      orderBy: { publishedAt: "desc" },
-      take: 12,
-    }),
-    // 全量已发布文章（供日期筛选，限制50条）
-    prisma.post.findMany({
-      where: { status: "PUBLISHED" },
-      include: {
-        author: { select: { id: true, username: true, displayName: true, avatar: true } },
-        category: true,
-        tags: { include: { tag: true } },
-      },
-      orderBy: { publishedAt: "desc" },
-      take: 50,
-    }) as unknown as PostCardData[],
-    prisma.photo.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    prisma.post.findMany({
-      where: { status: "PUBLISHED", category: { type: "EVENT" } },
-      include: {
-        author: { select: { id: true, username: true, displayName: true, avatar: true } },
-        category: true,
-      },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    prisma.post.findMany({
-      where: { status: "PUBLISHED" },
-      select: { slug: true, title: true, publishedAt: true },
-      orderBy: { publishedAt: "desc" },
-      take: 200,
-    }),
-    prisma.category.findMany({
-      include: { _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
-      orderBy: { sortOrder: "asc" },
-    }),
-    prisma.stickyNote.findMany({
-      include: { author: { select: { displayName: true, username: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    prisma.post.findFirst({
-      where: { status: "PUBLISHED", category: { type: "EVENT" } },
-      include: { author: { select: { displayName: true, username: true } }, category: true },
-      orderBy: { publishedAt: "desc" },
-    }),
-    // 友链成员
-    prisma.user.findMany({
-      where: { role: { not: "ADMIN" } },
-      include: { profile: true, _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-    }),
-  ]);
+export const revalidate = 300;
 
+const EMPTY_HOME_DATA: OceanHomeData = {
+  featuredPosts: [],
+  recentEvents: [],
+  knowledgeCategories: [],
+  competitionCategories: [],
+  photos: [],
+  notes: [],
+  members: [],
+  totals: { posts: 0, categories: 0, members: 0 },
+};
+
+function serializePost(post: {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  coverImage: string | null;
+  publishedAt: Date | null;
+  category: { name: string; slug: string; type: string } | null;
+}): HomePost {
   return {
-    featuredPosts,
-    allPublishedPosts,
-    recentPhotos,
-    recentEvents,
-    calendarPosts,
-    categories,
-    stickyNotes,
-    newsHeadline,
-    friendUsers,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    coverImage: post.coverImage,
+    publishedAt: post.publishedAt?.toISOString() ?? null,
+    categoryName: post.category?.name ?? null,
+    categorySlug: post.category?.slug ?? null,
+    categoryType: post.category?.type ?? null,
   };
 }
 
-// ══════════════════════════════════════════════════════
-// 知识图谱数据构建
-// ══════════════════════════════════════════════════════
-function buildGraphData(categories: Awaited<ReturnType<typeof getHomeData>>["categories"]): {
-  nodes: GraphNode[];
-  links: GraphLink[];
-} {
-  const nodes: GraphNode[] = [];
-  const links: GraphLink[] = [];
+async function getHomeData(): Promise<OceanHomeData> {
+  const [
+    featuredPosts,
+    recentEvents,
+    knowledgeCategories,
+    competitionCategories,
+    photos,
+    notes,
+    members,
+    postCount,
+    categoryCount,
+    memberCount,
+  ] = await Promise.all([
+    prisma.post.findMany({
+      where: { status: "PUBLISHED", isFeatured: true },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        coverImage: true,
+        publishedAt: true,
+        category: { select: { name: true, slug: true, type: true } },
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 5,
+    }),
+    prisma.post.findMany({
+      where: { status: "PUBLISHED", category: { type: "EVENT" } },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        coverImage: true,
+        publishedAt: true,
+        category: { select: { name: true, slug: true, type: true } },
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 5,
+    }),
+    prisma.category.findMany({
+      where: { type: "KNOWLEDGE" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+      },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.category.findMany({
+      where: { type: "COMPETITION" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+      },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.photo.findMany({
+      select: { id: true, imagePath: true, caption: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+    prisma.stickyNote.findMany({
+      select: {
+        id: true,
+        content: true,
+        isAnonymous: true,
+        author: { select: { displayName: true, username: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+    }),
+    prisma.user.findMany({
+      where: { role: { not: "ADMIN" } },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        profile: { select: { title: true } },
+        _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 4,
+    }),
+    prisma.post.count({ where: { status: "PUBLISHED" } }),
+    prisma.category.count(),
+    prisma.user.count({ where: { role: { not: "ADMIN" } } }),
+  ]);
 
-  nodes.push({
-    id: "competition-main",
-    label: "竞赛",
-    type: "main",
-    categorySlug: undefined,
-    radius: 30,
-  });
-  nodes.push({
-    id: "knowledge-main",
-    label: "知识库",
-    type: "main",
-    categorySlug: undefined,
-    radius: 30,
-  });
+  return {
+    featuredPosts: featuredPosts.map(serializePost),
+    recentEvents: recentEvents.map(serializePost),
+    knowledgeCategories: knowledgeCategories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      count: category._count.posts,
+    })),
+    competitionCategories: competitionCategories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      count: category._count.posts,
+    })),
+    photos,
+    notes: notes.map((note) => ({
+      id: note.id,
+      content: note.content,
+      authorName: note.isAnonymous ? "匿名" : (note.author.displayName ?? note.author.username),
+    })),
+    members: members.map((member) => ({
+      id: member.id,
+      username: member.username,
+      name: member.displayName ?? member.username,
+      title: member.profile?.title ?? "科协成员",
+      postCount: member._count.posts,
+    })),
+    totals: { posts: postCount, categories: categoryCount, members: memberCount },
+  };
+}
 
-  for (const cat of categories) {
-    if (cat._count.posts === 0) continue;
-    const isCompetition = cat.type === "COMPETITION";
-    const isKnowledge = cat.type === "KNOWLEDGE";
-    if (!isCompetition && !isKnowledge) continue;
+export default async function Home() {
+  let data: OceanHomeData;
 
-    const nodeId = `cat-${cat.slug}`;
-    nodes.push({
-      id: nodeId,
-      label: cat.name,
-      type: "category",
-      categorySlug: cat.slug,
-      radius: 18 + Math.min(cat._count.posts * 2, 14),
-    });
-    links.push({
-      source: isCompetition ? "competition-main" : "knowledge-main",
-      target: nodeId,
-    });
+  try {
+    data = await getHomeData();
+  } catch (error) {
+    console.error("Failed to load homepage content; rendering the visual fallback.", error);
+    data = EMPTY_HOME_DATA;
   }
 
-  return { nodes, links };
-}
-
-// ══════════════════════════════════════════════════════
-// 区块标题
-// ══════════════════════════════════════════════════════
-function SectionHeading({
-  children,
-  href,
-  moreLabel,
-}: {
-  children: React.ReactNode;
-  href?: string;
-  moreLabel?: string;
-}) {
-  return (
-    <div className="flex items-end justify-between mb-5 pb-2.5 border-b border-[#e8e0d5]">
-      <h2 className="text-lg font-bold text-[#1a1a1a] tracking-wide">{children}</h2>
-      {href && (
-        <Link
-          href={href}
-          className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] font-[family-name:var(--font-sans)]"
-        >
-          {moreLabel ?? "查看全部"} →
-        </Link>
-      )}
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════
-const NOTE_COLORS = [
-  "bg-[#fef9e7]",
-  "bg-[#fdedec]",
-  "bg-[#ebf5fb]",
-  "bg-[#eafaf1]",
-  "bg-[#f4ecf7]",
-];
-
-// ISR：每 5 分钟重新生成首页
-export const revalidate = 300;
-
-// ══════════════════════════════════════════════════════
-export default async function Home() {
-  const {
-    featuredPosts,
-    allPublishedPosts,
-    recentPhotos,
-    recentEvents,
-    calendarPosts,
-    categories,
-    stickyNotes,
-    newsHeadline,
-    friendUsers,
-  } = await getHomeData();
-  const graphData = buildGraphData(categories);
-
-  const calPosts = calendarPosts
-    .filter((p) => p.publishedAt)
-    .map((p) => ({ date: p.publishedAt!.toISOString(), slug: p.slug, title: p.title }));
-
-  const carouselImages = recentPhotos.map((p) => ({
-    src: p.imagePath,
-    alt: p.caption ?? "科协照片",
-    caption: p.caption ?? undefined,
-  }));
-
-  return (
-    <>
-      {/* ════════════════════════════════════════════════ */}
-      {/* S1 — 整体展示区                                    */}
-      {/* ════════════════════════════════════════════════ */}
-      <section className="snap-section paper-texture border-b border-[#e8e0d5]">
-        <div className="w-full max-w-[1160px] mx-auto px-5 py-8">
-          {/* B1+B2 Row 1: LogoBlock | CarouselBlock — 增大高度 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* B1: LogoBlock — 横排，加大尺寸 */}
-            <div className="flex items-center justify-center gap-6 min-h-[200px] px-6">
-              <div className="w-24 h-24 rounded-full bg-[#f5f0e8] flex items-center justify-center border-2 border-[#e8e0d5] shrink-0">
-                <span className="text-3xl font-bold text-[#8b5e3c] tracking-widest">科协</span>
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-[#1a1a1a] tracking-wide mb-1">英才科协</h1>
-                <p className="text-sm text-[#8b5e3c] tracking-[0.2em] font-[family-name:var(--font-sans)]">
-                  自由 · 创新 · 博学 · 精进
-                </p>
-              </div>
-            </div>
-            {/* B2: CarouselBlock — 恢复 */}
-            <div className="min-h-[200px]">
-              <ImageCarousel images={carouselImages} interval={3500} />
-            </div>
-          </div>
-
-          {/* B3: NavBar — 通栏分隔带，五张入口卡片均匀分布 */}
-          <div className="mb-8 py-5 px-2 rounded-md" style={{ backgroundColor: "#faf7f2" }}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 font-[family-name:var(--font-sans)]">
-              {[
-                {
-                  label: "技术支持",
-                  href: "/knowledge-base",
-                  desc: "嵌入式、信号处理、电子设计等方向的技术文章与学习笔记",
-                },
-                {
-                  label: "竞赛",
-                  href: "/competition",
-                  desc: "电赛、集创赛、物联网等竞赛经验与资料汇总",
-                },
-                { label: "大事记", href: "/events", desc: "科协历年工作日志、活动记录与重要事件" },
-                {
-                  label: "科协日常",
-                  href: "/routine",
-                  desc: "照片墙、吐槽便签，记录团队的点点滴滴",
-                },
-                { label: "友联", href: "/friends", desc: "科协成员个人主页、技术博客与社交链接" },
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block rounded-md p-4 text-center transition-all duration-200 hover:shadow-md"
-                  style={{ backgroundColor: "#f0ebe0" }}
-                >
-                  <p className="text-sm font-bold text-[#1a1a1a] mb-1.5">{item.label}</p>
-                  <p className="text-[11px] text-[#6b6b6b] leading-relaxed">{item.desc}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* B4+B5: ArticleShowcase — 精选/日历联动 */}
-          <ArticleShowcase
-            featuredPosts={featuredPosts}
-            calendarPosts={calPosts}
-            allPosts={allPublishedPosts}
-          />
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════ */}
-      {/* Part 2 — 知识库与竞赛区   snap-section             */}
-      {/* ════════════════════════════════════════════════ */}
-      <section className="snap-section bg-[#fefefd] border-b border-[#e8e0d5] flex items-center">
-        <div className="w-full px-5 py-8">
-          <div className="max-w-[1400px] mx-auto">
-            <SectionHeading>知识库与竞赛</SectionHeading>
-          </div>
-          {/* 6:4 全宽布局 */}
-          <KnowledgeGraphCanvas nodes={graphData.nodes} links={graphData.links} />
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════ */}
-      {/* Part 3 — 科协新闻与日常   snap-section             */}
-      {/* ════════════════════════════════════════════════ */}
-      <section className="snap-section paper-texture">
-        <div className="w-full max-w-[1160px] mx-auto px-5 py-8">
-          {/* 新闻头条 */}
-          {newsHeadline && (
-            <LazySection className="mb-6">
-              <SectionHeading href="/events">科协新闻</SectionHeading>
-              <Link
-                href={`/events/${newsHeadline.slug}`}
-                className="block card group overflow-hidden"
-              >
-                <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  {newsHeadline.coverImage && (
-                    <div className="w-full sm:w-48 shrink-0 rounded-md overflow-hidden bg-[#f5f0e8]">
-                      <img
-                        src={newsHeadline.coverImage}
-                        alt={newsHeadline.title}
-                        className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mb-1">
-                      {newsHeadline.title}
-                    </h3>
-                    {newsHeadline.excerpt && (
-                      <p className="text-xs text-[#6b6b6b] line-clamp-2 font-[family-name:var(--font-sans)]">
-                        {newsHeadline.excerpt}
-                      </p>
-                    )}
-                    <p className="text-[10px] text-[#6b6b6b] mt-2 font-[family-name:var(--font-sans)]">
-                      {newsHeadline.author.displayName ?? newsHeadline.author.username}
-                      {" · "}
-                      {newsHeadline.publishedAt?.toLocaleDateString("zh-CN", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </LazySection>
-          )}
-
-          {/* 大事记 + 照片预览 双栏 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {recentEvents.length > 0 && (
-              <LazySection>
-                <SectionHeading href="/events">大事记</SectionHeading>
-                <div className="relative border-l-2 border-[#e8e0d5] ml-3 pl-7 space-y-2">
-                  {recentEvents.slice(0, 5).map((post) => (
-                    <div key={post.id} className="relative">
-                      <span className="absolute -left-[31px] top-1.5 w-2.5 h-2.5 bg-[#c4a882] rounded-full" />
-                      <Link
-                        href={`/events/${post.slug}`}
-                        className="block hover:text-[#8b5e3c] transition-colors"
-                      >
-                        <time className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-                          {post.createdAt.toLocaleDateString("zh-CN")}
-                        </time>
-                        <p className="text-xs text-[#1a1a1a] line-clamp-1 mt-0.5">{post.title}</p>
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              </LazySection>
-            )}
-
-            {/* 照片预览 */}
-            {recentPhotos.length > 0 && (
-              <LazySection>
-                <SectionHeading href="/routine" moreLabel="更多照片">
-                  最近照片
-                </SectionHeading>
-                <div className="columns-2 gap-2 space-y-2">
-                  {recentPhotos.slice(0, 4).map((photo) => (
-                    <div
-                      key={photo.id}
-                      className="break-inside-avoid rounded-md overflow-hidden bg-[#f5f0e8]"
-                    >
-                      <img
-                        src={photo.imagePath}
-                        alt={photo.caption ?? ""}
-                        className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </LazySection>
-            )}
-          </div>
-
-          {/* 便签卡片 */}
-          <LazySection className="mb-6">
-            <SectionHeading>便签</SectionHeading>
-            {stickyNotes.length === 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                {["公告", "贴士", "入口", "须知", "待定"].map((label, i) => (
-                  <div
-                    key={i}
-                    className={`${NOTE_COLORS[i]} rounded-sm p-3 text-center text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)] min-h-[60px] flex items-center justify-center`}
-                  >
-                    {label}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                {stickyNotes.map((note, i) => (
-                  <div
-                    key={note.id}
-                    className={`${NOTE_COLORS[i % 5]} rounded-sm p-3 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 flex flex-col justify-between min-h-[60px]`}
-                  >
-                    <p className="text-[11px] text-[#2c2c2c] leading-relaxed line-clamp-2 font-[family-name:var(--font-sans)]">
-                      {note.content}
-                    </p>
-                    <p className="text-[10px] text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-                      {note.isAnonymous
-                        ? "匿名"
-                        : (note.author.displayName ?? note.author.username)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </LazySection>
-
-          {/* 友链预览 */}
-          {friendUsers.length > 0 && (
-            <LazySection>
-              <SectionHeading href="/friends" moreLabel="查看全部成员">
-                科协成员
-              </SectionHeading>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {friendUsers.map((user) => (
-                  <Link
-                    key={user.id}
-                    href={`/friends/${user.username}`}
-                    className="card group flex items-center gap-3 py-3 px-4"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#f5f0e8] flex items-center justify-center text-base text-[#8b5e3c] font-bold shrink-0">
-                      {(user.displayName ?? user.username).charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors truncate">
-                        {user.displayName ?? user.username}
-                      </p>
-                      <p className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-                        {user.profile?.title || "科协成员"} · {user._count.posts} 篇
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </LazySection>
-          )}
-        </div>
-      </section>
-    </>
-  );
+  return <OceanHome data={data} />;
 }
