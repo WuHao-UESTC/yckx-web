@@ -34,12 +34,13 @@ app route/page
 ## 内容领域
 
 - `Post` 是技术文章、新闻和日常文章的统一聚合根，通过 `PostKind` 区分领域。日常文章的专栏关联可选。
-- 技术文章使用 `Category` 组织知识分类和竞赛类别，并通过 `Column(type = TECHNICAL)` 在分类下组织可选专栏；一篇技术文章可以加入同一分类下的多个专栏。普通新闻通过 `PostNewsColumn` 加入零个或多个 `Column(type = NEWS)`；日常长文继续使用 `Post.columnId` 单选日常专栏。
+- 技术文章使用 `Category` 组织知识分类和竞赛类别，并通过 `Column(type = TECHNICAL)` 在分类下组织可选专栏；一篇技术文章可以加入同一分类下的多个专栏。普通新闻通过 `PostNewsColumn` 加入零个或多个 `Column(type = NEWS)`；日常长文通过 `PostDailyColumn` 加入零个或多个 `Column(type = DAILY)`。`Post.columnId` 仅保留为历史兼容字段，不再承担新闻或日常专栏写入。
 - `StickyNote` 和 `Photo` 保持独立模型，避免短留言和图片记录承担完整文章状态机。
 - 分类与专栏由成员创建并记录创建者，管理员负责停用、恢复和全站治理。
 - 文章服务必须校验领域与分类、专栏类型的组合，页面筛选不是数据一致性边界。
 - 技术文章更换分类时必须移除原分类下不再兼容的专栏关联；技术专栏删除时只删除关联，不删除文章。
 - 新闻多专栏关系只允许 `Post(kind = NEWS)` 且不属于旧 `EVENT` 分类的普通新闻使用；删除新闻专栏时只删除关联，不删除新闻。
+- 日常多专栏关系只允许 `Post(kind = DAILY)` 使用；删除日常专栏时只删除关联，不删除日常文章。
 
 ## 文件与照片
 
@@ -48,6 +49,7 @@ app route/page
 - 文章删除或解除附件后使用 `ON DELETE SET NULL` 保留文件，文件重新变为私有资源。
 - 已发布文章附件可以匿名下载，其中图片和 PDF 可以通过受控路由匿名内联预览；照片文件只有在关联公开照片时可以匿名内联读取。
 - 日常照片通过 `File` 保存 NAS 实体，`Photo.imagePath` 继续保留以兼容历史 URL 图片。
+- 公共照片墙按描述和上传日期查询 `Photo`，始终固定 `isVisible = true`，每次只读取当前照片墙的十张记录。
 - 成员头像使用 `File(purpose = AVATAR)` 和 `User.avatarFileId` 关联，公开页面只读取受控站内预览路径。
 
 ## 永久删除边界

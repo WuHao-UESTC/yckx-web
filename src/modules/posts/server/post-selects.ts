@@ -50,6 +50,14 @@ export const postApiSelect = {
       },
     },
   },
+  dailyColumns: {
+    orderBy: { createdAt: "asc" },
+    select: {
+      column: {
+        select: { id: true, title: true, slug: true, type: true, isActive: true },
+      },
+    },
+  },
   tags: { include: { tag: true } },
   files: {
     orderBy: { sortOrder: "asc" },
@@ -89,6 +97,9 @@ export const postListSelect = {
   newsColumns: {
     select: { column: { select: { id: true, title: true, slug: true } } },
   },
+  dailyColumns: {
+    select: { column: { select: { id: true, title: true, slug: true } } },
+  },
   tags: { include: { tag: true } },
 } satisfies Prisma.PostSelect;
 
@@ -120,6 +131,9 @@ export const articleDetailSelect = {
     },
   },
   newsColumns: {
+    select: { column: { select: { id: true, title: true, slug: true, isActive: true } } },
+  },
+  dailyColumns: {
     select: { column: { select: { id: true, title: true, slug: true, isActive: true } } },
   },
   tags: {

@@ -57,7 +57,7 @@ export async function findAdjacentPosts(post: ArticleDetailData, kind: ArticleKi
       : kind === "EVENT"
         ? { kind: "NEWS", category: { type: "EVENT" } }
         : kind === "DAILY"
-          ? { kind: "DAILY", columnId: post.column?.id }
+          ? { kind: "DAILY" }
           : { kind: "TECHNICAL", categoryId: post.categoryId };
 
   return Promise.all([

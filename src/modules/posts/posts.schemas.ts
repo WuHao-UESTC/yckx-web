@@ -8,6 +8,7 @@ const tagNameSchema = z.string().trim().min(1).max(40);
 const attachmentIdsSchema = z.array(z.string().trim().min(1).max(191)).max(20);
 const technicalColumnIdsSchema = z.array(z.string().trim().min(1).max(191)).max(20);
 const newsColumnIdsSchema = z.array(z.string().trim().min(1).max(191)).max(20);
+const dailyColumnIdsSchema = z.array(z.string().trim().min(1).max(191)).max(20);
 
 export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
 export const postKindSchema = z.enum(["TECHNICAL", "NEWS", "DAILY"]);
@@ -34,6 +35,7 @@ export const createPostSchema = z.object({
   attachmentIds: attachmentIdsSchema.default([]),
   technicalColumnIds: technicalColumnIdsSchema.default([]),
   newsColumnIds: newsColumnIdsSchema.default([]),
+  dailyColumnIds: dailyColumnIdsSchema.default([]),
   renderStyle: markdownStyleSchema.default("DEFAULT"),
 });
 
@@ -49,6 +51,7 @@ export const updatePostSchema = z
     attachmentIds: attachmentIdsSchema.optional(),
     technicalColumnIds: technicalColumnIdsSchema.optional(),
     newsColumnIds: newsColumnIdsSchema.optional(),
+    dailyColumnIds: dailyColumnIdsSchema.optional(),
     renderStyle: markdownStyleSchema.optional(),
     status: postStatusSchema.optional(),
   })

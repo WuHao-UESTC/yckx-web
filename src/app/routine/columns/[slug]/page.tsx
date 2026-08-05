@@ -1,28 +1,36 @@
 import { notFound } from "next/navigation";
 import { PostCard } from "@/components/article/post-card";
-import { InteriorEmpty, InteriorPage } from "@/components/interior/interior-page";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
 import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
+import { PublicPostPager } from "@/modules/posts/components/public-post-pager";
+import { PublicPostToolbar } from "@/modules/posts/components/public-post-toolbar";
+import { findPublicPostPage, parsePublicPostQuery } from "@/modules/posts/server/public-post-list";
 
-export default async function DailyColumnPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+interface Props {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string; sort?: string; page?: string }>;
+}
+
+export default async function DailyColumnPage({ params, searchParams }: Props) {
+  const [{ slug }, rawQuery] = await Promise.all([params, searchParams]);
+  const query = parsePublicPostQuery(rawQuery);
   const column = await prisma.column.findFirst({
-    where: { slug, type: "DAILY" },
-    include: {
-      posts: {
-        where: { status: "PUBLISHED", kind: "DAILY" },
-        include: {
-          author: { select: { id: true, username: true, displayName: true } },
-          category: true,
-          column: true,
-          tags: { include: { tag: true } },
-        },
-        orderBy: { publishedAt: "desc" },
-      },
-    },
+    where: { slug, type: "DAILY", isActive: true },
+    select: { id: true, title: true, description: true },
   });
   if (!column) notFound();
+
+  const articlePage = await findPublicPostPage({
+    scope: { kind: "DAILY", dailyColumns: { some: { columnId: column.id } } },
+    ...query,
+  });
   const copy = HOME_CHAPTER_COPY.routine;
+  const pathname = `/routine/columns/${slug}`;
 
   return (
     <InteriorPage
@@ -30,15 +38,28 @@ export default async function DailyColumnPage({ params }: { params: Promise<{ sl
       depth={copy.depth}
       section={`${copy.label} · 日常专栏`}
       title={column.title}
-      description={column.description ?? copy.description}
+      description={column.description ?? "日常专栏文章目录"}
       contentWidth="reading"
     >
-      <div className="post-signal-list">
-        {column.posts.map((post) => (
-          <PostCard key={post.id} post={post} showTags />
-        ))}
-        {column.posts.length === 0 && <InteriorEmpty>这个日常专栏还没有公开文章。</InteriorEmpty>}
-      </div>
+      <InteriorSectionHeading title="文章列表" meta={`共 ${articlePage.total} 篇文章`} />
+      <PublicPostToolbar query={query.q} sort={query.sort} placeholder="搜索当前日常专栏" />
+      {articlePage.posts.length > 0 ? (
+        <div className="post-signal-list">
+          {articlePage.posts.map((post) => (
+            <PostCard key={post.id} post={post} showTags />
+          ))}
+        </div>
+      ) : (
+        <InteriorEmpty>
+          {query.q ? `没有找到“${query.q}”相关的文章。` : "这个专栏还没有公开文章。"}
+        </InteriorEmpty>
+      )}
+      <PublicPostPager
+        pathname={pathname}
+        query={query}
+        totalPages={articlePage.totalPages}
+        label="日常专栏文章分页"
+      />
     </InteriorPage>
   );
 }

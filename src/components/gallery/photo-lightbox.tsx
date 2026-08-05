@@ -1,130 +1,159 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface Photo {
   id: string;
   imagePath: string;
   caption: string | null;
+  createdAt: Date;
   author: { displayName: string | null; username: string };
+}
+
+function photoDate(photo: Photo) {
+  return new Date(photo.createdAt).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export function PhotoLightbox({ photos }: { photos: Photo[] }) {
   const [selected, setSelected] = useState<number | null>(null);
+  const triggerRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const lastTriggerIndex = useRef(0);
 
-  const open = useCallback((index: number) => setSelected(index), []);
-  const close = useCallback(() => setSelected(null), []);
+  const open = useCallback((index: number) => {
+    lastTriggerIndex.current = index;
+    setSelected(index);
+  }, []);
+  const close = useCallback(() => {
+    setSelected(null);
+    requestAnimationFrame(() => triggerRefs.current[lastTriggerIndex.current]?.focus());
+  }, []);
   const prev = useCallback(() => {
-    setSelected((s) => (s !== null ? (s - 1 + photos.length) % photos.length : null));
+    setSelected((current) =>
+      current !== null ? (current - 1 + photos.length) % photos.length : null
+    );
   }, [photos.length]);
   const next = useCallback(() => {
-    setSelected((s) => (s !== null ? (s + 1) % photos.length : null));
+    setSelected((current) => (current !== null ? (current + 1) % photos.length : null));
   }, [photos.length]);
 
-  // 键盘导航
   useEffect(() => {
     if (selected === null) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+      if (event.key === "ArrowLeft") prev();
+      if (event.key === "ArrowRight") next();
     };
     document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [selected, close, prev, next]);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handler);
+    };
+  }, [selected, close, next, prev]);
 
   if (photos.length === 0) return null;
+  const selectedPhoto = selected !== null ? photos[selected] : null;
 
   return (
     <>
-      {/* Masonry 照片墙 */}
-      <div className="routine-gallery columns-2 gap-3 space-y-3 sm:columns-3 lg:columns-4">
-        {photos.map((photo, i) => (
-          <div
+      <div className="routine-photo-wall" aria-label="照片墙">
+        {photos.map((photo, index) => (
+          <button
             key={photo.id}
-            className="routine-gallery__item group relative break-inside-avoid cursor-zoom-in overflow-hidden bg-[#f5f0e8]"
-            onClick={() => open(i)}
+            ref={(element) => {
+              triggerRefs.current[index] = element;
+            }}
+            type="button"
+            className="routine-photo-wall__photo"
+            onClick={() => open(index)}
+            aria-label={`查看照片：${photo.caption || "该照片暂时没有描述"}`}
           >
-            <img
-              src={photo.imagePath}
-              alt={photo.caption ?? ""}
-              className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-            {photo.caption && (
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="text-white text-xs font-[family-name:var(--font-sans)]">
-                  {photo.caption}
-                </p>
-                <p className="text-white/70 text-[10px] mt-0.5">
-                  {photo.author.displayName ?? photo.author.username}
-                </p>
-              </div>
-            )}
-          </div>
+            <span className="routine-photo-wall__pin" aria-hidden="true" />
+            <span className="routine-photo-wall__frame">
+              <img src={photo.imagePath} alt={photo.caption ?? "日常照片"} loading="lazy" />
+            </span>
+            <span className="routine-photo-wall__caption">
+              <strong>{photo.caption || "该照片暂时没有描述"}</strong>
+              <small>{photoDate(photo)}</small>
+            </span>
+          </button>
         ))}
       </div>
 
-      {/* Lightbox 遮罩 */}
-      {selected !== null && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
-          onClick={close}
-        >
-          {/* 关闭按钮 */}
-          <button
-            className="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none z-10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-            onClick={close}
-            aria-label="关闭"
-          >
-            ×
-          </button>
+      {selectedPhoto && typeof document !== "undefined"
+        ? createPortal(
+            <div className="routine-photo-dialog-backdrop" onMouseDown={close}>
+              <div
+                className="routine-photo-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="routine-photo-dialog-title"
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="routine-photo-dialog__close"
+                  onClick={close}
+                  aria-label="关闭照片"
+                  title="关闭"
+                >
+                  <X size={20} aria-hidden="true" />
+                </button>
 
-          {/* 上一张 */}
-          <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-2xl z-10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              prev();
-            }}
-            aria-label="上一张"
-          >
-            ‹
-          </button>
+                <div className="routine-photo-dialog__image">
+                  <img src={selectedPhoto.imagePath} alt={selectedPhoto.caption ?? "日常照片"} />
+                </div>
 
-          {/* 下一张 */}
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-2xl z-10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              next();
-            }}
-            aria-label="下一张"
-          >
-            ›
-          </button>
+                <article className="routine-photo-dialog__letter">
+                  <header>
+                    <span>同行影像</span>
+                    <time dateTime={new Date(selectedPhoto.createdAt).toISOString()}>
+                      {photoDate(selectedPhoto)}
+                    </time>
+                  </header>
+                  <h2 id="routine-photo-dialog-title">
+                    {selectedPhoto.author.displayName ?? selectedPhoto.author.username} 的照片记录
+                  </h2>
+                  <p>{selectedPhoto.caption || "该照片暂时没有描述"}</p>
+                  <footer>
+                    PHOTO {(selected ?? 0) + 1} / {photos.length}
+                  </footer>
+                </article>
 
-          {/* 图片 */}
-          <div
-            className="max-w-[90vw] max-h-[85vh] flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={photos[selected].imagePath}
-              alt={photos[selected].caption ?? ""}
-              className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
-            />
-            {photos[selected].caption && (
-              <p className="text-white/80 text-sm mt-3 text-center font-[family-name:var(--font-sans)]">
-                {photos[selected].caption}
-              </p>
-            )}
-            <p className="text-white/50 text-xs mt-1 font-[family-name:var(--font-sans)]">
-              {selected + 1} / {photos.length}
-            </p>
-          </div>
-        </div>
-      )}
+                {photos.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      className="routine-photo-dialog__previous"
+                      onClick={prev}
+                      aria-label="上一张照片"
+                      title="上一张"
+                    >
+                      <ChevronLeft size={22} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="routine-photo-dialog__next"
+                      onClick={next}
+                      aria-label="下一张照片"
+                      title="下一张"
+                    >
+                      <ChevronRight size={22} aria-hidden="true" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }

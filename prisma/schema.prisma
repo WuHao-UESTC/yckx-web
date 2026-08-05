@@ -127,6 +127,7 @@ model Column {
   category       Category?             @relation("TechnicalColumnCategory", fields: [categoryId], references: [id], onDelete: Cascade)
   technicalPosts PostTechnicalColumn[]
   newsPosts      PostNewsColumn[]
+  dailyPosts     PostDailyColumn[]
   createdById    String?
   creator        User?                 @relation("ColumnCreator", fields: [createdById], references: [id], onDelete: SetNull)
   isActive       Boolean               @default(true)
@@ -163,6 +164,7 @@ model Post {
   column           Column?               @relation(fields: [columnId], references: [id])
   technicalColumns PostTechnicalColumn[]
   newsColumns      PostNewsColumn[]
+  dailyColumns     PostDailyColumn[]
   renderStyle      MarkdownStyle         @default(DEFAULT)
   tags             PostTag[]
   files            File[]
@@ -224,6 +226,18 @@ model PostNewsColumn {
   @@id([postId, columnId])
   @@index([columnId, createdAt])
   @@map("post_news_columns")
+}
+
+model PostDailyColumn {
+  postId    String
+  columnId  String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  column    Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([postId, columnId])
+  @@index([columnId, createdAt])
+  @@map("post_daily_columns")
 }
 
 // ========== 标签 ==========

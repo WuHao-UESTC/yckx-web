@@ -28,7 +28,9 @@ export default async function DashboardTaxonomiesPage() {
         categoryId: true,
         isActive: true,
         createdById: true,
-        _count: { select: { posts: true, technicalPosts: true, newsPosts: true } },
+        _count: {
+          select: { posts: true, technicalPosts: true, newsPosts: true, dailyPosts: true },
+        },
       },
       orderBy: [{ type: "asc" }, { sortOrder: "asc" }],
     }),
@@ -48,7 +50,7 @@ export default async function DashboardTaxonomiesPage() {
             ? _count.technicalPosts
             : column.type === "NEWS"
               ? _count.newsPosts
-              : _count.posts,
+              : _count.dailyPosts,
       }))}
       currentUser={{ id: user.id, role: user.role }}
     />

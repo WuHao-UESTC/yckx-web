@@ -185,6 +185,17 @@ export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: Ar
             </nav>
           )}
 
+          {post.dailyColumns.length > 0 && (
+            <nav className="article-technical-columns" aria-label="所属日常专栏">
+              <span>所属专栏</span>
+              {post.dailyColumns.map(({ column }) => (
+                <a key={column.id} href={`/routine/columns/${column.slug}`}>
+                  {column.title}
+                </a>
+              ))}
+            </nav>
+          )}
+
           {options.showAttachments && post.files.length > 0 && (
             <section className="article-attachments" aria-labelledby="article-attachments-title">
               <h3 id="article-attachments-title">附件下载</h3>

@@ -22,6 +22,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
       renderStyle: true,
       technicalColumns: { select: { columnId: true } },
       newsColumns: { select: { columnId: true } },
+      dailyColumns: { select: { columnId: true } },
       tags: { select: { tag: { select: { name: true } } } },
       files: {
         orderBy: { sortOrder: "asc" },
@@ -53,6 +54,9 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
           ...(post.kind === "NEWS" && post.newsColumns.length > 0
             ? [{ id: { in: post.newsColumns.map(({ columnId }) => columnId) } }]
             : []),
+          ...(post.kind === "DAILY" && post.dailyColumns.length > 0
+            ? [{ id: { in: post.dailyColumns.map(({ columnId }) => columnId) } }]
+            : []),
         ],
       },
       select: { id: true, title: true, type: true, categoryId: true, isActive: true },
@@ -69,9 +73,9 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
     kind: post.kind,
     categoryId: post.categoryId,
     categoryType: post.category?.type ?? null,
-    columnId: post.columnId,
     technicalColumnIds: post.technicalColumns.map(({ columnId }) => columnId),
     newsColumnIds: post.newsColumns.map(({ columnId }) => columnId),
+    dailyColumnIds: post.dailyColumns.map(({ columnId }) => columnId),
     renderStyle: post.renderStyle,
     tags: post.tags.map(({ tag }) => tag.name),
     files: post.files,

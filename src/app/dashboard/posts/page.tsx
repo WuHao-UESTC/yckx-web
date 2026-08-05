@@ -41,11 +41,12 @@ export default async function MyPostsPage({
         column: true,
         technicalColumns: { select: { columnId: true } },
         newsColumns: { select: { columnId: true } },
+        dailyColumns: { select: { columnId: true } },
       },
       orderBy,
     }),
     prisma.column.findMany({
-      where: { type: { in: ["TECHNICAL", "NEWS"] } },
+      where: { type: { in: ["TECHNICAL", "NEWS", "DAILY"] } },
       select: { id: true, title: true, type: true, categoryId: true, isActive: true },
       orderBy: [{ type: "asc" }, { categoryId: "asc" }, { sortOrder: "asc" }],
     }),
@@ -165,20 +166,31 @@ export default async function MyPostsPage({
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {(post.kind === "TECHNICAL" ||
+                  post.kind === "DAILY" ||
                   (post.kind === "NEWS" && post.category?.type !== "EVENT")) && (
                   <PostColumnManager
-                    kind={post.kind === "TECHNICAL" ? "TECHNICAL" : "NEWS"}
+                    kind={
+                      post.kind === "TECHNICAL"
+                        ? "TECHNICAL"
+                        : post.kind === "NEWS"
+                          ? "NEWS"
+                          : "DAILY"
+                    }
                     slug={post.slug}
                     categoryId={post.categoryId}
                     selectedIds={
                       post.kind === "TECHNICAL"
                         ? post.technicalColumns.map(({ columnId }) => columnId)
-                        : post.newsColumns.map(({ columnId }) => columnId)
+                        : post.kind === "NEWS"
+                          ? post.newsColumns.map(({ columnId }) => columnId)
+                          : post.dailyColumns.map(({ columnId }) => columnId)
                     }
                     columns={columns.filter((column) =>
                       post.kind === "TECHNICAL"
                         ? column.type === "TECHNICAL"
-                        : column.type === "NEWS"
+                        : post.kind === "NEWS"
+                          ? column.type === "NEWS"
+                          : column.type === "DAILY"
                     )}
                   />
                 )}

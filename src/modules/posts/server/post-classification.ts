@@ -11,6 +11,7 @@ export type PostClassification = {
   columnId: string | null;
   technicalColumnIds?: string[];
   newsColumnIds?: string[];
+  dailyColumnIds?: string[];
 };
 
 export async function assertValidPostClassification(
@@ -21,11 +22,19 @@ export async function assertValidPostClassification(
     columnId: string | null;
     technicalColumnIds?: string[];
     newsColumnIds?: string[];
+    dailyColumnIds?: string[];
   }
-): Promise<{ technicalColumnIds: string[]; newsColumnIds: string[] }> {
+): Promise<{
+  technicalColumnIds: string[];
+  newsColumnIds: string[];
+  dailyColumnIds: string[];
+}> {
   const technicalColumnIds = [...new Set(classification.technicalColumnIds ?? [])];
   const newsColumnIds = [...new Set(classification.newsColumnIds ?? [])];
-  const relationColumnIds = [...new Set([...technicalColumnIds, ...newsColumnIds])];
+  const dailyColumnIds = [...new Set(classification.dailyColumnIds ?? [])];
+  const relationColumnIds = [
+    ...new Set([...technicalColumnIds, ...newsColumnIds, ...dailyColumnIds]),
+  ];
   const [category, column, relationColumns] = await Promise.all([
     classification.categoryId
       ? client.category.findUnique({
@@ -68,6 +77,7 @@ export async function assertValidPostClassification(
     }
     if (column) throw new BadRequestError("技术文章不能加入新闻或日常专栏");
     if (newsColumnIds.length > 0) throw new BadRequestError("技术文章不能加入新闻专栏");
+    if (dailyColumnIds.length > 0) throw new BadRequestError("技术文章不能加入日常专栏");
     const technicalColumns = relationColumns.filter((item) => technicalColumnIds.includes(item.id));
     if (technicalColumns.length !== technicalColumnIds.length) {
       throw new BadRequestError("部分技术专栏不存在");
@@ -92,7 +102,7 @@ export async function assertValidPostClassification(
       }
       validIds.push(technicalColumn.id);
     }
-    return { technicalColumnIds: validIds, newsColumnIds: [] };
+    return { technicalColumnIds: validIds, newsColumnIds: [], dailyColumnIds: [] };
   }
 
   if (technicalColumnIds.length > 0) throw new BadRequestError("只有技术文章可以加入技术专栏");
@@ -102,6 +112,7 @@ export async function assertValidPostClassification(
       throw new BadRequestError("新闻不能使用技术文章分类");
     }
     if (column) throw new BadRequestError("新闻专栏必须通过多选关系管理");
+    if (dailyColumnIds.length > 0) throw new BadRequestError("新闻不能加入日常专栏");
     if (category?.type === "EVENT" && newsColumnIds.length > 0) {
       throw new BadRequestError("大事记文章不能加入新闻专栏");
     }
@@ -118,15 +129,26 @@ export async function assertValidPostClassification(
         throw new BadRequestError(`专栏“${newsColumn.title}”已停用`);
       }
     }
-    return { technicalColumnIds: [], newsColumnIds };
+    return { technicalColumnIds: [], newsColumnIds, dailyColumnIds: [] };
   }
 
   if (newsColumnIds.length > 0) throw new BadRequestError("日常文章不能加入新闻专栏");
   if (category && category.type !== "ROUTINE") {
     throw new BadRequestError("日常文章不能使用技术或新闻分类");
   }
-  if (column && column.type !== "DAILY") {
-    throw new BadRequestError("日常文章只能加入日常专栏");
+  if (column) throw new BadRequestError("日常专栏必须通过多选关系管理");
+
+  const dailyColumns = relationColumns.filter((item) => dailyColumnIds.includes(item.id));
+  if (dailyColumns.length !== dailyColumnIds.length) {
+    throw new BadRequestError("部分日常专栏不存在");
   }
-  return { technicalColumnIds: [], newsColumnIds: [] };
+  for (const dailyColumn of dailyColumns) {
+    if (dailyColumn.type !== "DAILY") {
+      throw new BadRequestError(`“${dailyColumn.title}”不是日常专栏`);
+    }
+    if (!dailyColumn.isActive && !previous?.dailyColumnIds?.includes(dailyColumn.id)) {
+      throw new BadRequestError(`专栏“${dailyColumn.title}”已停用`);
+    }
+  }
+  return { technicalColumnIds: [], newsColumnIds: [], dailyColumnIds };
 }

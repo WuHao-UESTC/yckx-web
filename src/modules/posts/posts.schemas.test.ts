@@ -23,6 +23,7 @@ describe("post schemas", () => {
     expect(result.attachmentIds).toEqual([]);
     expect(result.technicalColumnIds).toEqual([]);
     expect(result.newsColumnIds).toEqual([]);
+    expect(result.dailyColumnIds).toEqual([]);
     expect(result.renderStyle).toBe("DEFAULT");
   });
 

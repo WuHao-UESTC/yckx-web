@@ -9,11 +9,11 @@ type ClassificationClient = Parameters<typeof assertValidPostClassification>[0];
 function createClient({
   category = null,
   column = null,
-  technicalColumns = [],
+  relationColumns = [],
 }: {
   category?: { id: string; name: string; type: string; isActive: boolean } | null;
   column?: { id: string; title: string; type: string; isActive: boolean } | null;
-  technicalColumns?: Array<{
+  relationColumns?: Array<{
     id: string;
     title: string;
     type: string;
@@ -25,7 +25,7 @@ function createClient({
     category: { findUnique: vi.fn().mockResolvedValue(category) },
     column: {
       findUnique: vi.fn().mockResolvedValue(column),
-      findMany: vi.fn().mockResolvedValue(technicalColumns),
+      findMany: vi.fn().mockResolvedValue(relationColumns),
     },
   } as unknown as ClassificationClient;
 }
@@ -42,7 +42,7 @@ describe("post classification", () => {
         categoryId: "knowledge",
         columnId: null,
       })
-    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [], dailyColumnIds: [] });
   });
 
   it("accepts ordinary news and legacy column categories", async () => {
@@ -52,7 +52,7 @@ describe("post classification", () => {
         categoryId: null,
         columnId: null,
       })
-    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [], dailyColumnIds: [] });
 
     const legacyClient = createClient({
       category: { id: "legacy", name: "Legacy", type: "COLUMN", isActive: true },
@@ -63,37 +63,57 @@ describe("post classification", () => {
         categoryId: "legacy",
         columnId: null,
       })
-    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [], dailyColumnIds: [] });
   });
 
-  it("allows standalone daily posts and validates optional daily columns", async () => {
+  it("allows standalone daily posts and multiple daily columns", async () => {
     await expect(
       assertValidPostClassification(createClient({}), {
         kind: "DAILY",
         categoryId: null,
         columnId: null,
       })
-    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [], dailyColumnIds: [] });
 
     const client = createClient({
-      column: { id: "daily", title: "Daily", type: "DAILY", isActive: true },
+      relationColumns: [
+        {
+          id: "field-notes",
+          title: "Field Notes",
+          type: "DAILY",
+          categoryId: null,
+          isActive: true,
+        },
+        {
+          id: "team-life",
+          title: "Team Life",
+          type: "DAILY",
+          categoryId: null,
+          isActive: true,
+        },
+      ],
     });
     await expect(
       assertValidPostClassification(client, {
         kind: "DAILY",
         categoryId: null,
-        columnId: "daily",
+        columnId: null,
+        dailyColumnIds: ["field-notes", "team-life"],
       })
-    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+    ).resolves.toEqual({
+      technicalColumnIds: [],
+      newsColumnIds: [],
+      dailyColumnIds: ["field-notes", "team-life"],
+    });
 
-    const newsColumnClient = createClient({
-      column: { id: "news", title: "News", type: "NEWS", isActive: true },
+    const legacyColumnClient = createClient({
+      column: { id: "daily", title: "Daily", type: "DAILY", isActive: true },
     });
     await expect(
-      assertValidPostClassification(newsColumnClient, {
+      assertValidPostClassification(legacyColumnClient, {
         kind: "DAILY",
         categoryId: null,
-        columnId: "news",
+        columnId: "daily",
       })
     ).rejects.toMatchObject({ status: 400, code: "BAD_REQUEST" });
   });
@@ -117,13 +137,13 @@ describe("post classification", () => {
         categoryId: "disabled",
         columnId: null,
       })
-    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [], dailyColumnIds: [] });
   });
 
   it("accepts multiple technical columns from the selected category", async () => {
     const client = createClient({
       category: { id: "competition", name: "Competition", type: "COMPETITION", isActive: true },
-      technicalColumns: [
+      relationColumns: [
         {
           id: "guide",
           title: "Guide",
@@ -151,13 +171,14 @@ describe("post classification", () => {
     ).resolves.toEqual({
       technicalColumnIds: ["guide", "review"],
       newsColumnIds: [],
+      dailyColumnIds: [],
     });
   });
 
   it("removes old technical columns when the article changes category", async () => {
     const client = createClient({
       category: { id: "knowledge", name: "Knowledge", type: "KNOWLEDGE", isActive: true },
-      technicalColumns: [
+      relationColumns: [
         {
           id: "old-column",
           title: "Old",
@@ -183,12 +204,12 @@ describe("post classification", () => {
           technicalColumnIds: ["old-column"],
         }
       )
-    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [], dailyColumnIds: [] });
   });
 
   it("accepts multiple news columns for ordinary news", async () => {
     const client = createClient({
-      technicalColumns: [
+      relationColumns: [
         {
           id: "dispatches",
           title: "Dispatches",
@@ -216,13 +237,14 @@ describe("post classification", () => {
     ).resolves.toEqual({
       technicalColumnIds: [],
       newsColumnIds: ["dispatches", "awards"],
+      dailyColumnIds: [],
     });
   });
 
   it("rejects news columns for legacy event articles", async () => {
     const client = createClient({
       category: { id: "event", name: "Event", type: "EVENT", isActive: true },
-      technicalColumns: [
+      relationColumns: [
         {
           id: "dispatches",
           title: "Dispatches",

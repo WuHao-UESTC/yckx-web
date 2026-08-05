@@ -18,7 +18,7 @@ export function PostColumnManager({
   selectedIds,
   columns,
 }: {
-  kind: "TECHNICAL" | "NEWS";
+  kind: "TECHNICAL" | "NEWS" | "DAILY";
   slug: string;
   categoryId: string | null;
   selectedIds: string[];
@@ -30,7 +30,7 @@ export function PostColumnManager({
   const [message, setMessage] = useState("");
   const options = columns.filter(
     (column) =>
-      (kind === "NEWS" || column.categoryId === categoryId) &&
+      (kind !== "TECHNICAL" || column.categoryId === categoryId) &&
       (column.isActive || selectedIds.includes(column.id))
   );
 
@@ -42,7 +42,11 @@ export function PostColumnManager({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          kind === "TECHNICAL" ? { technicalColumnIds: selection } : { newsColumnIds: selection }
+          kind === "TECHNICAL"
+            ? { technicalColumnIds: selection }
+            : kind === "NEWS"
+              ? { newsColumnIds: selection }
+              : { dailyColumnIds: selection }
         ),
       });
       const result = await response.json();
@@ -82,7 +86,13 @@ export function PostColumnManager({
             </label>
           ))
         ) : (
-          <p>{kind === "TECHNICAL" ? "当前分类没有可用专栏。" : "暂无可用新闻专栏。"}</p>
+          <p>
+            {kind === "TECHNICAL"
+              ? "当前分类没有可用专栏。"
+              : kind === "NEWS"
+                ? "暂无可用新闻专栏。"
+                : "暂无可用日常专栏。"}
+          </p>
         )}
         <button type="button" disabled={pending} onClick={() => void save()}>
           <Save size={13} aria-hidden="true" />
