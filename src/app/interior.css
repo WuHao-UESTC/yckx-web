@@ -3937,9 +3937,10 @@ body:has(.interior-page) .site-footer {
 
 .routine-group-photos {
   position: relative;
-  width: 100%;
+  width: min(100%, 420px);
   min-width: 0;
-  height: 244px;
+  height: auto;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   border: 1px solid rgba(237, 201, 121, 0.38);
   background: #071b1d;
@@ -3984,10 +3985,14 @@ body:has(.interior-page) .site-footer {
 
 .routine-group-photos__frame {
   position: relative;
+  display: grid;
   width: 100%;
   min-width: 100%;
   height: 100%;
+  place-items: center;
   margin: 0;
+  background: rgba(3, 16, 18, 0.74);
+  padding: 18px;
   scroll-snap-align: start;
 }
 
@@ -4001,9 +4006,13 @@ body:has(.interior-page) .site-footer {
 
 .routine-group-photos__frame img {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
 }
 
 .routine-group-photos__frame figcaption {
@@ -4370,9 +4379,10 @@ body:has(.interior-page) .site-footer {
 }
 
 .routine-photo-wall__frame {
-  display: block;
+  display: grid;
   width: 100%;
   height: 100%;
+  place-items: center;
   background: #f2efe3;
   box-shadow:
     0 12px 22px rgba(0, 0, 0, 0.28),
@@ -4382,10 +4392,13 @@ body:has(.interior-page) .site-footer {
 
 .routine-photo-wall__frame img {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   background: #cbd2ca;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
 }
 
 .routine-photo-wall__pin {
@@ -4634,7 +4647,7 @@ body:has(.interior-page) .site-footer {
 
   .routine-page .interior-page__actions {
     grid-row: auto;
-    min-height: 220px;
+    min-height: 0;
   }
 
   .routine-page__layout {
@@ -4689,12 +4702,9 @@ body:has(.interior-page) .site-footer {
 }
 
 @media (max-width: 720px) {
-  .routine-page .interior-page__actions {
-    min-height: 190px;
-  }
-
   .routine-group-photos {
-    height: 190px;
+    width: min(100%, 420px);
+    height: auto;
   }
 
   .routine-group-photos__frame figcaption span,
