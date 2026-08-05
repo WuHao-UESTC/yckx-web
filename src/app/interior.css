@@ -3913,9 +3913,9 @@ body:has(.interior-page) .site-footer {
 
 /* Routine pinned photo wall */
 .routine-page .interior-page__header {
-  grid-template-columns: minmax(280px, 0.78fr) minmax(520px, 1.22fr);
-  min-height: 292px;
-  align-items: end;
+  grid-template-columns: minmax(300px, 0.58fr) minmax(0, 1.42fr);
+  min-height: clamp(380px, 42vw, 560px);
+  align-items: center;
   gap: clamp(28px, 4vw, 64px);
   padding-right: 0;
 }
@@ -3929,6 +3929,7 @@ body:has(.interior-page) .site-footer {
   grid-column: 2;
   min-width: 0;
   align-self: stretch;
+  align-items: center;
 }
 
 .routine-page .interior-page__mark {
@@ -3937,7 +3938,7 @@ body:has(.interior-page) .site-footer {
 
 .routine-group-photos {
   position: relative;
-  width: min(100%, 420px);
+  width: min(100%, 840px);
   min-width: 0;
   height: auto;
   aspect-ratio: 3 / 2;
@@ -3972,6 +3973,8 @@ body:has(.interior-page) .site-footer {
 }
 
 .routine-group-photos__rail {
+  position: relative;
+  z-index: 2;
   display: flex;
   width: 100%;
   height: 100%;
@@ -3991,20 +3994,47 @@ body:has(.interior-page) .site-footer {
   height: 100%;
   place-items: center;
   margin: 0;
-  background: rgba(3, 16, 18, 0.74);
-  padding: 18px;
+  background: rgba(3, 16, 18, 0.32);
+  padding: 28px;
   scroll-snap-align: start;
 }
 
-.routine-group-photos__frame::after {
+.routine-group-photos__backdrop {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 48%, rgba(3, 15, 17, 0.76));
-  content: "";
+  width: 100%;
+  height: 100%;
+  filter: blur(22px) saturate(0.78);
+  object-fit: cover;
+  opacity: 0.42;
+  pointer-events: none;
+  transform: scale(1.08);
+}
+
+.routine-group-photos__shade {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: rgba(3, 17, 19, 0.54);
   pointer-events: none;
 }
 
-.routine-group-photos__frame img {
+.routine-group-photos__surface {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: min(100%, 760px);
+  height: min(100%, 470px);
+  place-items: center;
+  border: 1px solid rgba(237, 201, 121, 0.56);
+  background: rgba(4, 20, 22, 0.66);
+  padding: 18px;
+  box-shadow:
+    0 20px 46px rgba(0, 0, 0, 0.34),
+    inset 0 0 0 5px rgba(6, 25, 27, 0.5);
+}
+
+.routine-group-photos__surface img {
   display: block;
   width: auto;
   height: auto;
@@ -4012,6 +4042,7 @@ body:has(.interior-page) .site-footer {
   max-height: 100%;
   object-fit: contain;
   object-position: center;
+  max-height: 100%;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
 }
 
@@ -4650,6 +4681,14 @@ body:has(.interior-page) .site-footer {
     min-height: 0;
   }
 
+  .routine-page .interior-page__header {
+    min-height: 0;
+  }
+
+  .routine-page .interior-page__actions {
+    min-height: clamp(300px, 58vw, 500px);
+  }
+
   .routine-page__layout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -4703,7 +4742,7 @@ body:has(.interior-page) .site-footer {
 
 @media (max-width: 720px) {
   .routine-group-photos {
-    width: min(100%, 420px);
+    width: min(100%, 840px);
     height: auto;
   }
 
