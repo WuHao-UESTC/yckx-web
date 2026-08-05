@@ -35,17 +35,21 @@ export async function createArticleMetadata(slug: string): Promise<Metadata> {
 }
 
 export function findPublishedArticle(slug: string, kind: ArticleKind) {
+  const category = kind === "NEWS" ? { slug: "news" } : { type: kind };
+
   return prisma.post.findFirst({
-    where: { slug, status: "PUBLISHED", category: { type: kind } },
+    where: { slug, status: "PUBLISHED", category },
     select: articleDetailSelect,
   });
 }
 
 export async function findAdjacentPosts(post: ArticleDetailData, kind: ArticleKind) {
   const scope: Prisma.PostWhereInput =
-    kind === "EVENT" || kind === "NEWS"
-      ? { category: { type: kind } }
-      : { categoryId: post.categoryId };
+    kind === "NEWS"
+      ? { category: { slug: "news" } }
+      : kind === "EVENT"
+        ? { category: { type: "EVENT" } }
+        : { categoryId: post.categoryId };
 
   return Promise.all([
     post.publishedAt

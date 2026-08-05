@@ -37,11 +37,31 @@ git fetch origin
 git pull --ff-only origin main
 corepack enable
 pnpm install --frozen-lockfile
+pnpm db:generate
 pnpm db:migrate:status
 pnpm db:migrate:deploy
 pnpm build
 <restart-web-service>
 ```
+
+`src/generated/prisma` 不进入 Git，因此每次包含 `prisma/schema.prisma` 变更的更新都必须在 NAS 重新执行 `pnpm db:generate`。项目的 `dev`、`build` 和 `start` 脚本也会在启动前自动生成 Client，但数据库迁移仍必须显式执行。
+
+## NAS 开发服务器更新
+
+NAS 上长期运行 `next dev` 时，Git 拉取不会替换进程内已经加载的 Prisma Client。包含 Schema 或迁移的更新按以下顺序执行：
+
+```bash
+git pull --ff-only origin main
+corepack enable
+pnpm install --frozen-lockfile
+pnpm db:generate
+pnpm db:migrate:status
+pnpm db:migrate:deploy
+<stop-current-dev-process>
+pnpm dev
+```
+
+必须先停止旧进程再执行最后的 `pnpm dev`。仅依赖热更新会继续使用旧枚举和模型 delegate，表现为 `Expected CategoryType` 或 `findMany` 未定义。
 
 如果应用由 Docker Compose 构建和运行，则依赖安装、迁移、构建和重启应在对应容器或镜像流程中完成。禁止猜测服务名后直接操作生产容器。
 

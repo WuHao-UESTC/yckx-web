@@ -6,7 +6,7 @@ export const revalidate = 300;
 
 export default async function NewsPage() {
   const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED", category: { type: "NEWS" } },
+    where: { status: "PUBLISHED", category: { slug: "news" } },
     include: {
       author: { select: { id: true, username: true, displayName: true } },
       category: true,

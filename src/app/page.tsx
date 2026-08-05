@@ -81,7 +81,7 @@ async function getHomeData(): Promise<OceanHomeData> {
       take: 5,
     }),
     prisma.post.findMany({
-      where: { status: "PUBLISHED", category: { type: "NEWS" } },
+      where: { status: "PUBLISHED", category: { slug: "news" } },
       select: {
         id: true,
         title: true,
