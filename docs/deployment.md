@@ -69,7 +69,7 @@ pnpm dev
 
 Archive 星链与新闻多专栏更新包含新的 `post_news_columns` 关联表和现有新闻专栏关系回填，也不能只执行 `git pull`。迁移前必须备份 PostgreSQL 和 `UPLOAD_DIR`；拉取后执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，再停止旧的 NAS 开发进程并重新运行 `pnpm dev`。
 
-Routine 照片墙与日常多专栏更新包含新的 `post_daily_columns` 关联表和现有日常专栏关系回填，也不能只执行 `git pull`。迁移前必须备份 PostgreSQL 和 `UPLOAD_DIR`；拉取后执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，再停止旧的 NAS 开发进程并重新运行 `pnpm dev`。
+Routine 照片墙、顶部合照与日常多专栏更新包含新的 `post_daily_columns` 关联表、现有日常专栏关系回填、`PhotoKind` 枚举和合照年份字段，也不能只执行 `git pull`。迁移前必须备份 PostgreSQL 和 `UPLOAD_DIR`；拉取后执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，再停止旧的 NAS 开发进程并重新运行 `pnpm dev`。
 
 如果应用由 Docker Compose 构建和运行，则依赖安装、迁移、构建和重启应在对应容器或镜像流程中完成。禁止猜测服务名后直接操作生产容器。
 

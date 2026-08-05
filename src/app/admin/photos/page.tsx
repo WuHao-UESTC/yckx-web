@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { movePhotoFormSchema, resourceIdSchema } from "@/modules/admin/admin.schemas";
 import { createPhotoSchema } from "@/modules/gallery/photos.schemas";
+import { AdminGroupPhotoUploader } from "@/modules/gallery/components/admin-group-photo-uploader";
 import { deletePhoto as deletePhotoRecord } from "@/modules/gallery/server/photo-service";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
@@ -10,7 +11,7 @@ export default async function AdminPhotosPage() {
   await requireAdmin();
   const photos = await prisma.photo.findMany({
     include: { author: { select: { displayName: true, username: true } } },
-    orderBy: { sortOrder: "asc" },
+    orderBy: [{ kind: "desc" }, { sortOrder: "asc" }],
   });
 
   async function addPhoto(formData: FormData) {
@@ -19,6 +20,7 @@ export default async function AdminPhotosPage() {
     const input = parseFormData(formData, createPhotoSchema);
 
     const maxOrder = await prisma.photo.findFirst({
+      where: { kind: "WALL" },
       orderBy: { sortOrder: "desc" },
       select: { sortOrder: true },
     });
@@ -26,11 +28,13 @@ export default async function AdminPhotosPage() {
       data: {
         imagePath: input.imagePath,
         caption: input.caption || null,
+        kind: "WALL",
         authorId: user.id,
         sortOrder: (maxOrder?.sortOrder ?? 0) + 1,
       },
     });
     revalidatePath("/admin/photos");
+    revalidatePath("/routine");
   }
 
   async function deletePhoto(formData: FormData) {
@@ -61,18 +65,18 @@ export default async function AdminPhotosPage() {
     const input = parseFormData(formData, movePhotoFormSchema);
     const current = await prisma.photo.findUniqueOrThrow({
       where: { id: input.id },
-      select: { sortOrder: true },
+      select: { kind: true, sortOrder: true },
     });
 
     const sibling =
       input.direction === "up"
         ? await prisma.photo.findFirst({
-            where: { sortOrder: { lt: current.sortOrder } },
+            where: { kind: current.kind, sortOrder: { lt: current.sortOrder } },
             orderBy: { sortOrder: "desc" },
             select: { id: true, sortOrder: true },
           })
         : await prisma.photo.findFirst({
-            where: { sortOrder: { gt: current.sortOrder } },
+            where: { kind: current.kind, sortOrder: { gt: current.sortOrder } },
             orderBy: { sortOrder: "asc" },
             select: { id: true, sortOrder: true },
           });
@@ -88,9 +92,11 @@ export default async function AdminPhotosPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">照片墙管理</h1>
+      <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">日常影像管理</h1>
 
-      {/* 新增照片 */}
+      <AdminGroupPhotoUploader />
+
+      <h2 className="mb-4 text-lg font-semibold text-[#1a1a1a]">普通照片墙快速添加</h2>
       <form action={addPhoto} className="card mb-8 flex flex-wrap items-end gap-4">
         <div className="flex-1 min-w-[200px]">
           <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
@@ -114,7 +120,7 @@ export default async function AdminPhotosPage() {
         </button>
       </form>
 
-      {/* 照片列表 */}
+      <h2 className="mb-4 text-lg font-semibold text-[#1a1a1a]">全部影像档案</h2>
       {photos.length === 0 ? (
         <p className="text-[#6b6b6b]">暂无照片。</p>
       ) : (
@@ -133,6 +139,8 @@ export default async function AdminPhotosPage() {
               )}
               <p className="text-xs text-[#6b6b6b] px-1">
                 {photo.author.displayName ?? photo.author.username} ·{" "}
+                {photo.kind === "GROUP" ? `顶部合照 · ${photo.year ?? "未标年份"}` : "普通照片墙"}
+                {" · "}
                 {photo.isVisible ? "公开" : "已隐藏"}
               </p>
               <div className="flex items-center justify-between mt-1.5 px-1">

@@ -6,7 +6,7 @@ export default async function DashboardRoutinePage() {
   const user = await requireUser();
   const [noteCount, photoCount, dailyPostCount] = await Promise.all([
     prisma.stickyNote.count({ where: { authorId: user.id } }),
-    prisma.photo.count({ where: { authorId: user.id } }),
+    prisma.photo.count({ where: { authorId: user.id, kind: "WALL" } }),
     prisma.post.count({ where: { authorId: user.id, kind: "DAILY" } }),
   ]);
 

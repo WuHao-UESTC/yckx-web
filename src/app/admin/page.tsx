@@ -16,7 +16,7 @@ const ADMIN_STATIONS = [
   { href: "/admin/posts", label: "文章管理", meta: "公开信号与状态", icon: FileText },
   { href: "/admin/users", label: "用户管理", meta: "成员身份与权限", icon: UsersRound },
   { href: "/admin/categories", label: "分类管理", meta: "知识与竞赛坐标", icon: ListTree },
-  { href: "/admin/photos", label: "照片墙管理", meta: "同行灯火影像", icon: Image },
+  { href: "/admin/photos", label: "日常影像管理", meta: "合照与照片墙", icon: Image },
   { href: "/admin/milestones", label: "大事记编辑", meta: "时间回声节点", icon: Orbit },
   { href: "/admin/invitations", label: "邀请码管理", meta: "新成员通行信号", icon: KeyRound },
   { href: "/admin/config", label: "站点配置", meta: "全站基础参数", icon: Settings },

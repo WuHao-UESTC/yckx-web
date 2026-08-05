@@ -3,12 +3,25 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { AuthenticatedUser } from "@/server/auth/guards";
 import { assertOwnerOrAdmin } from "@/server/auth/guards";
-import { BadRequestError, NotFoundError } from "@/server/http/errors";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@/server/http/errors";
 
 export async function createPhotoFromUpload(
-  input: { fileId: string; caption?: string | null },
-  authorId: string
+  input: {
+    fileId: string;
+    caption?: string | null;
+    kind?: "WALL" | "GROUP";
+    year?: number | null;
+  },
+  user: AuthenticatedUser
 ) {
+  const kind = input.kind ?? "WALL";
+  if (kind === "GROUP" && user.role !== "ADMIN") {
+    throw new ForbiddenError("仅管理员可以上传合照");
+  }
+  if (kind === "GROUP" && !input.year) {
+    throw new BadRequestError("合照必须填写年份");
+  }
+
   return prisma.$transaction(async (tx) => {
     const file = await tx.file.findUnique({
       where: { id: input.fileId },
@@ -23,13 +36,14 @@ export async function createPhotoFromUpload(
     });
 
     if (!file) throw new NotFoundError("上传文件不存在");
-    if (file.uploaderId !== authorId) throw new BadRequestError("只能发布自己上传的照片");
+    if (file.uploaderId !== user.id) throw new BadRequestError("只能发布自己上传的照片");
     if (!file.mimeType.startsWith("image/") || file.purpose !== "PHOTO") {
       throw new BadRequestError("请选择通过日常照片入口上传的图片");
     }
     if (file.postId || file.photo) throw new BadRequestError("该文件已被其他内容使用");
 
     const latest = await tx.photo.findFirst({
+      where: { kind },
       orderBy: { sortOrder: "desc" },
       select: { sortOrder: true },
     });
@@ -38,8 +52,10 @@ export async function createPhotoFromUpload(
       data: {
         imagePath: `/api/files/${file.id}/preview`,
         caption: input.caption || null,
+        kind,
+        year: kind === "GROUP" ? input.year : null,
         fileId: file.id,
-        authorId,
+        authorId: user.id,
         sortOrder: (latest?.sortOrder ?? 0) + 1,
       },
       include: { author: { select: { displayName: true, username: true } } },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createUploadedPhotoSchema } from "@/modules/gallery/photos.schemas";
 import { createPhotoFromUpload } from "@/modules/gallery/server/photo-service";
@@ -6,10 +7,10 @@ import { requireUser } from "@/server/auth/guards";
 import { routeErrorResponse } from "@/server/http/response";
 import { parseJson } from "@/server/http/validation";
 
-// GET: 照片列表
+// GET: 公开普通照片墙列表
 export async function GET() {
   const photos = await prisma.photo.findMany({
-    where: { isVisible: true },
+    where: { kind: "WALL", isVisible: true },
     include: { author: { select: { displayName: true, username: true } } },
     orderBy: { sortOrder: "asc" },
     take: 50,
@@ -22,7 +23,8 @@ export async function POST(req: NextRequest) {
   try {
     const user = await requireUser();
     const input = await parseJson(req, createUploadedPhotoSchema);
-    const photo = await createPhotoFromUpload(input, user.id);
+    const photo = await createPhotoFromUpload(input, user);
+    revalidatePath("/routine");
 
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {

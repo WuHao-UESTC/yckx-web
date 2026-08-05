@@ -307,20 +307,27 @@ enum FilePurpose {
 
 // ========== 照片墙 ==========
 model Photo {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   imagePath String
   caption   String?
-  fileId    String?  @unique
-  file      File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  kind      PhotoKind @default(WALL)
+  year      Int?
+  fileId    String?   @unique
+  file      File?     @relation(fields: [fileId], references: [id], onDelete: SetNull)
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  isVisible Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  isVisible Boolean   @default(true)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  @@index([isVisible, sortOrder])
+  @@index([kind, isVisible, sortOrder])
   @@map("photos")
+}
+
+enum PhotoKind {
+  WALL
+  GROUP
 }
 
 // ========== 吐槽便签 ==========

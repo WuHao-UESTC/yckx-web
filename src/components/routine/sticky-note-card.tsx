@@ -25,10 +25,12 @@ export function StickyNoteCard({
   note,
   index,
   canDelete,
+  showDate = true,
 }: {
   note: Note;
   index: number;
   canDelete: boolean;
+  showDate?: boolean;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -54,8 +56,7 @@ export function StickyNoteCard({
       <div className="flex items-center justify-between mt-2">
         <p className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
           {note.isAnonymous ? "匿名" : (note.author.displayName ?? note.author.username)}
-          {" · "}
-          {note.createdAt.toLocaleDateString("zh-CN")}
+          {showDate && ` · ${note.createdAt.toLocaleDateString("zh-CN")}`}
         </p>
         {canDelete && (
           <button

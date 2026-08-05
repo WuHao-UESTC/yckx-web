@@ -35,6 +35,7 @@ export function parsePublicPhotoQuery(query: {
 
 export async function findPublicPhotoPage(query: ReturnType<typeof parsePublicPhotoQuery>) {
   const where: Prisma.PhotoWhereInput = {
+    kind: "WALL",
     isVisible: true,
     ...(query.q ? { caption: { contains: query.q, mode: "insensitive" } } : {}),
     ...(Object.keys(query.createdAt).length > 0 ? { createdAt: query.createdAt } : {}),
