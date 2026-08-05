@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { SITE_NAME } from "@/lib/constants";
 import { adjacentPostSelect, articleDetailSelect, type ArticleDetailData } from "./post-selects";
 
-export type ArticleKind = "KNOWLEDGE" | "COMPETITION" | "NEWS" | "EVENT";
+export type ArticleKind = "KNOWLEDGE" | "COMPETITION" | "NEWS" | "EVENT" | "DAILY";
 
 export async function createArticleMetadata(slug: string): Promise<Metadata> {
   const post = await prisma.post.findUnique({
@@ -35,10 +35,17 @@ export async function createArticleMetadata(slug: string): Promise<Metadata> {
 }
 
 export function findPublishedArticle(slug: string, kind: ArticleKind) {
-  const category = kind === "NEWS" ? { slug: "news" } : { type: kind };
+  const scope: Prisma.PostWhereInput =
+    kind === "KNOWLEDGE" || kind === "COMPETITION"
+      ? { kind: "TECHNICAL", category: { type: kind } }
+      : kind === "EVENT"
+        ? { kind: "NEWS", category: { type: "EVENT" } }
+        : kind === "NEWS"
+          ? { kind: "NEWS", NOT: { category: { type: "EVENT" } } }
+          : { kind: "DAILY" };
 
   return prisma.post.findFirst({
-    where: { slug, status: "PUBLISHED", category },
+    where: { slug, status: "PUBLISHED", ...scope },
     select: articleDetailSelect,
   });
 }
@@ -46,10 +53,12 @@ export function findPublishedArticle(slug: string, kind: ArticleKind) {
 export async function findAdjacentPosts(post: ArticleDetailData, kind: ArticleKind) {
   const scope: Prisma.PostWhereInput =
     kind === "NEWS"
-      ? { category: { slug: "news" } }
+      ? { kind: "NEWS", NOT: { category: { type: "EVENT" } } }
       : kind === "EVENT"
-        ? { category: { type: "EVENT" } }
-        : { categoryId: post.categoryId };
+        ? { kind: "NEWS", category: { type: "EVENT" } }
+        : kind === "DAILY"
+          ? { kind: "DAILY", columnId: post.column?.id }
+          : { kind: "TECHNICAL", categoryId: post.categoryId };
 
   return Promise.all([
     post.publishedAt

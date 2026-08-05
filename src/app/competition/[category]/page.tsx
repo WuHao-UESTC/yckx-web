@@ -25,7 +25,7 @@ export default async function CompetitionCategoryPage({ params, searchParams }: 
 
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
-      where: { categoryId: category.id, status: "PUBLISHED" },
+      where: { categoryId: category.id, status: "PUBLISHED", kind: "TECHNICAL" },
       include: {
         author: { select: { id: true, username: true, displayName: true } },
         tags: { include: { tag: true } },
@@ -34,7 +34,9 @@ export default async function CompetitionCategoryPage({ params, searchParams }: 
       skip: (page - 1) * POSTS_PER_PAGE,
       take: POSTS_PER_PAGE,
     }),
-    prisma.post.count({ where: { categoryId: category.id, status: "PUBLISHED" } }),
+    prisma.post.count({
+      where: { categoryId: category.id, status: "PUBLISHED", kind: "TECHNICAL" },
+    }),
   ]);
 
   const copy = HOME_CHAPTER_COPY.competition;

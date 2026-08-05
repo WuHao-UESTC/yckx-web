@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import type { Post, User, Category, Tag } from "@/generated/prisma/client";
+import type { Category, Column, Post, Tag, User } from "@/generated/prisma/client";
 import { postUrl } from "@/lib/post-url";
 
 /** 文章卡片最小所需字段 */
 export type PostCardData = Post & {
   author: Pick<User, "id" | "username" | "displayName"> & Partial<Pick<User, "avatar">>;
   category?: Pick<Category, "id" | "name" | "slug" | "type"> | null;
+  column?: Pick<Column, "id" | "title" | "slug" | "type"> | null;
   tags?: { tag: Pick<Tag, "id" | "name" | "slug"> }[];
 };
 
@@ -40,6 +41,7 @@ export function PostCard({ post, showExcerpt = true, showTags = false, maxTags =
               })}
             </time>
             {post.category && <span className="tag">{post.category.name}</span>}
+            {post.column && <span className="tag">{post.column.title}</span>}
             {showTags &&
               tags.slice(0, maxTags).map((pt) => (
                 <span key={pt.tag.id} className="tag">

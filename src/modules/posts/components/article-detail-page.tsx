@@ -31,21 +31,28 @@ const ARTICLE_OPTIONS: Record<
     useCreatedAtFallback: false,
   },
   COMPETITION: {
-    showAttachments: false,
+    showAttachments: true,
     showBottomTags: true,
     showCategory: false,
     showViewCount: true,
     useCreatedAtFallback: false,
   },
   EVENT: {
-    showAttachments: false,
+    showAttachments: true,
     showBottomTags: true,
     showCategory: false,
     showViewCount: false,
     useCreatedAtFallback: true,
   },
   NEWS: {
-    showAttachments: false,
+    showAttachments: true,
+    showBottomTags: true,
+    showCategory: false,
+    showViewCount: true,
+    useCreatedAtFallback: false,
+  },
+  DAILY: {
+    showAttachments: true,
     showBottomTags: true,
     showCategory: false,
     showViewCount: true,
@@ -80,6 +87,12 @@ const ARTICLE_PRESENTATION: Record<
     depth: HOME_CHAPTER_COPY.archive.depth,
     section: HOME_CHAPTER_COPY.archive.label,
     recordLabel: "新闻档案",
+  },
+  DAILY: {
+    theme: "routine",
+    depth: HOME_CHAPTER_COPY.routine.depth,
+    section: HOME_CHAPTER_COPY.routine.label,
+    recordLabel: "同行日志",
   },
 };
 

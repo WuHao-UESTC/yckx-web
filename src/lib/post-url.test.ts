@@ -12,4 +12,9 @@ describe("postUrl", () => {
 
     expect(postUrl({ slug, category: { slug: categorySlug, type } })).toBe(expected);
   });
+
+  it("routes new news and daily posts by content kind", () => {
+    expect(postUrl({ slug: "award", kind: "NEWS" })).toBe("/archive/news/award");
+    expect(postUrl({ slug: "year-review", kind: "DAILY" })).toBe("/routine/entries/year-review");
+  });
 });

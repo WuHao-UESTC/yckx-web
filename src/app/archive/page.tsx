@@ -13,7 +13,11 @@ export const revalidate = 300;
 export default async function ArchivePage() {
   const [newsPosts, eventPosts, columns] = await Promise.all([
     prisma.post.findMany({
-      where: { status: "PUBLISHED", category: { slug: "news" } },
+      where: {
+        status: "PUBLISHED",
+        kind: "NEWS",
+        NOT: { category: { type: "EVENT" } },
+      },
       include: {
         author: { select: { id: true, username: true, displayName: true } },
         category: true,
@@ -22,7 +26,7 @@ export default async function ArchivePage() {
       orderBy: { publishedAt: "desc" },
     }),
     prisma.post.findMany({
-      where: { status: "PUBLISHED", category: { type: "EVENT" } },
+      where: { status: "PUBLISHED", kind: "NEWS", category: { type: "EVENT" } },
       include: {
         author: { select: { id: true, username: true, displayName: true } },
         category: true,
@@ -30,6 +34,7 @@ export default async function ArchivePage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.column.findMany({
+      where: { type: "NEWS", isActive: true },
       include: { _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
       orderBy: { sortOrder: "asc" },
     }),

@@ -5,6 +5,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { changePostStatusFormSchema, resourceIdSchema } from "@/modules/admin/admin.schemas";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
+import { updatePost } from "@/modules/posts/server/post-service";
 
 export default async function AdminPostsPage({
   searchParams,
@@ -23,7 +24,11 @@ export default async function AdminPostsPage({
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       where,
-      include: { author: { select: { displayName: true, username: true } }, category: true },
+      include: {
+        author: { select: { displayName: true, username: true } },
+        category: true,
+        column: true,
+      },
       orderBy: { updatedAt: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
@@ -54,15 +59,13 @@ export default async function AdminPostsPage({
 
   async function changeStatus(formData: FormData) {
     "use server";
-    await requireAdmin();
+    const user = await requireAdmin();
     const input = parseFormData(formData, changePostStatusFormSchema);
-    await prisma.post.update({
+    const post = await prisma.post.findUniqueOrThrow({
       where: { id: input.id },
-      data: {
-        status: input.status,
-        publishedAt: input.status === "PUBLISHED" ? new Date() : undefined,
-      },
+      select: { slug: true },
     });
+    await updatePost(post.slug, { status: input.status }, user);
     revalidatePath("/admin/posts");
   }
 
@@ -119,7 +122,10 @@ export default async function AdminPostsPage({
               </div>
               <p className="text-xs text-[#6b6b6b] mt-0.5 font-[family-name:var(--font-sans)]">
                 {post.author.displayName ?? post.author.username} ·{" "}
-                {post.category?.name || "无分类"} · {post.updatedAt.toLocaleDateString("zh-CN")}
+                {post.kind === "TECHNICAL" ? "技术" : post.kind === "NEWS" ? "新闻" : "日常"}
+                {post.category ? ` · ${post.category.name}` : ""}
+                {post.column ? ` · ${post.column.title}` : ""} ·{" "}
+                {post.updatedAt.toLocaleDateString("zh-CN")}
               </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">

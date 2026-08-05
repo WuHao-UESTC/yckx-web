@@ -13,6 +13,7 @@ interface SearchPost {
   categoryName: string | null;
   categorySlug: string | null;
   categoryType: string | null;
+  kind: string;
 }
 
 export function SearchResultCard({ post, query }: { post: SearchPost; query: string }) {
@@ -21,6 +22,7 @@ export function SearchResultCard({ post, query }: { post: SearchPost; query: str
       <Link
         href={postUrl({
           slug: post.slug,
+          kind: post.kind,
           category: { slug: post.categorySlug, type: post.categoryType },
         })}
         className="post-signal__link"

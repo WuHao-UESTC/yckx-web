@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readFile } from "fs/promises";
-import { assertOwnerOrAdmin, requireUser } from "@/server/auth/guards";
-import { NotFoundError } from "@/server/http/errors";
+import { requireUser } from "@/server/auth/guards";
+import { ForbiddenError, NotFoundError } from "@/server/http/errors";
 import { routeErrorResponse } from "@/server/http/response";
-import { resolveStoredPath } from "@/server/storage/file-storage";
+import { createContentDisposition, resolveStoredPath } from "@/server/storage/file-storage";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         mimeType: true,
         size: true,
         uploaderId: true,
-        post: { select: { status: true } },
+        post: { select: { status: true, authorId: true } },
       },
     });
 
@@ -26,7 +26,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const isPublicAttachment = file.post?.status === "PUBLISHED";
     if (!isPublicAttachment) {
       const user = await requireUser();
-      assertOwnerOrAdmin(user, file.uploaderId);
+      const canReadPrivateFile =
+        user.role === "ADMIN" || user.id === file.uploaderId || user.id === file.post?.authorId;
+      if (!canReadPrivateFile) throw new ForbiddenError("无权下载该文件");
     }
 
     const content = await readFile(/*turbopackIgnore: true*/ resolveStoredPath(file.storedPath));
@@ -34,8 +36,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       headers: {
         "Content-Type": file.mimeType,
         "Content-Length": String(file.size),
-        "Content-Disposition": `attachment; filename="${encodeURIComponent(file.filename)}"`,
-        "Cache-Control": isPublicAttachment ? "public, max-age=3600" : "private, no-store",
+        "Content-Disposition": createContentDisposition("attachment", file.filename),
+        "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
       },
     });

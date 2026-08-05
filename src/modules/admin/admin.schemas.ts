@@ -8,6 +8,12 @@ export const createCategoryFormSchema = z.object({
   type: z.enum(["KNOWLEDGE", "COMPETITION", "NEWS", "EVENT", "COLUMN", "ROUTINE"]),
 });
 
+export const toggleTaxonomyFormSchema = z.object({
+  id: resourceIdSchema,
+  resource: z.enum(["category", "column"]),
+  isActive: z.enum(["true", "false"]).transform((value) => value === "true"),
+});
+
 const milestoneDateSchema = z
   .string()
   .trim()

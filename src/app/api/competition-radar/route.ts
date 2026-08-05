@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const query = competitionRadarQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
     const category = query.slug
       ? await prisma.category.findFirst({
-          where: { slug: query.slug, type: "COMPETITION" },
+          where: { slug: query.slug, type: "COMPETITION", isActive: true },
           select: { id: true },
         })
       : null;
@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
 
     const where = {
       status: "PUBLISHED" as const,
-      category: { type: "COMPETITION" as const },
+      kind: "TECHNICAL" as const,
+      category: { type: "COMPETITION" as const, isActive: true },
       ...(category ? { categoryId: category.id } : { isFeatured: true }),
     };
     const [records, total] = await Promise.all([

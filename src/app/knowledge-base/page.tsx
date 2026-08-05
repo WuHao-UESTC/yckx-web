@@ -11,8 +11,10 @@ export const revalidate = 300;
 
 export default async function KnowledgeBasePage() {
   const categories = await prisma.category.findMany({
-    where: { type: "KNOWLEDGE" },
-    include: { _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
+    where: { type: "KNOWLEDGE", isActive: true },
+    include: {
+      _count: { select: { posts: { where: { status: "PUBLISHED", kind: "TECHNICAL" } } } },
+    },
     orderBy: { sortOrder: "asc" },
   });
 

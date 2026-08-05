@@ -9,24 +9,26 @@ datasource db {
 
 // ========== 用户与认证 ==========
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  username      String       @unique
-  displayName   String?
-  passwordHash  String
-  avatar        String?
-  role          Role         @default(MEMBER)
-  bio           String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  displayName  String?
+  passwordHash String
+  avatar       String?
+  role         Role     @default(MEMBER)
+  bio          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  posts         Post[]
-  files         File[]
-  profile       Profile?
-  invitations   Invitation[]
-  photos        Photo[]
-  comments      Comment[]
-  stickyNotes   StickyNote[]
+  posts       Post[]
+  files       File[]
+  categories  Category[]   @relation("CategoryCreator")
+  columns     Column[]     @relation("ColumnCreator")
+  profile     Profile?
+  invitations Invitation[]
+  photos      Photo[]
+  comments    Comment[]
+  stickyNotes StickyNote[]
 
   @@map("users")
 }
@@ -68,17 +70,22 @@ model Profile {
 
 // ========== 分类 ==========
 model Category {
-  id        String       @id @default(cuid())
-  name      String       @unique
-  slug      String       @unique
-  type      CategoryType
-  parentId  String?
-  parent    Category?    @relation("CategoryTree", fields: [parentId], references: [id])
-  children  Category[]   @relation("CategoryTree")
-  posts     Post[]
-  sortOrder Int          @default(0)
-  createdAt DateTime     @default(now())
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  type        CategoryType
+  parentId    String?
+  parent      Category?    @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[]   @relation("CategoryTree")
+  posts       Post[]
+  createdById String?
+  creator     User?        @relation("CategoryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  isActive    Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
+  @@index([type, isActive, sortOrder])
   @@map("categories")
 }
 
@@ -106,17 +113,27 @@ model Milestone {
 
 // ========== 专栏 ==========
 model Column {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
-  slug        String   @unique
+  slug        String     @unique
   description String?
   coverImage  String?
+  type        ColumnType @default(NEWS)
   posts       Post[]
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdById String?
+  creator     User?      @relation("ColumnCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
+  @@index([type, isActive, sortOrder])
   @@map("columns")
+}
+
+enum ColumnType {
+  NEWS
+  DAILY
 }
 
 // ========== 文章 ==========
@@ -128,7 +145,7 @@ model Post {
   excerpt     String?
   coverImage  String?
   status      PostStatus @default(DRAFT)
-  postType    PostType   @default(ARTICLE)
+  kind        PostKind   @default(TECHNICAL)
   authorId    String
   author      User       @relation(fields: [authorId], references: [id])
   categoryId  String?
@@ -147,7 +164,9 @@ model Post {
 
   @@index([authorId])
   @@index([categoryId])
-  @@index([status, postType])
+  @@index([status, kind])
+  @@index([kind, status, publishedAt])
+  @@index([columnId, status])
   @@index([createdAt])
   @@index([slug])
   @@map("posts")
@@ -159,10 +178,10 @@ enum PostStatus {
   ARCHIVED
 }
 
-enum PostType {
-  ARTICLE
-  NOTE
-  PHOTO
+enum PostKind {
+  TECHNICAL
+  NEWS
+  DAILY
 }
 
 // ========== 标签 ==========
@@ -178,8 +197,8 @@ model Tag {
 model PostTag {
   postId String
   tagId  String
-  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([postId, tagId])
   @@map("post_tags")
@@ -203,18 +222,29 @@ model Comment {
 
 // ========== 文件 ==========
 model File {
-  id         String   @id @default(cuid())
+  id         String      @id @default(cuid())
   filename   String
   storedPath String
   mimeType   String
   size       Int
+  purpose    FilePurpose @default(GENERAL)
+  sortOrder  Int         @default(0)
   uploaderId String
-  uploader   User     @relation(fields: [uploaderId], references: [id])
+  uploader   User        @relation(fields: [uploaderId], references: [id])
   postId     String?
-  post       Post?    @relation(fields: [postId], references: [id])
-  createdAt  DateTime @default(now())
+  post       Post?       @relation(fields: [postId], references: [id], onDelete: SetNull)
+  photo      Photo?
+  createdAt  DateTime    @default(now())
 
+  @@index([uploaderId, createdAt])
+  @@index([postId, sortOrder])
   @@map("files")
+}
+
+enum FilePurpose {
+  GENERAL
+  ATTACHMENT
+  PHOTO
 }
 
 // ========== 照片墙 ==========
@@ -222,23 +252,28 @@ model Photo {
   id        String   @id @default(cuid())
   imagePath String
   caption   String?
+  fileId    String?  @unique
+  file      File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
+  isVisible Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@index([isVisible, sortOrder])
   @@map("photos")
 }
 
 // ========== 吐槽便签 ==========
 model StickyNote {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  isAnonymous Boolean @default(false)
-  color     String   @default("yellow")
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  isAnonymous Boolean  @default(false)
+  color       String   @default("yellow")
+  createdAt   DateTime @default(now())
 
   @@map("sticky_notes")
 }

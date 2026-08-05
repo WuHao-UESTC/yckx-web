@@ -13,6 +13,11 @@ export async function POST(req: NextRequest) {
     const user = await requireUser();
     const formData = await req.formData();
     const file = formData.get("file");
+    const purposeValue = formData.get("purpose");
+    const purpose =
+      typeof purposeValue === "string" && ["GENERAL", "ATTACHMENT", "PHOTO"].includes(purposeValue)
+        ? (purposeValue as "GENERAL" | "ATTACHMENT" | "PHOTO")
+        : "GENERAL";
 
     if (!(file instanceof File)) throw new BadRequestError("未选择文件");
     if (!file.name.trim() || file.name.length > 255) {
@@ -20,6 +25,9 @@ export async function POST(req: NextRequest) {
     }
     if (!ALLOWED_MIME_TYPES.includes(file.type as (typeof ALLOWED_MIME_TYPES)[number])) {
       throw new BadRequestError("不支持的文件类型");
+    }
+    if (purpose === "PHOTO" && !file.type.startsWith("image/")) {
+      throw new BadRequestError("日常照片只支持 JPEG、PNG 和 WebP");
     }
     if (file.size <= 0 || file.size > MAX_FILE_SIZE) {
       throw new BadRequestError("文件大小必须在 1 字节到 20MB 之间");
@@ -46,6 +54,7 @@ export async function POST(req: NextRequest) {
         storedPath,
         mimeType: file.type,
         size: file.size,
+        purpose,
         uploaderId: user.id,
       },
       select: {
@@ -53,6 +62,7 @@ export async function POST(req: NextRequest) {
         filename: true,
         mimeType: true,
         size: true,
+        purpose: true,
         createdAt: true,
       },
     });

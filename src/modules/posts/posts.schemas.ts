@@ -5,16 +5,17 @@ const nullableReferenceSchema = z.union([z.string().trim().min(1).max(191), z.nu
 const nullablePathSchema = z.union([z.string().trim().max(2048), z.null()]).optional();
 
 const tagNameSchema = z.string().trim().min(1).max(40);
+const attachmentIdsSchema = z.array(z.string().trim().min(1).max(191)).max(20);
 
 export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
-export const postTypeSchema = z.enum(["ARTICLE", "NOTE", "PHOTO"]);
+export const postKindSchema = z.enum(["TECHNICAL", "NEWS", "DAILY"]);
 
 export const postListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   categoryId: z.string().trim().min(1).max(191).optional(),
   tag: z.string().trim().min(1).max(191).optional(),
   status: z.union([postStatusSchema, z.literal("all")]).default("PUBLISHED"),
-  postType: postTypeSchema.optional(),
+  kind: postKindSchema.optional(),
   columnId: z.string().trim().min(1).max(191).optional(),
   authorId: z.string().trim().min(1).max(191).optional(),
 });
@@ -26,7 +27,8 @@ export const createPostSchema = z.object({
   tags: z.array(tagNameSchema).max(20).default([]),
   coverImage: nullablePathSchema,
   columnId: nullableReferenceSchema,
-  postType: postTypeSchema.default("ARTICLE"),
+  kind: postKindSchema.default("TECHNICAL"),
+  attachmentIds: attachmentIdsSchema.default([]),
 });
 
 export const updatePostSchema = z
@@ -37,7 +39,8 @@ export const updatePostSchema = z
     tags: z.array(tagNameSchema).max(20).optional(),
     coverImage: nullablePathSchema,
     columnId: nullableReferenceSchema,
-    postType: postTypeSchema.optional(),
+    kind: postKindSchema.optional(),
+    attachmentIds: attachmentIdsSchema.optional(),
     status: postStatusSchema.optional(),
   })
   .refine((value) => Object.values(value).some((item) => item !== undefined), {

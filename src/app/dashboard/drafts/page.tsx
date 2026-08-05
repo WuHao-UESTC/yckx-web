@@ -8,6 +8,7 @@ export default async function DraftsPage() {
 
   const drafts = await prisma.post.findMany({
     where: { authorId: userId, status: "DRAFT" },
+    include: { category: true, column: true },
     orderBy: { updatedAt: "desc" },
   });
 
@@ -27,6 +28,11 @@ export default async function DraftsPage() {
               <h3 className="font-bold text-[#1a1a1a]">{post.title || "未命名草稿"}</h3>
               <p className="text-xs text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
                 最后编辑: {post.updatedAt.toLocaleDateString("zh-CN")}
+                <span className="ml-2">
+                  {post.kind === "TECHNICAL" ? "技术" : post.kind === "NEWS" ? "新闻" : "日常"}
+                </span>
+                {post.category && <span className="ml-2">{post.category.name}</span>}
+                {post.column && <span className="ml-2">{post.column.title}</span>}
               </p>
             </Link>
           ))}

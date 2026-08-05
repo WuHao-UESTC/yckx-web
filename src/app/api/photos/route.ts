@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createPhotoSchema } from "@/modules/gallery/photos.schemas";
-import { requireAdmin } from "@/server/auth/guards";
+import { createUploadedPhotoSchema } from "@/modules/gallery/photos.schemas";
+import { createPhotoFromUpload } from "@/modules/gallery/server/photo-service";
+import { requireUser } from "@/server/auth/guards";
 import { routeErrorResponse } from "@/server/http/response";
 import { parseJson } from "@/server/http/validation";
 
 // GET: 照片列表
 export async function GET() {
   const photos = await prisma.photo.findMany({
+    where: { isVisible: true },
     include: { author: { select: { displayName: true, username: true } } },
     orderBy: { sortOrder: "asc" },
     take: 50,
@@ -15,24 +17,12 @@ export async function GET() {
   return NextResponse.json(photos);
 }
 
-// POST: 新增照片（管理员）
+// POST: 发布成员上传的日常照片
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAdmin();
-    const input = await parseJson(req, createPhotoSchema);
-    const maxOrder = await prisma.photo.findFirst({
-      orderBy: { sortOrder: "desc" },
-      select: { sortOrder: true },
-    });
-
-    const photo = await prisma.photo.create({
-      data: {
-        imagePath: input.imagePath,
-        caption: input.caption || null,
-        authorId: user.id,
-        sortOrder: (maxOrder?.sortOrder ?? 0) + 1,
-      },
-    });
+    const user = await requireUser();
+    const input = await parseJson(req, createUploadedPhotoSchema);
+    const photo = await createPhotoFromUpload(input, user.id);
 
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (query.categoryId) where.categoryId = query.categoryId;
-    if (query.postType) where.postType = query.postType;
+    if (query.kind) where.kind = query.kind;
     if (query.columnId) where.columnId = query.columnId;
     if (query.tag) where.tags = { some: { tag: { slug: query.tag } } };
 

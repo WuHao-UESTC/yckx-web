@@ -5,19 +5,59 @@ import { createUrlSlug } from "@/lib/url-slug";
 import { prisma } from "@/lib/prisma";
 import type { AuthenticatedUser } from "@/server/auth/guards";
 import { assertOwnerOrAdmin } from "@/server/auth/guards";
-import { NotFoundError } from "@/server/http/errors";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@/server/http/errors";
 import type { CreatePostInput, UpdatePostInput } from "../posts.schemas";
 import { generateExcerpt } from "../post-text";
 import { postApiSelect } from "./post-selects";
+import { assertValidPostClassification } from "./post-classification";
 
-async function createUniqueSlug(title: string): Promise<string> {
+async function createUniqueSlug(client: Prisma.TransactionClient, title: string): Promise<string> {
   const baseSlug = createUrlSlug(title);
-  const existing = await prisma.post.findUnique({
+  const existing = await client.post.findUnique({
     where: { slug: baseSlug },
     select: { id: true },
   });
 
   return existing ? `${baseSlug}-${Date.now().toString(36)}` : baseSlug;
+}
+
+async function syncPostAttachments(
+  tx: Prisma.TransactionClient,
+  postId: string,
+  attachmentIds: string[],
+  userId: string
+): Promise<void> {
+  const uniqueIds = [...new Set(attachmentIds)];
+  const files = await tx.file.findMany({
+    where: { id: { in: uniqueIds } },
+    select: { id: true, uploaderId: true, postId: true, photo: { select: { id: true } } },
+  });
+
+  if (files.length !== uniqueIds.length) throw new BadRequestError("部分附件不存在");
+
+  for (const file of files) {
+    if (file.photo) throw new BadRequestError("日常照片不能同时作为文章附件");
+    if (file.postId && file.postId !== postId) {
+      throw new BadRequestError("附件已绑定到其他文章");
+    }
+    if (!file.postId && file.uploaderId !== userId) {
+      throw new ForbiddenError("只能添加自己上传的附件");
+    }
+  }
+
+  await tx.file.updateMany({
+    where: { postId, id: { notIn: uniqueIds } },
+    data: { postId: null, purpose: "GENERAL", sortOrder: 0 },
+  });
+
+  await Promise.all(
+    uniqueIds.map((id, index) =>
+      tx.file.update({
+        where: { id },
+        data: { postId, purpose: "ATTACHMENT", sortOrder: index },
+      })
+    )
+  );
 }
 
 function createTagRelations(
@@ -38,22 +78,30 @@ function createTagRelations(
 }
 
 export async function createPost(input: CreatePostInput, authorId: string) {
-  const slug = await createUniqueSlug(input.title);
+  return prisma.$transaction(async (tx) => {
+    const categoryId = input.categoryId || null;
+    const columnId = input.columnId || null;
+    await assertValidPostClassification(tx, { kind: input.kind, categoryId, columnId });
+    const slug = await createUniqueSlug(tx, input.title);
 
-  return prisma.post.create({
-    data: {
-      title: input.title,
-      slug,
-      content: input.content,
-      excerpt: generateExcerpt(input.content),
-      coverImage: input.coverImage || null,
-      categoryId: input.categoryId || null,
-      columnId: input.columnId || null,
-      postType: input.postType,
-      authorId,
-      tags: createTagRelations(input.tags),
-    },
-    select: postApiSelect,
+    const post = await tx.post.create({
+      data: {
+        title: input.title,
+        slug,
+        content: input.content,
+        excerpt: generateExcerpt(input.content),
+        coverImage: input.coverImage || null,
+        categoryId,
+        columnId,
+        kind: input.kind,
+        authorId,
+        tags: createTagRelations(input.tags),
+      },
+      select: { id: true },
+    });
+
+    await syncPostAttachments(tx, post.id, input.attachmentIds, authorId);
+    return tx.post.findUniqueOrThrow({ where: { id: post.id }, select: postApiSelect });
   });
 }
 
@@ -61,11 +109,38 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
   return prisma.$transaction(async (tx) => {
     const post = await tx.post.findUnique({
       where: { slug },
-      select: { id: true, authorId: true, publishedAt: true },
+      select: {
+        id: true,
+        authorId: true,
+        publishedAt: true,
+        status: true,
+        title: true,
+        content: true,
+        kind: true,
+        categoryId: true,
+        columnId: true,
+      },
     });
 
     if (!post) throw new NotFoundError("文章不存在");
     assertOwnerOrAdmin(user, post.authorId);
+
+    const classification = {
+      kind: input.kind ?? post.kind,
+      categoryId: input.categoryId === undefined ? post.categoryId : input.categoryId,
+      columnId: input.columnId === undefined ? post.columnId : input.columnId,
+    };
+    await assertValidPostClassification(tx, classification, {
+      categoryId: post.categoryId,
+      columnId: post.columnId,
+    });
+
+    const nextStatus = input.status ?? post.status;
+    const nextTitle = input.title ?? post.title;
+    const nextContent = input.content ?? post.content;
+    if (nextStatus === "PUBLISHED" && (!nextTitle.trim() || !nextContent.trim())) {
+      throw new BadRequestError("发布前必须填写标题和正文");
+    }
 
     const data: Prisma.PostUpdateInput = {};
     if (input.title !== undefined) data.title = input.title;
@@ -82,7 +157,7 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
       data.column = input.columnId ? { connect: { id: input.columnId } } : { disconnect: true };
     }
     if (input.coverImage !== undefined) data.coverImage = input.coverImage || null;
-    if (input.postType !== undefined) data.postType = input.postType;
+    if (input.kind !== undefined) data.kind = input.kind;
     if (input.status !== undefined) {
       data.status = input.status;
       if (input.status === "PUBLISHED" && !post.publishedAt) data.publishedAt = new Date();
@@ -94,11 +169,14 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
       };
     }
 
-    return tx.post.update({
-      where: { id: post.id },
-      data,
-      select: postApiSelect,
-    });
+    if (Object.keys(data).length > 0) {
+      await tx.post.update({ where: { id: post.id }, data });
+    }
+    if (input.attachmentIds !== undefined) {
+      await syncPostAttachments(tx, post.id, input.attachmentIds, user.id);
+    }
+
+    return tx.post.findUniqueOrThrow({ where: { id: post.id }, select: postApiSelect });
   });
 }
 

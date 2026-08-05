@@ -13,11 +13,13 @@ interface SearchResult {
   categoryName: string | null;
   categorySlug: string | null;
   categoryType: string | null;
+  kind: string;
 }
 
 function resultUrl(result: SearchResult): string {
   return postUrl({
     slug: result.slug,
+    kind: result.kind,
     category: { slug: result.categorySlug, type: result.categoryType },
   });
 }
@@ -119,7 +121,7 @@ export function SearchDialog() {
               setSelectedIdx(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="搜索知识、竞赛、新闻或活动"
+            placeholder="搜索技术、竞赛、新闻或日常"
             aria-label="搜索关键词"
           />
           <kbd>ESC</kbd>

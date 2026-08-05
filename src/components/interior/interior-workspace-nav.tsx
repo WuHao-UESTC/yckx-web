@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Archive,
+  BookOpenText,
   FileText,
   FolderOpen,
   Gauge,
@@ -11,7 +12,8 @@ import {
   KeyRound,
   LayoutDashboard,
   ListTree,
-  NotebookPen,
+  MessageSquareText,
+  Newspaper,
   Orbit,
   Settings,
   UserRound,
@@ -20,9 +22,12 @@ import {
 
 const WORKSPACE_ITEMS = [
   { href: "/dashboard", label: "概览", icon: Gauge, exact: true },
-  { href: "/dashboard/editor", label: "写文章", icon: NotebookPen },
+  { href: "/dashboard/editor/technical", label: "写技术文章", icon: BookOpenText },
+  { href: "/dashboard/editor/news", label: "写新闻", icon: Newspaper },
+  { href: "/dashboard/routine", label: "写日常", icon: MessageSquareText },
   { href: "/dashboard/posts", label: "我的文章", icon: FileText },
   { href: "/dashboard/drafts", label: "草稿箱", icon: Archive },
+  { href: "/dashboard/taxonomies", label: "分类与专栏", icon: ListTree },
   { href: "/dashboard/files", label: "文件管理", icon: FolderOpen },
   { href: "/dashboard/profile", label: "个人资料", icon: UserRound },
 ] as const;

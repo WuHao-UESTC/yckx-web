@@ -71,6 +71,14 @@ export function validateFileContent(mimeType: string, content: Buffer): void {
   }
 }
 
+export function createContentDisposition(
+  disposition: "attachment" | "inline",
+  filename: string
+): string {
+  const fallback = filename.replace(/[^\x20-\x7e]/g, "_").replace(/["\\]/g, "_");
+  return `${disposition}; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+}
+
 export async function storeFile(mimeType: string, content: Buffer): Promise<string> {
   const extension = MIME_EXTENSIONS[mimeType];
   if (!extension) throw new BadRequestError("不支持的文件类型");

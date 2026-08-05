@@ -19,7 +19,8 @@ describe("post schemas", () => {
     expect(result.title).toBe("标题");
     expect(result.content).toBe("正文");
     expect(result.tags).toEqual(["标签"]);
-    expect(result.postType).toBe("ARTICLE");
+    expect(result.kind).toBe("TECHNICAL");
+    expect(result.attachmentIds).toEqual([]);
   });
 
   it("rejects empty updates", () => {

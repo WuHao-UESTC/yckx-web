@@ -55,6 +55,7 @@ async function SearchResults({ query }: { query: string }) {
     categoryName: string | null;
     categorySlug: string | null;
     categoryType: string | null;
+    kind: string;
   }> = [];
 
   try {
@@ -69,9 +70,10 @@ async function SearchResults({ query }: { query: string }) {
         categoryName: string | null;
         categorySlug: string | null;
         categoryType: string | null;
+        kind: string;
       }>
     >(
-      `SELECT p.slug, p.title, p.excerpt, p."publishedAt",
+      `SELECT p.slug, p.title, p.excerpt, p."publishedAt", p.kind::text AS kind,
               u.username AS "authorUsername", u."displayName" AS "authorDisplayName",
               c.name AS "categoryName", c.slug AS "categorySlug", c.type AS "categoryType"
        FROM posts p
@@ -128,6 +130,7 @@ async function SearchResults({ query }: { query: string }) {
                   categoryName: p.category?.name ?? null,
                   categorySlug: p.category?.slug ?? null,
                   categoryType: p.category?.type ?? null,
+                  kind: p.kind,
                 }}
                 query={query}
               />

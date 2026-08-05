@@ -63,6 +63,8 @@ pnpm dev
 
 必须先停止旧进程再执行最后的 `pnpm dev`。仅依赖热更新会继续使用旧枚举和模型 delegate，表现为 `Expected CategoryType` 或 `findMany` 未定义。
 
+内容领域重构包含 `PostKind`、`ColumnType`、`FilePurpose` 和照片关系变更，不能只执行 `git pull`。迁移前必须备份 PostgreSQL 与 `UPLOAD_DIR`；拉取代码后至少执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，再完整重启开发进程。
+
 如果应用由 Docker Compose 构建和运行，则依赖安装、迁移、构建和重启应在对应容器或镜像流程中完成。禁止猜测服务名后直接操作生产容器。
 
 部署后至少检查：

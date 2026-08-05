@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { InteriorEmpty, InteriorPage } from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
 import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
+import { postUrl } from "@/lib/post-url";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -11,13 +12,15 @@ interface Props {
 
 export default async function ColumnPage({ params }: Props) {
   const { slug } = await params;
-  const column = await prisma.column.findUnique({
-    where: { slug },
+  const column = await prisma.column.findFirst({
+    where: { slug, type: "NEWS" },
     include: {
       posts: {
         where: { status: "PUBLISHED" },
         include: {
           author: { select: { id: true, username: true, displayName: true } },
+          category: true,
+          column: true,
         },
         orderBy: { publishedAt: "desc" },
       },
@@ -39,7 +42,7 @@ export default async function ColumnPage({ params }: Props) {
       <div className="archive-column-register" aria-label={`${column.title}文章目录`}>
         {column.posts.map((post) => (
           <article key={post.id}>
-            <Link href={`/archive/events/${post.slug}`}>
+            <Link href={postUrl(post)}>
               <time dateTime={post.publishedAt?.toISOString()}>
                 {post.publishedAt?.toLocaleDateString("zh-CN") ?? "未标注日期"}
               </time>

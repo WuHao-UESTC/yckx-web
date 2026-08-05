@@ -19,11 +19,12 @@ export async function GET(req: NextRequest) {
     categoryName: string | null;
     categorySlug: string | null;
     categoryType: string | null;
+    kind: string;
   }> = [];
 
   try {
     posts = await prisma.$queryRawUnsafe<typeof posts>(
-      `SELECT p.slug, p.title, p.excerpt,
+      `SELECT p.slug, p.title, p.excerpt, p.kind::text AS kind,
               u.username AS "authorUsername", u."displayName" AS "authorDisplayName",
               c.name AS "categoryName", c.slug AS "categorySlug", c.type AS "categoryType"
        FROM posts p
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
         slug: true,
         title: true,
         excerpt: true,
+        kind: true,
         author: { select: { username: true, displayName: true } },
         category: { select: { name: true, slug: true, type: true } },
       },
@@ -62,6 +64,7 @@ export async function GET(req: NextRequest) {
       categoryName: p.category?.name ?? null,
       categorySlug: p.category?.slug ?? null,
       categoryType: p.category?.type ?? null,
+      kind: p.kind,
     }));
   }
 

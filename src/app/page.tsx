@@ -91,7 +91,11 @@ async function getHomeData(): Promise<OceanHomeData> {
       take: 5,
     }),
     prisma.post.findMany({
-      where: { status: "PUBLISHED", category: { slug: "news" } },
+      where: {
+        status: "PUBLISHED",
+        kind: "NEWS",
+        NOT: { category: { type: "EVENT" } },
+      },
       select: {
         id: true,
         title: true,
@@ -106,26 +110,31 @@ async function getHomeData(): Promise<OceanHomeData> {
     }),
     getHomepageMilestones(),
     prisma.category.findMany({
-      where: { type: "KNOWLEDGE" },
+      where: { type: "KNOWLEDGE", isActive: true },
       select: {
         id: true,
         name: true,
         slug: true,
-        _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+        _count: {
+          select: { posts: { where: { status: "PUBLISHED", kind: "TECHNICAL" } } },
+        },
       },
       orderBy: { sortOrder: "asc" },
     }),
     prisma.category.findMany({
-      where: { type: "COMPETITION" },
+      where: { type: "COMPETITION", isActive: true },
       select: {
         id: true,
         name: true,
         slug: true,
-        _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+        _count: {
+          select: { posts: { where: { status: "PUBLISHED", kind: "TECHNICAL" } } },
+        },
       },
       orderBy: { sortOrder: "asc" },
     }),
     prisma.photo.findMany({
+      where: { isVisible: true },
       select: { id: true, imagePath: true, caption: true },
       orderBy: { createdAt: "desc" },
       take: 232,
@@ -163,6 +172,7 @@ async function getHomeData(): Promise<OceanHomeData> {
     prisma.category.count(),
     prisma.user.count({ where: { role: { not: "ADMIN" } } }),
     prisma.category.findMany({
+      where: { isActive: true },
       select: {
         type: true,
         _count: { select: { posts: { where: { status: "PUBLISHED" } } } },

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { movePhotoFormSchema, resourceIdSchema } from "@/modules/admin/admin.schemas";
 import { createPhotoSchema } from "@/modules/gallery/photos.schemas";
+import { deletePhoto as deletePhotoRecord } from "@/modules/gallery/server/photo-service";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
 
@@ -34,10 +35,24 @@ export default async function AdminPhotosPage() {
 
   async function deletePhoto(formData: FormData) {
     "use server";
+    const user = await requireAdmin();
+    const id = resourceIdSchema.parse(formData.get("id"));
+    await deletePhotoRecord(id, user);
+    revalidatePath("/admin/photos");
+    revalidatePath("/routine");
+  }
+
+  async function togglePhoto(formData: FormData) {
+    "use server";
     await requireAdmin();
     const id = resourceIdSchema.parse(formData.get("id"));
-    await prisma.photo.delete({ where: { id } });
+    const photo = await prisma.photo.findUniqueOrThrow({
+      where: { id },
+      select: { isVisible: true },
+    });
+    await prisma.photo.update({ where: { id }, data: { isVisible: !photo.isVisible } });
     revalidatePath("/admin/photos");
+    revalidatePath("/routine");
   }
 
   async function movePhoto(formData: FormData) {
@@ -105,7 +120,7 @@ export default async function AdminPhotosPage() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {photos.map((photo) => (
-            <div key={photo.id} className="card p-2 group">
+            <div key={photo.id} className={`card p-2 group ${photo.isVisible ? "" : "opacity-50"}`}>
               <div className="aspect-square rounded-md overflow-hidden bg-[#f5f0e8] mb-2">
                 <img
                   src={photo.imagePath}
@@ -116,6 +131,10 @@ export default async function AdminPhotosPage() {
               {photo.caption && (
                 <p className="text-xs text-[#6b6b6b] truncate px-1">{photo.caption}</p>
               )}
+              <p className="text-xs text-[#6b6b6b] px-1">
+                {photo.author.displayName ?? photo.author.username} ·{" "}
+                {photo.isVisible ? "公开" : "已隐藏"}
+              </p>
               <div className="flex items-center justify-between mt-1.5 px-1">
                 {/* 排序 */}
                 <div className="flex gap-0.5">
@@ -150,6 +169,15 @@ export default async function AdminPhotosPage() {
                     className="text-xs text-red-500 hover:text-red-700 font-[family-name:var(--font-sans)]"
                   >
                     删除
+                  </button>
+                </form>
+                <form action={togglePhoto}>
+                  <input type="hidden" name="id" value={photo.id} />
+                  <button
+                    type="submit"
+                    className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] font-[family-name:var(--font-sans)]"
+                  >
+                    {photo.isVisible ? "隐藏" : "恢复"}
                   </button>
                 </form>
               </div>

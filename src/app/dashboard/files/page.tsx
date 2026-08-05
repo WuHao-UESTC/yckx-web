@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { MAX_USER_STORAGE } from "@/lib/constants";
 import { assertOwnerOrAdmin, requireUser } from "@/server/auth/guards";
-import { NotFoundError } from "@/server/http/errors";
+import { BadRequestError, NotFoundError } from "@/server/http/errors";
 import { resourceIdSchema } from "@/modules/admin/admin.schemas";
 import { removeStoredFile } from "@/server/storage/file-storage";
 
@@ -12,7 +12,10 @@ export default async function FilesPage() {
 
   const files = await prisma.file.findMany({
     where: { uploaderId: userId },
-    include: { post: { select: { title: true, slug: true } } },
+    include: {
+      post: { select: { title: true, slug: true, status: true } },
+      photo: { select: { id: true, isVisible: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -27,10 +30,19 @@ export default async function FilesPage() {
     const id = resourceIdSchema.parse(formData.get("id"));
     const file = await prisma.file.findUnique({
       where: { id },
-      select: { uploaderId: true, storedPath: true },
+      select: {
+        uploaderId: true,
+        storedPath: true,
+        post: { select: { status: true } },
+        photo: { select: { id: true } },
+      },
     });
     if (!file) throw new NotFoundError("文件不存在");
     assertOwnerOrAdmin(currentUser, file.uploaderId);
+    if (file.post?.status === "PUBLISHED") {
+      throw new BadRequestError("请先在文章编辑器中解除已发布附件的关联");
+    }
+    if (file.photo) throw new BadRequestError("请先删除对应的日常照片");
 
     await prisma.file.delete({ where: { id } });
     await removeStoredFile(file.storedPath).catch((error) => {
@@ -73,7 +85,8 @@ export default async function FilesPage() {
                 <p className="text-xs text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
                   {(f.size / 1024).toFixed(0)} KB · {f.mimeType} ·{" "}
                   {f.createdAt.toLocaleDateString("zh-CN")}
-                  {f.post && <span className="ml-2">📎 {f.post.title}</span>}
+                  {f.post && <span className="ml-2">附件：{f.post.title}</span>}
+                  {f.photo && <span className="ml-2">日常照片</span>}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">

@@ -3,15 +3,16 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { DeleteButton } from "./delete-btn";
 import { requireUser } from "@/server/auth/guards";
+import { postUrl } from "@/lib/post-url";
 
 export default async function MyPostsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; status?: string }>;
+  searchParams: Promise<{ sort?: string; status?: string; kind?: string }>;
 }) {
   const user = await requireUser();
   const userId = user.id;
-  const { sort, status } = await searchParams;
+  const { sort, status, kind } = await searchParams;
 
   let orderBy: Prisma.PostOrderByWithRelationInput[] = [{ updatedAt: "desc" }];
   if (sort === "title") orderBy = [{ title: "asc" }];
@@ -22,10 +23,18 @@ export default async function MyPostsPage({
     status && ["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)
       ? (status as "DRAFT" | "PUBLISHED" | "ARCHIVED")
       : undefined;
+  const kindFilter =
+    kind && ["TECHNICAL", "NEWS", "DAILY"].includes(kind)
+      ? (kind as "TECHNICAL" | "NEWS" | "DAILY")
+      : undefined;
 
   const posts = await prisma.post.findMany({
-    where: { authorId: userId, ...(statusFilter ? { status: statusFilter } : {}) },
-    include: { category: true },
+    where: {
+      authorId: userId,
+      ...(statusFilter ? { status: statusFilter } : {}),
+      ...(kindFilter ? { kind: kindFilter } : {}),
+    },
+    include: { category: true, column: true },
     orderBy,
   });
 
@@ -39,6 +48,7 @@ export default async function MyPostsPage({
     PUBLISHED: "已发布",
     ARCHIVED: "已归档",
   };
+  const kindLabel = { TECHNICAL: "技术", NEWS: "新闻", DAILY: "日常" } as const;
 
   const sortOptions = [
     { value: "updated", label: "最近更新" },
@@ -67,10 +77,28 @@ export default async function MyPostsPage({
         ].map((opt) => (
           <Link
             key={opt.value}
-            href={`/dashboard/posts?${opt.value ? `status=${opt.value}` : ""}${sort ? `&sort=${sort}` : ""}`}
+            href={`/dashboard/posts?${opt.value ? `status=${opt.value}` : ""}${kind ? `&kind=${kind}` : ""}${sort ? `&sort=${sort}` : ""}`}
             className={`px-2.5 py-1 rounded text-xs transition-colors ${(status || "") === opt.value ? "bg-[#8b5e3c] text-white" : "text-[#6b6b6b] hover:text-[#8b5e3c] hover:bg-[#f5f0e8]"}`}
           >
             {opt.label}
+          </Link>
+        ))}
+      </div>
+
+      <div className="flex gap-1.5 mb-3 font-[family-name:var(--font-sans)] text-sm">
+        <span className="text-[#6b6b6b] mr-1 self-center text-xs">类型：</span>
+        {[
+          { value: "", label: "全部" },
+          { value: "TECHNICAL", label: "技术" },
+          { value: "NEWS", label: "新闻" },
+          { value: "DAILY", label: "日常" },
+        ].map((option) => (
+          <Link
+            key={option.value}
+            href={`/dashboard/posts?${option.value ? `kind=${option.value}` : ""}${status ? `&status=${status}` : ""}${sort ? `&sort=${sort}` : ""}`}
+            className={`px-2.5 py-1 rounded text-xs transition-colors ${(kind || "") === option.value ? "bg-[#5a8a6a] text-white" : "text-[#6b6b6b] hover:text-[#5a8a6a] hover:bg-[#edf4ef]"}`}
+          >
+            {option.label}
           </Link>
         ))}
       </div>
@@ -81,7 +109,7 @@ export default async function MyPostsPage({
         {sortOptions.map((opt) => (
           <Link
             key={opt.value}
-            href={`/dashboard/posts?sort=${opt.value}${status ? `&status=${status}` : ""}`}
+            href={`/dashboard/posts?sort=${opt.value}${status ? `&status=${status}` : ""}${kind ? `&kind=${kind}` : ""}`}
             className={`px-2 py-0.5 rounded transition-colors ${(sort || "updated") === opt.value ? "bg-[#8b5e3c] text-white" : "text-[#6b6b6b] hover:text-[#8b5e3c]"}`}
           >
             {opt.label}
@@ -117,13 +145,15 @@ export default async function MyPostsPage({
                 <div className="text-xs text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
                   <span>{post.updatedAt.toLocaleDateString("zh-CN")}</span>
                   <span className="ml-2">{wordCount(post.content)} 字</span>
+                  <span className="ml-2">{kindLabel[post.kind]}</span>
                   {post.category && <span className="ml-2">{post.category.name}</span>}
+                  {post.column && <span className="ml-2">{post.column.title}</span>}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {post.status === "PUBLISHED" && (
                   <Link
-                    href={`/${post.category?.type === "COMPETITION" ? "competition" : "knowledge-base"}/${post.category?.slug ?? "uncategorized"}/${post.slug}`}
+                    href={postUrl(post)}
                     className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] font-[family-name:var(--font-sans)]"
                     target="_blank"
                   >

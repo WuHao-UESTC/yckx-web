@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const query = graphPostsQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
     const category = await prisma.category.findFirst({
-      where: { slug: query.slug, type: "KNOWLEDGE" },
+      where: { slug: query.slug, type: "KNOWLEDGE", isActive: true },
       select: { id: true },
     });
 
@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const where = {
       categoryId: category.id,
       status: "PUBLISHED" as const,
+      kind: "TECHNICAL" as const,
     };
     const [records, total] = await Promise.all([
       prisma.post.findMany({
