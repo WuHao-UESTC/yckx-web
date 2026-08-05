@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { ArrowUpRight, ChevronRight, RefreshCw, Trophy, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createCompetitionConstellationLabelLayouts,
+  projectCompetitionConstellationStar,
+} from "../competition-constellation-layout";
 import { selectCompetitionConstellation } from "../competition-constellations";
 import { createRadarTargetLayouts } from "../competition-radar-layout";
 import type { HomeCategory } from "../home.types";
@@ -56,6 +60,19 @@ const SONAR_CLUTTER = [
   { x: 42, y: 72, delay: -8.4 },
   { x: 76, y: 78, delay: -3.7 },
   { x: 56, y: 61, delay: -5.5 },
+] as const;
+
+const SONAR_MINERALS = [
+  { x: -2, y: 17, size: 2, delay: -1.4 },
+  { x: 12, y: 4, size: 3, delay: -4.1 },
+  { x: 38, y: -3, size: 2, delay: -2.7 },
+  { x: 73, y: 1, size: 2, delay: -6.5 },
+  { x: 97, y: 20, size: 3, delay: -3.6 },
+  { x: 103, y: 63, size: 2, delay: -7.4 },
+  { x: 83, y: 94, size: 2, delay: -5.2 },
+  { x: 55, y: 103, size: 3, delay: -2.1 },
+  { x: 19, y: 96, size: 2, delay: -6.9 },
+  { x: -4, y: 72, size: 2, delay: -4.8 },
 ] as const;
 
 function isRadarPost(value: unknown): value is RadarPost {
@@ -145,13 +162,13 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
     () => selectCompetitionConstellation(constellationKey),
     [constellationKey]
   );
-  const activeAnchors = useMemo(
-    () => constellation.articleAnchors.slice(0, batch.items.length),
+  const articleLayouts = useMemo(
+    () => createCompetitionConstellationLabelLayouts(constellation, batch.items.length),
     [batch.items.length, constellation]
   );
   const litStarIndices = useMemo(
-    () => new Set(activeAnchors.map((anchor) => anchor.starIndex)),
-    [activeAnchors]
+    () => new Set(articleLayouts.map((layout) => layout.starIndex)),
+    [articleLayouts]
   );
 
   const loadBatch = useCallback(async (categorySlug: string | null, cursor: string | null) => {
@@ -250,6 +267,21 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
   return (
     <div className="competition-radar" data-selected={selectedCategory ? "true" : "false"}>
       <div className="competition-sonar" aria-label="竞赛分类声纳">
+        <div className="competition-sonar__minerals" aria-hidden="true">
+          {SONAR_MINERALS.map((particle) => (
+            <i
+              key={`${particle.x}:${particle.y}`}
+              style={
+                {
+                  "--mineral-x": `${particle.x}%`,
+                  "--mineral-y": `${particle.y}%`,
+                  "--mineral-size": `${particle.size}px`,
+                  "--mineral-delay": `${particle.delay}s`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
         <div className="competition-sonar__rings" aria-hidden="true">
           <span />
           <span />
@@ -361,11 +393,21 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
         )}
       </div>
 
+      <div
+        className="competition-radar__signal-path"
+        data-active={selectedCategory ? "true" : "false"}
+        aria-hidden="true"
+      >
+        <span />
+        <i />
+        <b />
+      </div>
+
       <header className="competition-radar__heading">
         <div className="chapter-label">
-          <span>300m</span>
+          <span>HYDROACOUSTIC STATION</span>
           <i aria-hidden="true" />
-          <strong>竞赛航线</strong>
+          <strong>竞赛信号</strong>
         </div>
         <Trophy
           className="chapter-icon chapter-icon--gold"
@@ -373,8 +415,15 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
           strokeWidth={1.35}
           aria-hidden="true"
         />
-        <h2 id="competition-title">把未知拆成问题，把问题变成可以抵达的坐标。</h2>
-        <p>声纳捕获竞赛方向，星座航图记录经验、资料与成果。</p>
+        <h2 id="competition-title">
+          <span>300M</span>
+          <i aria-hidden="true">—</i>
+          竞赛航线
+        </h2>
+        <p>
+          <strong>把未知拆成问题，把问题变成可以抵达的坐标。</strong>
+          <span>声纳捕获竞赛方向，星座航图记录经验、资料与成果。</span>
+        </p>
       </header>
 
       <section
@@ -407,7 +456,57 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
           aria-busy={batch.status === "loading"}
         >
           <svg
-            className="competition-constellation__chart"
+            className="competition-constellation__chart competition-constellation__chart--desktop"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <g className="competition-constellation__lines">
+              {constellation.edges.map(([sourceIndex, targetIndex], index) => {
+                const sourceStar = constellation.stars[sourceIndex];
+                const targetStar = constellation.stars[targetIndex];
+                const projectedSource = projectCompetitionConstellationStar(sourceStar);
+                const projectedTarget = projectCompetitionConstellationStar(targetStar);
+                const isLit = litStarIndices.has(sourceIndex) && litStarIndices.has(targetIndex);
+                return (
+                  <line
+                    key={`${sourceIndex}:${targetIndex}:${index}`}
+                    className={isLit ? "is-lit" : undefined}
+                    x1={projectedSource.x}
+                    y1={projectedSource.y}
+                    x2={projectedTarget.x}
+                    y2={projectedTarget.y}
+                  />
+                );
+              })}
+            </g>
+            <g className="competition-constellation__base-stars">
+              {constellation.stars.map((star, index) => {
+                const projectedStar = projectCompetitionConstellationStar(star);
+                return (
+                  <circle
+                    key={index}
+                    className={litStarIndices.has(index) ? "is-lit" : undefined}
+                    cx={projectedStar.x}
+                    cy={projectedStar.y}
+                    r={litStarIndices.has(index) ? 0.86 : 0.58}
+                  />
+                );
+              })}
+            </g>
+            <g className="competition-constellation__leader-lines">
+              {articleLayouts.map((layout) => (
+                <polyline
+                  key={layout.articleIndex}
+                  points={`${layout.starX},${layout.starY} ${layout.elbowX},${layout.labelY} ${layout.railX},${layout.labelY}`}
+                  style={{ animationDelay: `${layout.articleIndex * 115}ms` }}
+                />
+              ))}
+            </g>
+          </svg>
+
+          <svg
+            className="competition-constellation__chart competition-constellation__chart--mobile"
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             aria-hidden="true"
@@ -436,7 +535,7 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
                   className={litStarIndices.has(index) ? "is-lit" : undefined}
                   cx={star.x}
                   cy={star.y}
-                  r={litStarIndices.has(index) ? 0.86 : 0.58}
+                  r={litStarIndices.has(index) ? 1.1 : 0.72}
                 />
               ))}
             </g>
@@ -445,14 +544,17 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
           {batch.status === "loading" &&
             constellation.articleAnchors.map((anchor, index) => {
               const star = constellation.stars[anchor.starIndex];
+              const projectedStar = projectCompetitionConstellationStar(star);
               return (
                 <span
                   key={anchor.starIndex}
                   className="competition-constellation__loading-star"
                   style={
                     {
-                      "--star-x": `${star.x}%`,
-                      "--star-y": `${star.y}%`,
+                      "--star-x": `${projectedStar.x}%`,
+                      "--star-y": `${projectedStar.y}%`,
+                      "--mobile-star-x": `${star.x}%`,
+                      "--mobile-star-y": `${star.y}%`,
                       animationDelay: `${index * 110}ms`,
                     } as React.CSSProperties
                   }
@@ -481,33 +583,68 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
 
           {batch.status === "ready" &&
             batch.items.map((post, index) => {
-              const anchor = activeAnchors[index];
-              const star = constellation.stars[anchor.starIndex];
+              const layout = articleLayouts[index];
+              const star = constellation.stars[layout.starIndex];
               return (
-                <Link
+                <span
                   key={`${batchVersion}-${post.id}`}
-                  href={`/competition/${post.categorySlug}/${post.slug}`}
-                  className="competition-constellation__star"
-                  data-label={anchor.label}
+                  className="competition-constellation__article-node"
                   style={
                     {
-                      "--star-x": `${star.x}%`,
-                      "--star-y": `${star.y}%`,
+                      "--star-x": `${layout.starX}%`,
+                      "--star-y": `${layout.starY}%`,
+                      "--mobile-star-x": `${star.x}%`,
+                      "--mobile-star-y": `${star.y}%`,
+                      animationDelay: `${index * 115}ms`,
+                    } as React.CSSProperties
+                  }
+                  aria-hidden="true"
+                >
+                  <i aria-hidden="true" />
+                  <b>{index + 1}</b>
+                </span>
+              );
+            })}
+
+          {batch.status === "ready" &&
+            batch.items.map((post, index) => {
+              const layout = articleLayouts[index];
+              return (
+                <Link
+                  key={`label-${batchVersion}-${post.id}`}
+                  href={`/competition/${post.categorySlug}/${post.slug}`}
+                  className="competition-constellation__article-label"
+                  data-side={layout.side}
+                  style={
+                    {
+                      "--label-y": `${layout.labelY}%`,
                       animationDelay: `${index * 115}ms`,
                     } as React.CSSProperties
                   }
                 >
-                  <i aria-hidden="true" />
-                  <span>
-                    <small>
-                      {post.categoryName} · {formatRadarDate(post.publishedAt)}
-                    </small>
-                    <strong>{post.title}</strong>
-                  </span>
+                  <small>
+                    <b>{String(index + 1).padStart(2, "0")}</b>
+                    {post.categoryName} · {formatRadarDate(post.publishedAt)}
+                  </small>
+                  <strong>{post.title}</strong>
                 </Link>
               );
             })}
         </div>
+
+        {batch.status === "ready" && batch.items.length > 0 && (
+          <div className="competition-constellation__mobile-list">
+            {batch.items.map((post, index) => (
+              <Link
+                key={`mobile-${batchVersion}-${post.id}`}
+                href={`/competition/${post.categorySlug}/${post.slug}`}
+              >
+                <span>{index + 1}</span>
+                <strong>{post.title}</strong>
+              </Link>
+            ))}
+          </div>
+        )}
 
         <footer className="competition-constellation__footer">
           {batch.total > 7 && (
