@@ -151,11 +151,11 @@ async function getHomeData(): Promise<OceanHomeData> {
       take: 20,
     }),
     prisma.user.findMany({
-      where: { role: { not: "ADMIN" } },
       select: {
         id: true,
         username: true,
         displayName: true,
+        role: true,
         avatar: true,
         bio: true,
         profile: { select: { title: true, avatarUrl: true } },
@@ -170,7 +170,7 @@ async function getHomeData(): Promise<OceanHomeData> {
       _sum: { viewCount: true },
     }),
     prisma.category.count(),
-    prisma.user.count({ where: { role: { not: "ADMIN" } } }),
+    prisma.user.count(),
     prisma.category.findMany({
       where: { isActive: true },
       select: {
@@ -225,7 +225,7 @@ async function getHomeData(): Promise<OceanHomeData> {
       id: member.id,
       username: member.username,
       name: member.displayName ?? member.username,
-      title: member.profile?.title ?? "科协成员",
+      title: member.profile?.title ?? (member.role === "ADMIN" ? "科协管理员" : "科协成员"),
       avatar: member.avatar ?? member.profile?.avatarUrl ?? null,
       bio: member.bio,
       postCount: member._count.posts,

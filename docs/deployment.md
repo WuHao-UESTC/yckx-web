@@ -71,6 +71,8 @@ Archive 星链与新闻多专栏更新包含新的 `post_news_columns` 关联表
 
 Routine 照片墙、顶部合照与日常多专栏更新包含新的 `post_daily_columns` 关联表、现有日常专栏关系回填、`PhotoKind` 枚举和合照年份字段，也不能只执行 `git pull`。迁移前必须备份 PostgreSQL 和 `UPLOAD_DIR`；拉取后执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，再停止旧的 NAS 开发进程并重新运行 `pnpm dev`。
 
+个人资料与同行者主页更新包含迁移 `20260807090000_profile_contact_fields`。NAS 上不能只执行 `git pull`：备份 PostgreSQL 和 `UPLOAD_DIR` 后，依次执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，停止旧的 `next dev` 进程，再运行 `pnpm dev`。迁移字段均可为空，不需要额外数据回填。
+
 如果应用由 Docker Compose 构建和运行，则依赖安装、迁移、构建和重启应在对应容器或镜像流程中完成。禁止猜测服务名后直接操作生产容器。
 
 部署后至少检查：

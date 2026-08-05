@@ -56,16 +56,20 @@ model Invitation {
 
 // ========== 用户资料 ==========
 model Profile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  website   String?
-  github    String?
-  bilibili  String?
-  title     String?
-  avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  website      String?
+  github       String?
+  bilibili     String?
+  title        String?
+  grade        Int?
+  contactEmail String?
+  qq           String?
+  wechat       String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("profiles")
 }

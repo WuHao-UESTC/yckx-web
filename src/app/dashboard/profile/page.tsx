@@ -34,18 +34,29 @@ export default async function ProfilePage() {
               github: input.github,
               bilibili: input.bilibili,
               title: input.title,
+              grade: input.grade,
+              contactEmail: input.contactEmail,
+              qq: input.qq,
+              wechat: input.wechat,
             },
             update: {
               website: input.website,
               github: input.github,
               bilibili: input.bilibili,
               title: input.title,
+              grade: input.grade,
+              contactEmail: input.contactEmail,
+              qq: input.qq,
+              wechat: input.wechat,
             },
           },
         },
       },
     });
     revalidatePath("/dashboard/profile");
+    revalidatePath("/friends");
+    revalidatePath(`/friends/${user.username}`);
+    revalidatePath("/");
   }
 
   async function changePassword(formData: FormData) {
@@ -102,6 +113,23 @@ export default async function ProfilePage() {
         </div>
         <div>
           <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
+            年级
+          </label>
+          <select
+            name="grade"
+            defaultValue={user.profile?.grade?.toString() ?? ""}
+            className="input-field w-full"
+          >
+            <option value="">暂不填写</option>
+            {Array.from({ length: 991 }, (_, index) => 2010 + index).map((grade) => (
+              <option key={grade} value={grade}>
+                {grade} 级
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
             个人简介
           </label>
           <textarea
@@ -118,13 +146,26 @@ export default async function ProfilePage() {
 
         <div>
           <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
+            公开邮箱
+          </label>
+          <input
+            name="contactEmail"
+            type="email"
+            defaultValue={user.profile?.contactEmail ?? ""}
+            className="input-field w-full"
+            placeholder="只在个人主页展示，不会公开登录邮箱"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
             个人网站
           </label>
           <input
             name="website"
             defaultValue={user.profile?.website ?? ""}
             className="input-field w-full"
-            placeholder="https://..."
+            placeholder="可填写网址、主页名称或其他说明"
           />
         </div>
         <div>
@@ -134,6 +175,22 @@ export default async function ProfilePage() {
           <input
             name="github"
             defaultValue={user.profile?.github ?? ""}
+            className="input-field w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
+            QQ 号码（可选）
+          </label>
+          <input name="qq" defaultValue={user.profile?.qq ?? ""} className="input-field w-full" />
+        </div>
+        <div>
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
+            微信号（可选）
+          </label>
+          <input
+            name="wechat"
+            defaultValue={user.profile?.wechat ?? ""}
             className="input-field w-full"
           />
         </div>

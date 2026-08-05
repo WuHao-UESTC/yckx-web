@@ -6,7 +6,6 @@ import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 export default async function FriendsPage() {
   const users = await prisma.user.findMany({
-    where: { role: { not: "ADMIN" } },
     include: {
       profile: true,
       _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
@@ -46,7 +45,9 @@ export default async function FriendsPage() {
               </span>
               <span className="friend-stream__identity">
                 <strong>{user.displayName ?? user.username}</strong>
-                <small>{user.profile?.title || "科协成员"}</small>
+                <small>
+                  {user.profile?.title || (user.role === "ADMIN" ? "科协管理员" : "科协成员")}
+                </small>
               </span>
               <span className="friend-stream__posts">
                 <strong>{user._count.posts}</strong>

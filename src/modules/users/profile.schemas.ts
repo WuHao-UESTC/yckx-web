@@ -2,27 +2,32 @@ import { z } from "zod";
 
 const optionalText = (max: number) =>
   z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    (value) => (value == null || (typeof value === "string" && value.trim() === "") ? null : value),
     z.string().trim().max(max).nullable()
   );
 
-const optionalLink = z.preprocess(
-  (value) => (typeof value === "string" && value.trim() === "" ? null : value),
-  z
-    .string()
-    .trim()
-    .max(2048)
-    .refine((value) => value.startsWith("/") || URL.canParse(value), "链接格式无效")
-    .nullable()
+const optionalGrade = z.preprocess((value) => {
+  if (value == null || (typeof value === "string" && value.trim() === "")) return null;
+  if (typeof value === "string") return Number(value);
+  return value;
+}, z.number().int().min(2010).max(3000).nullable());
+
+const optionalEmail = z.preprocess(
+  (value) => (value == null || (typeof value === "string" && value.trim() === "") ? null : value),
+  z.string().trim().email("邮箱格式无效").max(320).nullable()
 );
 
 export const profileFormSchema = z.object({
   displayName: optionalText(80),
   bio: optionalText(1_000),
-  website: optionalLink,
+  website: optionalText(2_048),
   github: optionalText(100),
   bilibili: optionalText(100),
   title: optionalText(100),
+  grade: optionalGrade,
+  contactEmail: optionalEmail,
+  qq: optionalText(100),
+  wechat: optionalText(100),
 });
 
 export const changePasswordFormSchema = z

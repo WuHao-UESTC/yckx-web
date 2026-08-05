@@ -26,6 +26,10 @@ export type PublicUser = Pick<
     github: string | null;
     bilibili: string | null;
     title: string | null;
+    grade: number | null;
+    contactEmail: string | null;
+    qq: string | null;
+    wechat: string | null;
   } | null;
   _count: { posts: number };
 };
