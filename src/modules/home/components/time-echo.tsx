@@ -316,9 +316,9 @@ export function TimeEcho({
             <svg className="echo-readout__connector" viewBox="0 0 720 440" aria-hidden="true">
               <polyline
                 points={`${activeMarker.x * 7.2},${activeMarker.y * 4.4} ${Math.max(
-                  150,
+                  80,
                   activeMarker.x * 7.2 - 62
-                )},${Math.max(58, activeMarker.y * 4.4 - 38)} 104,44`}
+                )},${Math.max(150, activeMarker.y * 4.4 - 38)} 70,165`}
               />
             </svg>
             <article className="echo-readout" aria-live="polite">
@@ -375,7 +375,7 @@ export function TimeEcho({
       </div>
 
       {!isOpen ? (
-        <>
+        <div className="time-echo-workbench">
           <button
             type="button"
             className="archive-folder archive-folder--closed"
@@ -394,7 +394,7 @@ export function TimeEcho({
             <span>打开并读取最新新闻</span>
           </button>
           <SiteActivityConsole activity={activity} />
-        </>
+        </div>
       ) : (
         <div className="archive-folder archive-folder--open" aria-live="polite">
           <div className="archive-folder__shell" aria-hidden="true">
