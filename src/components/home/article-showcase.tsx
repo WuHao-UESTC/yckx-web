@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { PostCard } from "@/components/article/post-card";
 import { PostCalendar } from "@/components/home/post-calendar";
@@ -39,13 +39,19 @@ function visibleCount(): number {
 export function ArticleShowcase({ featuredPosts, calendarPosts, allPosts }: Props) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [seed, setSeed] = useState(0); // 换一批触发器
+  const [mounted, setMounted] = useState(false);
   const limit = visibleCount();
 
-  // 默认模式：随机精选文章
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 默认模式：服务端/首次渲染取前 N 篇（确定性），客户端水合后执行随机选取
   const featuredDisplay = useMemo(() => {
+    if (!mounted) return featuredPosts.slice(0, limit);
     return randomPick(featuredPosts, limit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [featuredPosts, seed]);
+  }, [featuredPosts, seed, mounted]);
 
   // 日期选中模式：该日期的文章
   const dateFilteredPosts = useMemo(() => {
