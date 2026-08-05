@@ -37,10 +37,7 @@ export function LazySection({
   }, [rootMargin]);
 
   return (
-    <div
-      ref={ref}
-      className={`lazy-section ${visible ? "visible" : ""} ${className}`}
-    >
+    <div ref={ref} className={`lazy-section ${visible ? "visible" : ""} ${className}`}>
       {visible && children}
     </div>
   );

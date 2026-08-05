@@ -18,7 +18,9 @@ export default async function SearchPage({ searchParams }: Props) {
           placeholder="搜索文章..."
           className="input-field flex-1"
         />
-        <button type="submit" className="btn-primary">搜索</button>
+        <button type="submit" className="btn-primary">
+          搜索
+        </button>
       </form>
 
       {q ? (
@@ -35,17 +37,29 @@ async function SearchResults({ query }: { query: string }) {
 
   // PostgreSQL 全文搜索 + ILIKE 回退（中文兼容）
   let posts: Array<{
-    slug: string; title: string; excerpt: string | null;
-    publishedAt: Date | null; authorUsername: string; authorDisplayName: string | null;
-    categoryName: string | null; categorySlug: string | null; categoryType: string | null;
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    publishedAt: Date | null;
+    authorUsername: string;
+    authorDisplayName: string | null;
+    categoryName: string | null;
+    categorySlug: string | null;
+    categoryType: string | null;
   }> = [];
 
   try {
     posts = await prisma.$queryRawUnsafe<
       Array<{
-        slug: string; title: string; excerpt: string | null;
-        publishedAt: Date | null; authorUsername: string; authorDisplayName: string | null;
-        categoryName: string | null; categorySlug: string | null; categoryType: string | null;
+        slug: string;
+        title: string;
+        excerpt: string | null;
+        publishedAt: Date | null;
+        authorUsername: string;
+        authorDisplayName: string | null;
+        categoryName: string | null;
+        categorySlug: string | null;
+        categoryType: string | null;
       }>
     >(
       `SELECT p.slug, p.title, p.excerpt, p."publishedAt",
@@ -85,21 +99,31 @@ async function SearchResults({ query }: { query: string }) {
       });
 
       if (fallback.length === 0) {
-        return <p className="text-[#6b6b6b]">未找到包含 "{query}" 的文章。</p>;
+        return <p className="text-[#6b6b6b]">未找到包含“{query}”的文章。</p>;
       }
 
       return (
         <div>
-          <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">找到 {fallback.length} 篇相关文章</p>
+          <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">
+            找到 {fallback.length} 篇相关文章
+          </p>
           <div className="space-y-4">
             {fallback.map((p) => (
-              <SearchResultCard key={p.id} post={{
-                slug: p.slug, title: p.title, excerpt: p.excerpt,
-                publishedAt: p.publishedAt,
-                authorUsername: p.author.username, authorDisplayName: p.author.displayName,
-                categoryName: p.category?.name ?? null, categorySlug: p.category?.slug ?? null,
-                categoryType: p.category?.type ?? null,
-              }} query={query} />
+              <SearchResultCard
+                key={p.id}
+                post={{
+                  slug: p.slug,
+                  title: p.title,
+                  excerpt: p.excerpt,
+                  publishedAt: p.publishedAt,
+                  authorUsername: p.author.username,
+                  authorDisplayName: p.author.displayName,
+                  categoryName: p.category?.name ?? null,
+                  categorySlug: p.category?.slug ?? null,
+                  categoryType: p.category?.type ?? null,
+                }}
+                query={query}
+              />
             ))}
           </div>
         </div>
@@ -111,7 +135,9 @@ async function SearchResults({ query }: { query: string }) {
 
   return (
     <div>
-      <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">找到 {posts.length} 篇相关文章</p>
+      <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">
+        找到 {posts.length} 篇相关文章
+      </p>
       <div className="space-y-4">
         {posts.map((post) => (
           <SearchResultCard key={post.slug} post={post} query={query} />

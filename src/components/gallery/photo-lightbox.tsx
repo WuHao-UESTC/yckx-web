@@ -53,7 +53,9 @@ export function PhotoLightbox({ photos }: { photos: Photo[] }) {
             />
             {photo.caption && (
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="text-white text-xs font-[family-name:var(--font-sans)]">{photo.caption}</p>
+                <p className="text-white text-xs font-[family-name:var(--font-sans)]">
+                  {photo.caption}
+                </p>
                 <p className="text-white/70 text-[10px] mt-0.5">
                   {photo.author.displayName ?? photo.author.username}
                 </p>
@@ -81,7 +83,10 @@ export function PhotoLightbox({ photos }: { photos: Photo[] }) {
           {/* 上一张 */}
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-2xl z-10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-            onClick={(e) => { e.stopPropagation(); prev(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              prev();
+            }}
             aria-label="上一张"
           >
             ‹
@@ -90,14 +95,20 @@ export function PhotoLightbox({ photos }: { photos: Photo[] }) {
           {/* 下一张 */}
           <button
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-2xl z-10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-            onClick={(e) => { e.stopPropagation(); next(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              next();
+            }}
             aria-label="下一张"
           >
             ›
           </button>
 
           {/* 图片 */}
-          <div className="max-w-[90vw] max-h-[85vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="max-w-[90vw] max-h-[85vh] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
             <img
               src={photos[selected].imagePath}
               alt={photos[selected].caption ?? ""}

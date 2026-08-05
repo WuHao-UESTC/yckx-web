@@ -1,22 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { assertOwnerOrAdmin, requireUser } from "@/server/auth/guards";
+import { NotFoundError } from "@/server/http/errors";
+import { routeErrorResponse } from "@/server/http/response";
 
 // DELETE: 删除便签（作者或管理员）
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  const userId = (session.user as { id: string }).id;
-  const role = (session.user as { role?: string }).role;
+  try {
+    const user = await requireUser();
+    const { id } = await params;
+    const note = await prisma.stickyNote.findUnique({
+      where: { id },
+      select: { authorId: true },
+    });
+    if (!note) throw new NotFoundError("便签不存在");
 
-  const { id } = await params;
-  const note = await prisma.stickyNote.findUnique({ where: { id }, select: { authorId: true } });
-  if (!note) return NextResponse.json({ error: "不存在" }, { status: 404 });
-
-  if (note.authorId !== userId && role !== "ADMIN") {
-    return NextResponse.json({ error: "无权限" }, { status: 403 });
+    assertOwnerOrAdmin(user, note.authorId);
+    await prisma.stickyNote.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return routeErrorResponse(error);
   }
-
-  await prisma.stickyNote.delete({ where: { id } });
-  return NextResponse.json({ success: true });
 }

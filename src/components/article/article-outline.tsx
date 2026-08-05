@@ -155,7 +155,10 @@ export function ArticleOutline({ content }: { content: string }) {
             {hasChildren ? (
               <span
                 className="shrink-0 w-3.5 text-[#c4a882] hover:text-[#8b5e3c] cursor-pointer mr-0.5 leading-none"
-                onClick={(e) => { e.stopPropagation(); toggleCollapse(h.id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleCollapse(h.id);
+                }}
               >
                 {isCollapsed ? "▸" : "▾"}
               </span>
@@ -163,14 +166,10 @@ export function ArticleOutline({ content }: { content: string }) {
               <span className="shrink-0 w-3.5 mr-0.5" />
             )}
             {/* 标题文本 */}
-            <span className="truncate text-[13px] leading-relaxed">
-              {h.text}
-            </span>
+            <span className="truncate text-[13px] leading-relaxed">{h.text}</span>
           </button>
           {/* 子标题 */}
-          {hasChildren && !isCollapsed && (
-            <div>{renderNodes(h.children, depth + 1)}</div>
-          )}
+          {hasChildren && !isCollapsed && <div>{renderNodes(h.children, depth + 1)}</div>}
         </div>
       );
     });
@@ -184,9 +183,7 @@ export function ArticleOutline({ content }: { content: string }) {
       <p className="text-xs font-bold text-[#1a1a1a] mb-2.5 px-1.5 font-[family-name:var(--font-sans)]">
         目录
       </p>
-      <div className="font-[family-name:var(--font-sans)]">
-        {renderNodes(tree)}
-      </div>
+      <div className="font-[family-name:var(--font-sans)]">{renderNodes(tree)}</div>
     </nav>
   );
 }

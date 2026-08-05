@@ -33,10 +33,26 @@ export function MarkdownRenderer({ content }: Props) {
         remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: true }]]}
         rehypePlugins={[[rehypeKatex, { strict: false, output: "html" }]]}
         components={{
-          h1: ({ children, ...props }) => <h1 id={headingId(children, 1)} {...props}>{children}</h1>,
-          h2: ({ children, ...props }) => <h2 id={headingId(children, 2)} {...props}>{children}</h2>,
-          h3: ({ children, ...props }) => <h3 id={headingId(children, 3)} {...props}>{children}</h3>,
-          h4: ({ children, ...props }) => <h4 id={headingId(children, 4)} {...props}>{children}</h4>,
+          h1: ({ children, ...props }) => (
+            <h1 id={headingId(children, 1)} {...props}>
+              {children}
+            </h1>
+          ),
+          h2: ({ children, ...props }) => (
+            <h2 id={headingId(children, 2)} {...props}>
+              {children}
+            </h2>
+          ),
+          h3: ({ children, ...props }) => (
+            <h3 id={headingId(children, 3)} {...props}>
+              {children}
+            </h3>
+          ),
+          h4: ({ children, ...props }) => (
+            <h4 id={headingId(children, 4)} {...props}>
+              {children}
+            </h4>
+          ),
           pre: ({ children }) => <>{children}</>,
           code: ({ className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || "");
@@ -45,25 +61,34 @@ export function MarkdownRenderer({ content }: Props) {
 
             if (!className) {
               return (
-                <code className="bg-[#f5f0e8] px-1.5 py-0.5 rounded text-[0.88em] text-[#8b5e3c]" {...props}>
+                <code
+                  className="bg-[#f5f0e8] px-1.5 py-0.5 rounded text-[0.88em] text-[#8b5e3c]"
+                  {...props}
+                >
                   {children}
                 </code>
               );
             }
 
-            return <CodeBlock language={language} children={codeStr} />;
+            return <CodeBlock language={language}>{codeStr}</CodeBlock>;
           },
           img: ({ src, alt }) => <ImageLightbox src={src} alt={alt} />,
           a: ({ href, children }) => {
             const isExternal = href?.startsWith("http");
             return (
-              <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined}>
+              <a
+                href={href}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+              >
                 {children}
               </a>
             );
           },
           table: ({ children }) => (
-            <div className="overflow-x-auto"><table>{children}</table></div>
+            <div className="overflow-x-auto">
+              <table>{children}</table>
+            </div>
           ),
         }}
       >

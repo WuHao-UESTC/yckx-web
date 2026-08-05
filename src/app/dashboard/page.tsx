@@ -1,9 +1,9 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/server/auth/guards";
 
 export default async function DashboardPage() {
-  const session = await auth();
-  const userId = (session?.user as { id?: string }).id;
+  const user = await requireUser();
+  const userId = user.id;
 
   const [postCount, draftCount, fileCount] = await Promise.all([
     prisma.post.count({ where: { authorId: userId, status: "PUBLISHED" } }),
@@ -17,7 +17,9 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="card">
           <p className="text-3xl font-bold text-[#8b5e3c]">{postCount}</p>
-          <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">已发布文章</p>
+          <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
+            已发布文章
+          </p>
         </div>
         <div className="card">
           <p className="text-3xl font-bold text-[#c4944a]">{draftCount}</p>
@@ -25,7 +27,9 @@ export default async function DashboardPage() {
         </div>
         <div className="card">
           <p className="text-3xl font-bold text-[#5a8a6a]">{fileCount}</p>
-          <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">上传文件</p>
+          <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
+            上传文件
+          </p>
         </div>
       </div>
     </div>

@@ -1,0 +1,13 @@
+.next
+node_modules
+src/generated
+coverage
+public/uploads
+.agents
+.claude
+.windsurf
+AGENTS.md
+skills-lock.json
+*.html
+*.vsdx
+*.tsbuildinfo

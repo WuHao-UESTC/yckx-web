@@ -8,17 +8,33 @@ const adapter = new PrismaPg({
 });
 const prisma = new PrismaClient({ adapter });
 
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`${name} is required for database seeding`);
+  return value;
+}
+
 async function main() {
   console.log("🌱 开始种子数据...");
 
-  // 创建管理员
-  const adminPassword = await hash("admin123456", 12);
+  const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim() || "admin@yckx.edu";
+  const adminUsername = process.env.SEED_ADMIN_USERNAME?.trim() || "admin";
+  const adminPasswordValue = requiredEnv("SEED_ADMIN_PASSWORD");
+  const inviteCode = requiredEnv("SEED_INVITE_CODE");
+
+  if (adminPasswordValue === "admin123456" || adminPasswordValue.length < 12) {
+    throw new Error(
+      "SEED_ADMIN_PASSWORD must be at least 12 characters and not use the old default"
+    );
+  }
+
+  const adminPassword = await hash(adminPasswordValue, 12);
   const admin = await prisma.user.upsert({
-    where: { email: "admin@yckx.edu" },
+    where: { email: adminEmail },
     update: {},
     create: {
-      email: "admin@yckx.edu",
-      username: "admin",
+      email: adminEmail,
+      username: adminUsername,
       displayName: "管理员",
       passwordHash: adminPassword,
       role: "ADMIN",
@@ -27,19 +43,18 @@ async function main() {
       },
     },
   });
-  console.log(`  ✓ 管理员: admin@yckx.edu / admin123456`);
+  console.log(`  ✓ 管理员: ${adminEmail}`);
 
-  // 创建初始邀请码
   await prisma.invitation.upsert({
-    where: { code: "YKX2025INITIAL00" },
+    where: { code: inviteCode },
     update: {},
     create: {
-      code: "YKX2025INITIAL00",
+      code: inviteCode,
       maxUses: 50,
       createdBy: admin.id,
     },
   });
-  console.log(`  ✓ 初始邀请码: YKX2025INITIAL00 (可用50次)`);
+  console.log("  ✓ 初始邀请码已创建");
 
   // 创建知识类分类
   const knowledgeCategories = [

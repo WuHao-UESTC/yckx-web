@@ -11,9 +11,14 @@ export async function GET(req: NextRequest) {
 
   // 尝试 tsvector 全文搜索，失败则回退 contains
   let posts: Array<{
-    slug: string; title: string; excerpt: string | null;
-    authorUsername: string; authorDisplayName: string | null;
-    categoryName: string | null; categorySlug: string | null; categoryType: string | null;
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    authorUsername: string;
+    authorDisplayName: string | null;
+    categoryName: string | null;
+    categorySlug: string | null;
+    categoryType: string | null;
   }> = [];
 
   try {
@@ -28,13 +33,20 @@ export async function GET(req: NextRequest) {
          AND (p.search_vector @@ plainto_tsquery('simple', $1) OR p.title ILIKE $2)
        ORDER BY p."publishedAt" DESC
        LIMIT $3`,
-      q, `%${q}%`, limit
+      q,
+      `%${q}%`,
+      limit
     );
   } catch {
     const fallback = await prisma.post.findMany({
-      where: { status: "PUBLISHED", OR: [{ title: { contains: q } }, { content: { contains: q } }] },
+      where: {
+        status: "PUBLISHED",
+        OR: [{ title: { contains: q } }, { content: { contains: q } }],
+      },
       select: {
-        slug: true, title: true, excerpt: true,
+        slug: true,
+        title: true,
+        excerpt: true,
         author: { select: { username: true, displayName: true } },
         category: { select: { name: true, slug: true, type: true } },
       },
@@ -42,9 +54,14 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
     posts = fallback.map((p) => ({
-      slug: p.slug, title: p.title, excerpt: p.excerpt,
-      authorUsername: p.author.username, authorDisplayName: p.author.displayName,
-      categoryName: p.category?.name ?? null, categorySlug: p.category?.slug ?? null, categoryType: p.category?.type ?? null,
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt,
+      authorUsername: p.author.username,
+      authorDisplayName: p.author.displayName,
+      categoryName: p.category?.name ?? null,
+      categorySlug: p.category?.slug ?? null,
+      categoryType: p.category?.type ?? null,
     }));
   }
 

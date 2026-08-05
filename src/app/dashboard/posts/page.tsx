@@ -1,21 +1,27 @@
-import { auth } from "@/lib/auth";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { DeleteButton } from "./delete-btn";
+import { requireUser } from "@/server/auth/guards";
 
-export default async function MyPostsPage({ searchParams }: { searchParams: Promise<{ sort?: string; status?: string }> }) {
-  const session = await auth();
-  const userId = (session?.user as { id: string }).id;
+export default async function MyPostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; status?: string }>;
+}) {
+  const user = await requireUser();
+  const userId = user.id;
   const { sort, status } = await searchParams;
 
-  let orderBy: Record<string, string>[] = [{ updatedAt: "desc" }];
+  let orderBy: Prisma.PostOrderByWithRelationInput[] = [{ updatedAt: "desc" }];
   if (sort === "title") orderBy = [{ title: "asc" }];
   else if (sort === "created") orderBy = [{ createdAt: "desc" }];
   else if (sort === "category") orderBy = [{ categoryId: "asc" }];
 
-  const statusFilter = status && ["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)
-    ? status as "DRAFT" | "PUBLISHED" | "ARCHIVED"
-    : undefined;
+  const statusFilter =
+    status && ["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)
+      ? (status as "DRAFT" | "PUBLISHED" | "ARCHIVED")
+      : undefined;
 
   const posts = await prisma.post.findMany({
     where: { authorId: userId, ...(statusFilter ? { status: statusFilter } : {}) },
@@ -45,7 +51,9 @@ export default async function MyPostsPage({ searchParams }: { searchParams: Prom
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-[#1a1a1a]">我的文章</h1>
-        <Link href="/dashboard/editor" className="btn-primary text-sm">写新文章</Link>
+        <Link href="/dashboard/editor" className="btn-primary text-sm">
+          写新文章
+        </Link>
       </div>
 
       {/* 状态筛选 */}
@@ -83,7 +91,10 @@ export default async function MyPostsPage({ searchParams }: { searchParams: Prom
 
       {posts.length === 0 ? (
         <p className="text-[#6b6b6b]">
-          暂无文章，<Link href="/dashboard/editor" className="text-[#8b5e3c]">写第一篇</Link>
+          暂无文章，
+          <Link href="/dashboard/editor" className="text-[#8b5e3c]">
+            写第一篇
+          </Link>
         </p>
       ) : (
         <div className="space-y-2">
@@ -91,10 +102,15 @@ export default async function MyPostsPage({ searchParams }: { searchParams: Prom
             <div key={post.id} className="card flex items-center justify-between flex-wrap gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <Link href={`/dashboard/editor/${post.id}`} className="font-bold text-[#1a1a1a] hover:text-[#8b5e3c] transition-colors">
+                  <Link
+                    href={`/dashboard/editor/${post.id}`}
+                    className="font-bold text-[#1a1a1a] hover:text-[#8b5e3c] transition-colors"
+                  >
                     {post.title || "未命名文章"}
                   </Link>
-                  <span className={`tag text-xs ${post.status === "PUBLISHED" ? "bg-green-100 text-green-700" : post.status === "DRAFT" ? "bg-amber-100 text-amber-700" : ""}`}>
+                  <span
+                    className={`tag text-xs ${post.status === "PUBLISHED" ? "bg-green-100 text-green-700" : post.status === "DRAFT" ? "bg-amber-100 text-amber-700" : ""}`}
+                  >
                     {statusLabel[post.status]}
                   </span>
                 </div>

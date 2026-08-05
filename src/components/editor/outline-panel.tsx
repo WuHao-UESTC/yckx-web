@@ -27,7 +27,13 @@ function buildTree(headings: { level: number; text: string; line: number }[]): H
   return root;
 }
 
-export function OutlinePanel({ markdown, editorRef }: { markdown: string; editorRef?: React.RefObject<HTMLDivElement | null> }) {
+export function OutlinePanel({
+  markdown,
+  editorRef,
+}: {
+  markdown: string;
+  editorRef?: React.RefObject<HTMLDivElement | null>;
+}) {
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
 
   const tree = useMemo(() => {
@@ -83,7 +89,10 @@ export function OutlinePanel({ markdown, editorRef }: { markdown: string; editor
             {hasChildren && (
               <span
                 className="shrink-0 w-4 text-[#c4a882] hover:text-[#8b5e3c] cursor-pointer mr-0.5"
-                onClick={(e) => { e.stopPropagation(); toggleCollapse(h.line); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleCollapse(h.line);
+                }}
               >
                 {isCollapsed ? "▸" : "▾"}
               </span>
@@ -94,9 +103,7 @@ export function OutlinePanel({ markdown, editorRef }: { markdown: string; editor
               {h.text}
             </span>
           </button>
-          {hasChildren && !isCollapsed && (
-            <div>{renderNodes(h.children, depth + 1)}</div>
-          )}
+          {hasChildren && !isCollapsed && <div>{renderNodes(h.children, depth + 1)}</div>}
         </div>
       );
     });

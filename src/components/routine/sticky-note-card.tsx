@@ -21,7 +21,15 @@ const COLORS: Record<string, string> = {
   orange: "bg-[#fef5e7]",
 };
 
-export function StickyNoteCard({ note, index, canDelete }: { note: Note; index: number; canDelete: boolean }) {
+export function StickyNoteCard({
+  note,
+  index,
+  canDelete,
+}: {
+  note: Note;
+  index: number;
+  canDelete: boolean;
+}) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const rotation = ((index % 5) - 2) * 1.5;

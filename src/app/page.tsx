@@ -86,18 +86,43 @@ async function getHomeData() {
     }),
   ]);
 
-  return { featuredPosts, allPublishedPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers };
+  return {
+    featuredPosts,
+    allPublishedPosts,
+    recentPhotos,
+    recentEvents,
+    calendarPosts,
+    categories,
+    stickyNotes,
+    newsHeadline,
+    friendUsers,
+  };
 }
 
 // ══════════════════════════════════════════════════════
 // 知识图谱数据构建
 // ══════════════════════════════════════════════════════
-function buildGraphData(categories: Awaited<ReturnType<typeof getHomeData>>["categories"]): { nodes: GraphNode[]; links: GraphLink[] } {
+function buildGraphData(categories: Awaited<ReturnType<typeof getHomeData>>["categories"]): {
+  nodes: GraphNode[];
+  links: GraphLink[];
+} {
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
 
-  nodes.push({ id: "competition-main", label: "竞赛", type: "main", categorySlug: undefined, radius: 30 });
-  nodes.push({ id: "knowledge-main", label: "知识库", type: "main", categorySlug: undefined, radius: 30 });
+  nodes.push({
+    id: "competition-main",
+    label: "竞赛",
+    type: "main",
+    categorySlug: undefined,
+    radius: 30,
+  });
+  nodes.push({
+    id: "knowledge-main",
+    label: "知识库",
+    type: "main",
+    categorySlug: undefined,
+    radius: 30,
+  });
 
   for (const cat of categories) {
     if (cat._count.posts === 0) continue;
@@ -125,12 +150,23 @@ function buildGraphData(categories: Awaited<ReturnType<typeof getHomeData>>["cat
 // ══════════════════════════════════════════════════════
 // 区块标题
 // ══════════════════════════════════════════════════════
-function SectionHeading({ children, href, moreLabel }: { children: React.ReactNode; href?: string; moreLabel?: string }) {
+function SectionHeading({
+  children,
+  href,
+  moreLabel,
+}: {
+  children: React.ReactNode;
+  href?: string;
+  moreLabel?: string;
+}) {
   return (
     <div className="flex items-end justify-between mb-5 pb-2.5 border-b border-[#e8e0d5]">
       <h2 className="text-lg font-bold text-[#1a1a1a] tracking-wide">{children}</h2>
       {href && (
-        <Link href={href} className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] font-[family-name:var(--font-sans)]">
+        <Link
+          href={href}
+          className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] font-[family-name:var(--font-sans)]"
+        >
           {moreLabel ?? "查看全部"} →
         </Link>
       )}
@@ -139,14 +175,30 @@ function SectionHeading({ children, href, moreLabel }: { children: React.ReactNo
 }
 
 // ══════════════════════════════════════════════════════
-const NOTE_COLORS = ["bg-[#fef9e7]", "bg-[#fdedec]", "bg-[#ebf5fb]", "bg-[#eafaf1]", "bg-[#f4ecf7]"];
+const NOTE_COLORS = [
+  "bg-[#fef9e7]",
+  "bg-[#fdedec]",
+  "bg-[#ebf5fb]",
+  "bg-[#eafaf1]",
+  "bg-[#f4ecf7]",
+];
 
 // ISR：每 5 分钟重新生成首页
 export const revalidate = 300;
 
 // ══════════════════════════════════════════════════════
 export default async function Home() {
-  const { featuredPosts, allPublishedPosts, recentPhotos, recentEvents, calendarPosts, categories, stickyNotes, newsHeadline, friendUsers } = await getHomeData();
+  const {
+    featuredPosts,
+    allPublishedPosts,
+    recentPhotos,
+    recentEvents,
+    calendarPosts,
+    categories,
+    stickyNotes,
+    newsHeadline,
+    friendUsers,
+  } = await getHomeData();
   const graphData = buildGraphData(categories);
 
   const calPosts = calendarPosts
@@ -190,10 +242,22 @@ export default async function Home() {
           <div className="mb-8 py-5 px-2 rounded-md" style={{ backgroundColor: "#faf7f2" }}>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 font-[family-name:var(--font-sans)]">
               {[
-                { label: "技术支持", href: "/knowledge-base", desc: "嵌入式、信号处理、电子设计等方向的技术文章与学习笔记" },
-                { label: "竞赛", href: "/competition", desc: "电赛、集创赛、物联网等竞赛经验与资料汇总" },
+                {
+                  label: "技术支持",
+                  href: "/knowledge-base",
+                  desc: "嵌入式、信号处理、电子设计等方向的技术文章与学习笔记",
+                },
+                {
+                  label: "竞赛",
+                  href: "/competition",
+                  desc: "电赛、集创赛、物联网等竞赛经验与资料汇总",
+                },
                 { label: "大事记", href: "/events", desc: "科协历年工作日志、活动记录与重要事件" },
-                { label: "科协日常", href: "/routine", desc: "照片墙、吐槽便签，记录团队的点点滴滴" },
+                {
+                  label: "科协日常",
+                  href: "/routine",
+                  desc: "照片墙、吐槽便签，记录团队的点点滴滴",
+                },
                 { label: "友联", href: "/friends", desc: "科协成员个人主页、技术博客与社交链接" },
               ].map((item) => (
                 <Link
@@ -227,10 +291,7 @@ export default async function Home() {
             <SectionHeading>知识库与竞赛</SectionHeading>
           </div>
           {/* 6:4 全宽布局 */}
-          <KnowledgeGraphCanvas
-            nodes={graphData.nodes}
-            links={graphData.links}
-          />
+          <KnowledgeGraphCanvas nodes={graphData.nodes} links={graphData.links} />
         </div>
       </section>
 
@@ -239,17 +300,22 @@ export default async function Home() {
       {/* ════════════════════════════════════════════════ */}
       <section className="snap-section paper-texture">
         <div className="w-full max-w-[1160px] mx-auto px-5 py-8">
-
           {/* 新闻头条 */}
           {newsHeadline && (
             <LazySection className="mb-6">
               <SectionHeading href="/events">科协新闻</SectionHeading>
-              <Link href={`/events/${newsHeadline.slug}`} className="block card group overflow-hidden">
+              <Link
+                href={`/events/${newsHeadline.slug}`}
+                className="block card group overflow-hidden"
+              >
                 <div className="flex flex-col sm:flex-row gap-4 items-start">
                   {newsHeadline.coverImage && (
                     <div className="w-full sm:w-48 shrink-0 rounded-md overflow-hidden bg-[#f5f0e8]">
-                      <img src={newsHeadline.coverImage} alt={newsHeadline.title}
-                        className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img
+                        src={newsHeadline.coverImage}
+                        alt={newsHeadline.title}
+                        className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
                   )}
                   <div className="min-w-0">
@@ -264,7 +330,11 @@ export default async function Home() {
                     <p className="text-[10px] text-[#6b6b6b] mt-2 font-[family-name:var(--font-sans)]">
                       {newsHeadline.author.displayName ?? newsHeadline.author.username}
                       {" · "}
-                      {newsHeadline.publishedAt?.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+                      {newsHeadline.publishedAt?.toLocaleDateString("zh-CN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
                     </p>
                   </div>
                 </div>
@@ -281,7 +351,10 @@ export default async function Home() {
                   {recentEvents.slice(0, 5).map((post) => (
                     <div key={post.id} className="relative">
                       <span className="absolute -left-[31px] top-1.5 w-2.5 h-2.5 bg-[#c4a882] rounded-full" />
-                      <Link href={`/events/${post.slug}`} className="block hover:text-[#8b5e3c] transition-colors">
+                      <Link
+                        href={`/events/${post.slug}`}
+                        className="block hover:text-[#8b5e3c] transition-colors"
+                      >
                         <time className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
                           {post.createdAt.toLocaleDateString("zh-CN")}
                         </time>
@@ -296,12 +369,21 @@ export default async function Home() {
             {/* 照片预览 */}
             {recentPhotos.length > 0 && (
               <LazySection>
-                <SectionHeading href="/routine" moreLabel="更多照片">最近照片</SectionHeading>
+                <SectionHeading href="/routine" moreLabel="更多照片">
+                  最近照片
+                </SectionHeading>
                 <div className="columns-2 gap-2 space-y-2">
                   {recentPhotos.slice(0, 4).map((photo) => (
-                    <div key={photo.id} className="break-inside-avoid rounded-md overflow-hidden bg-[#f5f0e8]">
-                      <img src={photo.imagePath} alt={photo.caption ?? ""}
-                        className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300" loading="lazy" />
+                    <div
+                      key={photo.id}
+                      className="break-inside-avoid rounded-md overflow-hidden bg-[#f5f0e8]"
+                    >
+                      <img
+                        src={photo.imagePath}
+                        alt={photo.caption ?? ""}
+                        className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
                     </div>
                   ))}
                 </div>
@@ -315,7 +397,10 @@ export default async function Home() {
             {stickyNotes.length === 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                 {["公告", "贴士", "入口", "须知", "待定"].map((label, i) => (
-                  <div key={i} className={`${NOTE_COLORS[i]} rounded-sm p-3 text-center text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)] min-h-[60px] flex items-center justify-center`}>
+                  <div
+                    key={i}
+                    className={`${NOTE_COLORS[i]} rounded-sm p-3 text-center text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)] min-h-[60px] flex items-center justify-center`}
+                  >
                     {label}
                   </div>
                 ))}
@@ -323,13 +408,17 @@ export default async function Home() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                 {stickyNotes.map((note, i) => (
-                  <div key={note.id}
-                    className={`${NOTE_COLORS[i % 5]} rounded-sm p-3 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 flex flex-col justify-between min-h-[60px]`}>
+                  <div
+                    key={note.id}
+                    className={`${NOTE_COLORS[i % 5]} rounded-sm p-3 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 flex flex-col justify-between min-h-[60px]`}
+                  >
                     <p className="text-[11px] text-[#2c2c2c] leading-relaxed line-clamp-2 font-[family-name:var(--font-sans)]">
                       {note.content}
                     </p>
                     <p className="text-[10px] text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-                      {note.isAnonymous ? "匿名" : (note.author.displayName ?? note.author.username)}
+                      {note.isAnonymous
+                        ? "匿名"
+                        : (note.author.displayName ?? note.author.username)}
                     </p>
                   </div>
                 ))}
@@ -340,10 +429,14 @@ export default async function Home() {
           {/* 友链预览 */}
           {friendUsers.length > 0 && (
             <LazySection>
-              <SectionHeading href="/friends" moreLabel="查看全部成员">科协成员</SectionHeading>
+              <SectionHeading href="/friends" moreLabel="查看全部成员">
+                科协成员
+              </SectionHeading>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {friendUsers.map((user) => (
-                  <Link key={user.id} href={`/friends/${user.username}`}
+                  <Link
+                    key={user.id}
+                    href={`/friends/${user.username}`}
                     className="card group flex items-center gap-3 py-3 px-4"
                   >
                     <div className="w-10 h-10 rounded-full bg-[#f5f0e8] flex items-center justify-center text-base text-[#8b5e3c] font-bold shrink-0">
@@ -362,7 +455,6 @@ export default async function Home() {
               </div>
             </LazySection>
           )}
-
         </div>
       </section>
     </>

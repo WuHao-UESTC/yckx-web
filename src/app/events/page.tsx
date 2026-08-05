@@ -61,33 +61,35 @@ export default async function EventsPage() {
       )}
 
       {/* 时间线 */}
-      {[...grouped.entries()].sort((a, b) => b[0] - a[0]).map(([year, items]) => (
-        <section key={year} id={`year-${year}`} className="mb-8 scroll-mt-20">
-          <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4 sticky top-14 bg-[#fdfcf9] py-2 z-10">
-            {year}
-          </h2>
-          <div className="relative border-l-2 border-[#e8e0d5] ml-3 pl-6 space-y-5">
-            {items.map((post) => (
-              <div key={post.id} className="relative">
-                <span className="absolute -left-[29px] top-1.5 w-3 h-3 bg-[#c4a882] rounded-full" />
-                <Link href={`/events/${post.slug}`} className="block card group">
-                  <time className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-                    {post.createdAt.toLocaleDateString("zh-CN")}
-                  </time>
-                  <h3 className="text-base font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mt-1">
-                    {post.title}
-                  </h3>
-                  {post.excerpt && (
-                    <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1 font-[family-name:var(--font-sans)]">
-                      {post.excerpt}
-                    </p>
-                  )}
-                </Link>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
+      {[...grouped.entries()]
+        .sort((a, b) => b[0] - a[0])
+        .map(([year, items]) => (
+          <section key={year} id={`year-${year}`} className="mb-8 scroll-mt-20">
+            <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4 sticky top-14 bg-[#fdfcf9] py-2 z-10">
+              {year}
+            </h2>
+            <div className="relative border-l-2 border-[#e8e0d5] ml-3 pl-6 space-y-5">
+              {items.map((post) => (
+                <div key={post.id} className="relative">
+                  <span className="absolute -left-[29px] top-1.5 w-3 h-3 bg-[#c4a882] rounded-full" />
+                  <Link href={`/events/${post.slug}`} className="block card group">
+                    <time className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+                      {post.createdAt.toLocaleDateString("zh-CN")}
+                    </time>
+                    <h3 className="text-base font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mt-1">
+                      {post.title}
+                    </h3>
+                    {post.excerpt && (
+                      <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1 font-[family-name:var(--font-sans)]">
+                        {post.excerpt}
+                      </p>
+                    )}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
 
       {posts.length === 0 && <p className="text-[#6b6b6b]">暂无大事记。</p>}
     </div>

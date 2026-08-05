@@ -3,13 +3,18 @@ import type { Post, User, Category, Tag } from "@/generated/prisma/client";
 
 /** 文章卡片最小所需字段 */
 export type PostCardData = Post & {
-  author: Pick<User, "id" | "username" | "displayName" | "avatar">;
-  category: Pick<Category, "id" | "name" | "slug" | "type"> | null;
+  author: Pick<User, "id" | "username" | "displayName"> & Partial<Pick<User, "avatar">>;
+  category?: Pick<Category, "id" | "name" | "slug" | "type"> | null;
   tags?: { tag: Pick<Tag, "id" | "name" | "slug"> }[];
 };
 
+export type RoutablePost = {
+  slug: string;
+  category?: Pick<Category, "slug" | "type"> | null;
+};
+
 /** 根据文章分类类型生成文章链接 */
-export function postUrl(post: PostCardData): string {
+export function postUrl(post: RoutablePost): string {
   const type = post.category?.type;
   const catSlug = post.category?.slug ?? "uncategorized";
 
@@ -46,7 +51,11 @@ export function PostCard({ post, showExcerpt = true, showTags = false, maxTags =
           <span>{post.author.displayName ?? post.author.username}</span>
           <span>·</span>
           <time dateTime={post.publishedAt?.toISOString()}>
-            {post.publishedAt?.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+            {post.publishedAt?.toLocaleDateString("zh-CN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </time>
           {post.category && (
             <>
@@ -57,7 +66,9 @@ export function PostCard({ post, showExcerpt = true, showTags = false, maxTags =
           {showTags && tags.length > 0 && (
             <>
               {tags.slice(0, maxTags).map((pt) => (
-                <span key={pt.tag.id} className="tag">{pt.tag.name}</span>
+                <span key={pt.tag.id} className="tag">
+                  {pt.tag.name}
+                </span>
               ))}
             </>
           )}

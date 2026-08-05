@@ -21,7 +21,9 @@ export default function EditPostPage() {
   const [ready, setReady] = useState(false);
   const [markdown, setMarkdown] = useState("");
   const mdRef = useRef(markdown);
-  useEffect(() => { mdRef.current = markdown; }, [markdown]);
+  useEffect(() => {
+    mdRef.current = markdown;
+  }, [markdown]);
   const [loading, setLoading] = useState(true);
   const [postSlug, setPostSlug] = useState("");
   const [postStatus, setPostStatus] = useState("DRAFT");
@@ -29,17 +31,18 @@ export default function EditPostPage() {
 
   // 加载分类列表
   useEffect(() => {
-    fetch("/api/categories").then(r => r.json()).then(setCategories).catch(console.error);
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then(setCategories)
+      .catch(console.error);
   }, []);
 
   // 加载文章
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/posts?status=all");
-      const data = await res.json();
-      const posts = data.items || [];
-      const post = posts.find((p: { id: string }) => p.id === id);
-      if (post) {
+      const res = await fetch(`/api/posts/id/${encodeURIComponent(id)}`);
+      const post = await res.json();
+      if (res.ok) {
         setTitle(post.title || "");
         setCategoryId(post.categoryId || "");
         setTags(post.tags?.map((pt: { tag: { name: string } }) => pt.tag.name).join(", ") || "");
@@ -95,36 +98,42 @@ export default function EditPostPage() {
     };
   }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const save = useCallback(async (status?: string) => {
-    if (!ready || !postSlug) return;
-    setSaving(true);
-    setMessage("");
-    const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
+  const save = useCallback(
+    async (status?: string) => {
+      if (!ready || !postSlug) return;
+      setSaving(true);
+      setMessage("");
+      const tagList = tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
 
-    const body: Record<string, unknown> = {
-      title: title || "未命名文章",
-      content: markdown,
-      categoryId: categoryId || null,
-      tags: tagList,
-    };
-    if (status) body.status = status;
+      const body: Record<string, unknown> = {
+        title: title || "未命名文章",
+        content: markdown,
+        categoryId: categoryId || null,
+        tags: tagList,
+      };
+      if (status) body.status = status;
 
-    const res = await fetch(`/api/posts/${postSlug}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    setSaving(false);
-    if (res.ok) {
-      const post = await res.json();
-      setPostSlug(post.slug);
-      setPostStatus(post.status);
-      setMessage(status === "PUBLISHED" ? "已发布！" : "已保存");
-    } else {
-      const err = await res.json();
-      setMessage(`保存失败: ${err.error}`);
-    }
-  }, [ready, postSlug, markdown, title, categoryId, tags]);
+      const res = await fetch(`/api/posts/${postSlug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      setSaving(false);
+      if (res.ok) {
+        const post = await res.json();
+        setPostSlug(post.slug);
+        setPostStatus(post.status);
+        setMessage(status === "PUBLISHED" ? "已发布！" : "已保存");
+      } else {
+        const err = await res.json();
+        setMessage(`保存失败: ${err.error}`);
+      }
+    },
+    [ready, postSlug, markdown, title, categoryId, tags]
+  );
 
   const deletePost = useCallback(async () => {
     if (!confirm("确定要永久删除这篇文章吗？此操作不可撤销。")) return;
@@ -138,19 +147,26 @@ export default function EditPostPage() {
     }
   }, [postSlug, router]);
 
-  const insertTemplate = useCallback((tmpl: string) => {
-    if (!crepeRef.current) return;
-    const updated = markdown + tmpl;
-    setMarkdown(updated);
-    crepeRef.current.editor.action(replaceAll(updated));
-  }, [markdown]);
+  const insertTemplate = useCallback(
+    (tmpl: string) => {
+      if (!crepeRef.current) return;
+      const updated = markdown + tmpl;
+      setMarkdown(updated);
+      crepeRef.current.editor.action(replaceAll(updated));
+    },
+    [markdown]
+  );
 
   const groupedCategories: Record<string, typeof categories> = {};
   for (const c of categories) {
     if (!groupedCategories[c.type]) groupedCategories[c.type] = [];
     groupedCategories[c.type].push(c);
   }
-  const typeLabels: Record<string, string> = { KNOWLEDGE: "知识", COMPETITION: "竞赛", EVENT: "事件" };
+  const typeLabels: Record<string, string> = {
+    KNOWLEDGE: "知识",
+    COMPETITION: "竞赛",
+    EVENT: "事件",
+  };
 
   if (loading) {
     return <p className="text-[#6b6b6b] py-8 text-center">加载中…</p>;
@@ -171,20 +187,30 @@ export default function EditPostPage() {
       {/* 分类与标签 */}
       <div className="grid gap-2 sm:grid-cols-2 mb-2">
         <div>
-          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">分类</label>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="input-field w-full">
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
+            分类
+          </label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="input-field w-full"
+          >
             <option value="">选择分类…</option>
             {Object.entries(groupedCategories).map(([type, cats]) => (
               <optgroup key={type} label={typeLabels[type] || type}>
                 {cats.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </optgroup>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">标签（逗号分隔）</label>
+          <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
+            标签（逗号分隔）
+          </label>
           <input
             type="text"
             value={tags}
@@ -198,23 +224,71 @@ export default function EditPostPage() {
       {/* 工具栏：格式 + 插入 */}
       <div className="flex flex-wrap gap-1 mb-2 font-[family-name:var(--font-sans)] text-xs">
         <span className="text-[#6b6b6b] py-1 mr-1">格式：</span>
-        <button onClick={() => insertTemplate("****")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"><strong>B</strong></button>
-        <button onClick={() => insertTemplate("**")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"><em>I</em></button>
-        <button onClick={() => insertTemplate("~~~~")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"><s>S</s></button>
+        <button
+          onClick={() => insertTemplate("****")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"
+        >
+          <strong>B</strong>
+        </button>
+        <button
+          onClick={() => insertTemplate("**")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"
+        >
+          <em>I</em>
+        </button>
+        <button
+          onClick={() => insertTemplate("~~~~")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#2c2c2c] transition-colors"
+        >
+          <s>S</s>
+        </button>
         <span className="mx-1 border-r border-[#e8e0d5]" />
-        <button onClick={() => insertTemplate("> ")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">❝ 引用</button>
-        <button onClick={() => insertTemplate("\n| 列A | 列B |\n|-----|-----|\n|     |     |\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">⊞ 表格</button>
-        <button onClick={() => insertTemplate("$x^2$")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">ƒ 公式</button>
+        <button
+          onClick={() => insertTemplate("> ")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+        >
+          ❝ 引用
+        </button>
+        <button
+          onClick={() => insertTemplate("\n| 列A | 列B |\n|-----|-----|\n|     |     |\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+        >
+          ⊞ 表格
+        </button>
+        <button
+          onClick={() => insertTemplate("$x^2$")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+        >
+          ƒ 公式
+        </button>
         <span className="mx-1 border-r border-[#e8e0d5]" />
         <span className="text-[#6b6b6b] py-1 mr-1">插入：</span>
-        <button onClick={() => insertTemplate("\n```markmap\n- 思维导图\n  - 分支一\n  - 分支二\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">🧠 思维导图</button>
-        <button onClick={() => insertTemplate("\n```mermaid\ngraph TD\n  A[开始] --> B[结束]\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">📊 图表</button>
-        <button onClick={() => insertTemplate("\n```pdf\nhttps://example.com/file.pdf\n```\n")} className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors">📄 PDF</button>
+        <button
+          onClick={() => insertTemplate("\n```markmap\n- 思维导图\n  - 分支一\n  - 分支二\n```\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+        >
+          🧠 思维导图
+        </button>
+        <button
+          onClick={() => insertTemplate("\n```mermaid\ngraph TD\n  A[开始] --> B[结束]\n```\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+        >
+          📊 图表
+        </button>
+        <button
+          onClick={() => insertTemplate("\n```pdf\nhttps://example.com/file.pdf\n```\n")}
+          className="px-2 py-1 rounded border border-[#e8e0d5] hover:bg-[#f0ebe0] text-[#8b5e3c] transition-colors"
+        >
+          📄 PDF
+        </button>
       </div>
 
       {/* 编辑区 + 大纲 */}
       <div className="flex gap-3 flex-1 min-h-0">
-        <div ref={editorRef} className="flex-1 border border-[#e8e0d5] rounded-md overflow-auto min-w-0" />
+        <div
+          ref={editorRef}
+          className="flex-1 border border-[#e8e0d5] rounded-md overflow-auto min-w-0"
+        />
         <div className="hidden lg:block w-48 shrink-0 border border-[#e8e0d5] rounded-md p-3 overflow-y-auto bg-white">
           <OutlinePanel markdown={markdown} editorRef={editorRef} />
         </div>
@@ -223,7 +297,11 @@ export default function EditPostPage() {
       {/* 操作按钮 */}
       <div className="flex items-center gap-3 flex-wrap mt-2">
         {postStatus === "PUBLISHED" ? (
-          <button onClick={() => save()} disabled={saving || !ready} className="btn-primary bg-[#5a8a6a]">
+          <button
+            onClick={() => save()}
+            disabled={saving || !ready}
+            className="btn-primary bg-[#5a8a6a]"
+          >
             {saving ? "保存中…" : "保存更新"}
           </button>
         ) : (
@@ -231,7 +309,11 @@ export default function EditPostPage() {
             <button onClick={() => save()} disabled={saving || !ready} className="btn-primary">
               {saving ? "保存中…" : "保存草稿"}
             </button>
-            <button onClick={() => save("PUBLISHED")} disabled={saving || !ready} className="btn-primary bg-[#5a8a6a]">
+            <button
+              onClick={() => save("PUBLISHED")}
+              disabled={saving || !ready}
+              className="btn-primary bg-[#5a8a6a]"
+            >
               发布
             </button>
           </>
@@ -239,11 +321,17 @@ export default function EditPostPage() {
         <button onClick={() => router.push("/dashboard/posts")} className="btn-primary">
           返回列表
         </button>
-        <button onClick={deletePost} disabled={saving} className="btn-primary bg-red-500 hover:bg-red-600">
+        <button
+          onClick={deletePost}
+          disabled={saving}
+          className="btn-primary bg-red-500 hover:bg-red-600"
+        >
           删除
         </button>
         {message && (
-          <span className="text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">{message}</span>
+          <span className="text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+            {message}
+          </span>
         )}
       </div>
     </div>

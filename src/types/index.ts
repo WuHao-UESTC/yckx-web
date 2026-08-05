@@ -1,4 +1,4 @@
-import type { Post, User, Category, Tag, Column, Comment } from "../generated/prisma/client";
+import type { Post, User, Category, Tag, Column } from "../generated/prisma/client";
 
 /** 文章列表项（含关联） */
 export type PostWithAuthor = Post & {
@@ -17,7 +17,10 @@ export type PostDetail = Post & {
 };
 
 /** 用户公开信息 */
-export type PublicUser = Pick<User, "id" | "username" | "displayName" | "avatar" | "bio" | "role" | "createdAt"> & {
+export type PublicUser = Pick<
+  User,
+  "id" | "username" | "displayName" | "avatar" | "bio" | "role" | "createdAt"
+> & {
   profile: {
     website: string | null;
     github: string | null;

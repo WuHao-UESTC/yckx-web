@@ -48,11 +48,7 @@ export function ImageCarousel({ images, interval = 4000 }: Props) {
             className="absolute inset-0 transition-opacity duration-700"
             style={{ opacity: i === current ? 1 : 0 }}
           >
-            <img
-              src={img.src}
-              alt={img.alt}
-              className="w-full h-full object-cover"
-            />
+            <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
           </div>
         ))}
       </div>
@@ -60,7 +56,9 @@ export function ImageCarousel({ images, interval = 4000 }: Props) {
       {/* 标题 */}
       {images[current].caption && (
         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent p-3">
-          <p className="text-white text-xs font-[family-name:var(--font-sans)]">{images[current].caption}</p>
+          <p className="text-white text-xs font-[family-name:var(--font-sans)]">
+            {images[current].caption}
+          </p>
         </div>
       )}
 
@@ -69,13 +67,19 @@ export function ImageCarousel({ images, interval = 4000 }: Props) {
         <>
           <button
             className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/70 hover:bg-white text-[#6b6b6b] hover:text-[#1a1a1a] flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => { e.stopPropagation(); prev(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              prev();
+            }}
           >
             ‹
           </button>
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/70 hover:bg-white text-[#6b6b6b] hover:text-[#1a1a1a] flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => { e.stopPropagation(); next(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              next();
+            }}
           >
             ›
           </button>

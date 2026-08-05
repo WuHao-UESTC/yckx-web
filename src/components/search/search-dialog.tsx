@@ -21,7 +21,7 @@ export function SearchDialog() {
   const [loading, setLoading] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ⌘K / Ctrl+K 唤起
   useEffect(() => {
@@ -46,7 +46,10 @@ export function SearchDialog() {
 
   // 防抖搜索
   const doSearch = useCallback(async (q: string) => {
-    if (q.trim().length < 1) { setResults([]); return; }
+    if (q.trim().length < 1) {
+      setResults([]);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
@@ -61,20 +64,29 @@ export function SearchDialog() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => doSearch(query), 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query, doSearch]);
 
   // 键盘导航
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") { e.preventDefault(); setSelectedIdx((i) => Math.min(i + 1, results.length - 1)); }
-    if (e.key === "ArrowUp") { e.preventDefault(); setSelectedIdx((i) => Math.max(i - 1, 0)); }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIdx((i) => Math.min(i + 1, results.length - 1));
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIdx((i) => Math.max(i - 1, 0));
+    }
     if (e.key === "Enter" && results[selectedIdx]) {
       const r = results[selectedIdx];
-      const url = r.categoryType === "COMPETITION"
-        ? `/competition/${r.categorySlug ?? "uncategorized"}/${r.slug}`
-        : r.categoryType === "EVENT"
-        ? `/events/${r.slug}`
-        : `/knowledge-base/${r.categorySlug ?? "uncategorized"}/${r.slug}`;
+      const url =
+        r.categoryType === "COMPETITION"
+          ? `/competition/${r.categorySlug ?? "uncategorized"}/${r.slug}`
+          : r.categoryType === "EVENT"
+            ? `/events/${r.slug}`
+            : `/knowledge-base/${r.categorySlug ?? "uncategorized"}/${r.slug}`;
       router.push(url);
       setOpen(false);
     }
@@ -83,7 +95,10 @@ export function SearchDialog() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh]" onClick={() => setOpen(false)}>
+    <div
+      className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh]"
+      onClick={() => setOpen(false)}
+    >
       {/* 遮罩 */}
       <div className="absolute inset-0 bg-black/40" />
       {/* 对话框 */}
@@ -93,42 +108,63 @@ export function SearchDialog() {
       >
         {/* 输入框 */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-[#e8e0d5]">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2" strokeLinecap="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#6b6b6b"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
           </svg>
           <input
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelectedIdx(0); }}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIdx(0);
+            }}
             onKeyDown={handleKeyDown}
             placeholder="搜索文章…"
             className="flex-1 text-sm outline-none bg-transparent font-[family-name:var(--font-sans)]"
           />
-          <kbd className="text-[10px] text-[#6b6b6b] bg-[#f5f0e8] px-1.5 py-0.5 rounded font-mono">ESC</kbd>
+          <kbd className="text-[10px] text-[#6b6b6b] bg-[#f5f0e8] px-1.5 py-0.5 rounded font-mono">
+            ESC
+          </kbd>
         </div>
 
         {/* 结果列表 */}
         <div className="max-h-[360px] overflow-y-auto">
           {loading && (
-            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">搜索中…</p>
+            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+              搜索中…
+            </p>
           )}
           {!loading && query && results.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">未找到结果</p>
+            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+              未找到结果
+            </p>
           )}
           {!loading && !query && (
-            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">输入关键词开始搜索</p>
+            <p className="px-4 py-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+              输入关键词开始搜索
+            </p>
           )}
           {results.map((r, i) => (
             <button
               key={r.slug}
               className={`w-full text-left px-4 py-2.5 hover:bg-[#f5f0e8] transition-colors border-b border-[#e8e0d5] last:border-b-0 ${i === selectedIdx ? "bg-[#f0ebe0]" : ""}`}
               onClick={() => {
-                const url = r.categoryType === "COMPETITION"
-                  ? `/competition/${r.categorySlug ?? "uncategorized"}/${r.slug}`
-                  : r.categoryType === "EVENT"
-                  ? `/events/${r.slug}`
-                  : `/knowledge-base/${r.categorySlug ?? "uncategorized"}/${r.slug}`;
+                const url =
+                  r.categoryType === "COMPETITION"
+                    ? `/competition/${r.categorySlug ?? "uncategorized"}/${r.slug}`
+                    : r.categoryType === "EVENT"
+                      ? `/events/${r.slug}`
+                      : `/knowledge-base/${r.categorySlug ?? "uncategorized"}/${r.slug}`;
                 router.push(url);
                 setOpen(false);
               }}

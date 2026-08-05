@@ -11,7 +11,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ posts: [] });
   }
 
-  const category = await prisma.category.findUnique({ where: { slug: categorySlug }, select: { id: true } });
+  const category = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+    select: { id: true },
+  });
   if (!category) {
     return NextResponse.json({ posts: [] });
   }

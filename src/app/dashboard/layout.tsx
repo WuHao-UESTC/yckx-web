@@ -2,18 +2,14 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/login");
   }
 
-  const user = session.user as { name?: string; email?: string; role?: string };
+  const user = session.user;
   const isAdmin = user.role === "ADMIN";
 
   return (
@@ -34,9 +30,7 @@ export default async function DashboardLayout({
             {isAdmin && (
               <>
                 <hr className="my-2 border-[#e8e0d5]" />
-                <p className="text-xs text-[#6b6b6b] uppercase tracking-wider mb-2 px-3">
-                  管理
-                </p>
+                <p className="text-xs text-[#6b6b6b] uppercase tracking-wider mb-2 px-3">管理</p>
                 <SidebarLink href="/admin">管理面板</SidebarLink>
               </>
             )}
@@ -50,13 +44,7 @@ export default async function DashboardLayout({
   );
 }
 
-function SidebarLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
+function SidebarLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}

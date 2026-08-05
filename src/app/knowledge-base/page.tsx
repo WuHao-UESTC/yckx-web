@@ -13,20 +13,14 @@ export default async function KnowledgeBasePage() {
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
       <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">知识库</h1>
-      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">
-        按分类浏览技术文章
-      </p>
+      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">按分类浏览技术文章</p>
 
       {categories.length === 0 ? (
         <p className="text-[#6b6b6b]">暂无分类。</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((cat) => (
-            <Link
-              key={cat.id}
-              href={`/knowledge-base/${cat.slug}`}
-              className="card group"
-            >
+            <Link key={cat.id} href={`/knowledge-base/${cat.slug}`} className="card group">
               <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors">
                 {cat.name}
               </h3>

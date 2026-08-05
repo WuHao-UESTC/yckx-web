@@ -1,30 +1,50 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { resourceIdSchema } from "@/modules/admin/admin.schemas";
+import { requireAdmin } from "@/server/auth/guards";
+import { ConflictError } from "@/server/http/errors";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
 }
 
 export default async function AdminUsersPage({ searchParams }: Props) {
+  await requireAdmin();
   const { q } = await searchParams;
 
   const users = await prisma.user.findMany({
-    where: q ? {
-      OR: [
-        { username: { contains: q } },
-        { displayName: { contains: q } },
-        { email: { contains: q } },
-      ],
-    } : {},
+    where: q
+      ? {
+          OR: [
+            { username: { contains: q } },
+            { displayName: { contains: q } },
+            { email: { contains: q } },
+          ],
+        }
+      : {},
     include: { profile: true, _count: { select: { posts: true } } },
     orderBy: { createdAt: "desc" },
   });
 
   async function toggleRole(formData: FormData) {
     "use server";
-    const userId = formData.get("userId") as string;
-    const currentRole = formData.get("currentRole") as string;
-    const newRole = currentRole === "ADMIN" ? "MEMBER" : "ADMIN";
+    const currentAdmin = await requireAdmin();
+    const userId = resourceIdSchema.parse(formData.get("userId"));
+    const target = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (userId === currentAdmin.id && target.role === "ADMIN") {
+      throw new ConflictError("不能移除自己的管理员权限");
+    }
+
+    if (target.role === "ADMIN") {
+      const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+      if (adminCount <= 1) throw new ConflictError("系统必须保留至少一名管理员");
+    }
+
+    const newRole = target.role === "ADMIN" ? "MEMBER" : "ADMIN";
     await prisma.user.update({ where: { id: userId }, data: { role: newRole } });
     revalidatePath("/admin/users");
   }
@@ -42,9 +62,14 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           placeholder="搜索用户名 / 邮箱..."
           className="input-field flex-1 max-w-sm"
         />
-        <button type="submit" className="btn-primary text-sm">搜索</button>
+        <button type="submit" className="btn-primary text-sm">
+          搜索
+        </button>
         {q && (
-          <a href="/admin/users" className="text-sm text-[#6b6b6b] hover:text-[#8b5e3c] self-center font-[family-name:var(--font-sans)]">
+          <a
+            href="/admin/users"
+            className="text-sm text-[#6b6b6b] hover:text-[#8b5e3c] self-center font-[family-name:var(--font-sans)]"
+          >
             清除
           </a>
         )}
@@ -64,12 +89,15 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#1a1a1a] flex items-center gap-2">
                     {user.displayName ?? user.username}
-                    <span className={`tag text-xs ${user.role === "ADMIN" ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"}`}>
+                    <span
+                      className={`tag text-xs ${user.role === "ADMIN" ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"}`}
+                    >
                       {user.role === "ADMIN" ? "管理员" : "成员"}
                     </span>
                   </p>
                   <p className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)] truncate">
-                    {user.email} · {user._count.posts} 篇文章 · 加入于 {user.createdAt.toLocaleDateString("zh-CN")}
+                    {user.email} · {user._count.posts} 篇文章 · 加入于{" "}
+                    {user.createdAt.toLocaleDateString("zh-CN")}
                   </p>
                 </div>
               </div>

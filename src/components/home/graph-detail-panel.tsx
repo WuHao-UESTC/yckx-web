@@ -13,24 +13,31 @@ interface PostItem {
 }
 
 export function GraphDetailPanel({ selectedNode }: { selectedNode: GraphNode | null }) {
-  const [posts, setPosts] = useState<PostItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ slug: string; posts: PostItem[] } | null>(null);
+  const categorySlug = selectedNode?.categorySlug ?? null;
 
   useEffect(() => {
-    if (!selectedNode?.categorySlug) {
-      setPosts([]);
-      return;
-    }
+    if (!categorySlug) return;
 
-    setLoading(true);
-    fetch(`/api/graph-posts?slug=${selectedNode.categorySlug}&limit=5`)
+    const controller = new AbortController();
+
+    fetch(`/api/graph-posts?slug=${encodeURIComponent(categorySlug)}&limit=5`, {
+      signal: controller.signal,
+    })
       .then((res) => res.json())
       .then((data) => {
-        setPosts(data.posts || data.items || []);
+        setResult({ slug: categorySlug, posts: data.posts || data.items || [] });
       })
-      .catch(() => setPosts([]))
-      .finally(() => setLoading(false));
-  }, [selectedNode]);
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setResult({ slug: categorySlug, posts: [] });
+      });
+
+    return () => controller.abort();
+  }, [categorySlug]);
+
+  const posts = result?.slug === categorySlug ? result.posts : [];
+  const loading = Boolean(categorySlug && result?.slug !== categorySlug);
 
   const categoryUrl = selectedNode?.categorySlug
     ? selectedNode.type === "main" || selectedNode.type === "category"
@@ -48,9 +55,7 @@ export function GraphDetailPanel({ selectedNode }: { selectedNode: GraphNode | n
 
   return (
     <div className="font-[family-name:var(--font-sans)]">
-      <h3 className="text-base font-bold text-[#1a1a1a] mb-3">
-        {selectedNode.label}
-      </h3>
+      <h3 className="text-base font-bold text-[#1a1a1a] mb-3">{selectedNode.label}</h3>
 
       {loading ? (
         <div className="space-y-2">
@@ -70,7 +75,8 @@ export function GraphDetailPanel({ selectedNode }: { selectedNode: GraphNode | n
                 {post.title}
               </p>
               <p className="text-[10px] text-[#6b6b6b] mt-0.5">
-                {post.author.displayName ?? post.author.username} · {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("zh-CN") : ""}
+                {post.author.displayName ?? post.author.username} ·{" "}
+                {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("zh-CN") : ""}
               </p>
             </Link>
           ))}

@@ -27,12 +27,6 @@ export function PostCalendar({ posts, onSelectDate }: Props) {
     return set;
   }, [posts]);
 
-  // 本月文章列表
-  const monthPosts = useMemo(() => {
-    const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
-    return posts.filter((p) => p.date.startsWith(prefix));
-  }, [posts, year, month]);
-
   // 日历网格
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sun
@@ -53,12 +47,16 @@ export function PostCalendar({ posts, onSelectDate }: Props) {
   const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
 
   const prevMonth = () => {
-    if (month === 0) { setYear(y => y - 1); setMonth(11); }
-    else setMonth(m => m - 1);
+    if (month === 0) {
+      setYear((y) => y - 1);
+      setMonth(11);
+    } else setMonth((m) => m - 1);
   };
   const nextMonth = () => {
-    if (month === 11) { setYear(y => y + 1); setMonth(0); }
-    else setMonth(m => m + 1);
+    if (month === 11) {
+      setYear((y) => y + 1);
+      setMonth(0);
+    } else setMonth((m) => m + 1);
   };
 
   const handleDateClick = (dayNum: number) => {
@@ -71,15 +69,23 @@ export function PostCalendar({ posts, onSelectDate }: Props) {
     <div className="font-[family-name:var(--font-sans)]">
       {/* 月份切换 */}
       <div className="flex items-center justify-between mb-2">
-        <button onClick={prevMonth} className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] px-1">‹</button>
-        <span className="text-sm font-bold text-[#1a1a1a]">{year}年 {month + 1}月</span>
-        <button onClick={nextMonth} className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] px-1">›</button>
+        <button onClick={prevMonth} className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] px-1">
+          ‹
+        </button>
+        <span className="text-sm font-bold text-[#1a1a1a]">
+          {year}年 {month + 1}月
+        </span>
+        <button onClick={nextMonth} className="text-xs text-[#8b5e3c] hover:text-[#5a3a22] px-1">
+          ›
+        </button>
       </div>
 
       {/* 日期表头 */}
       <div className="grid grid-cols-7 gap-px mb-1">
         {dayNames.map((n) => (
-          <div key={n} className="text-center text-[10px] text-[#6b6b6b] py-0.5">{n}</div>
+          <div key={n} className="text-center text-[10px] text-[#6b6b6b] py-0.5">
+            {n}
+          </div>
         ))}
       </div>
 
@@ -108,7 +114,6 @@ export function PostCalendar({ posts, onSelectDate }: Props) {
           })}
         </div>
       ))}
-
     </div>
   );
 }

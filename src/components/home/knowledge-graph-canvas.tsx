@@ -18,7 +18,10 @@ export function KnowledgeGraphCanvas({ nodes, links }: Props) {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-0 max-w-[1400px] mx-auto" style={{ minHeight: "calc(100vh - 140px)" }}>
+    <div
+      className="flex flex-col lg:flex-row gap-0 max-w-[1400px] mx-auto"
+      style={{ minHeight: "calc(100vh - 140px)" }}
+    >
       {/* 左侧：知识图谱 — 60% */}
       <div className="w-full lg:w-[60%] bg-[#fdfcf9] flex items-center justify-center border-r border-[#e8e0d5] p-4">
         <div className="w-full h-full flex items-center justify-center">

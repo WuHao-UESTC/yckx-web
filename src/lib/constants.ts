@@ -22,7 +22,7 @@ export const ALLOWED_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-];
+] as const;
 
 /** 导航链接 */
 export const NAV_LINKS = [

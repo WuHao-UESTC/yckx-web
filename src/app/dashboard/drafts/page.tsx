@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { requireUser } from "@/server/auth/guards";
 
 export default async function DraftsPage() {
-  const session = await auth();
-  const userId = (session?.user as { id: string }).id;
+  const user = await requireUser();
+  const userId = user.id;
 
   const drafts = await prisma.post.findMany({
     where: { authorId: userId, status: "DRAFT" },
@@ -19,7 +19,11 @@ export default async function DraftsPage() {
       ) : (
         <div className="space-y-2">
           {drafts.map((post) => (
-            <Link key={post.id} href={`/dashboard/editor/${post.id}`} className="card block hover:border-[#c4a882]">
+            <Link
+              key={post.id}
+              href={`/dashboard/editor/${post.id}`}
+              className="card block hover:border-[#c4a882]"
+            >
               <h3 className="font-bold text-[#1a1a1a]">{post.title || "未命名草稿"}</h3>
               <p className="text-xs text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
                 最后编辑: {post.updatedAt.toLocaleDateString("zh-CN")}

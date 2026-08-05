@@ -14,7 +14,8 @@ interface SearchPost {
 }
 
 function postUrl(post: SearchPost): string {
-  if (post.categoryType === "COMPETITION") return `/competition/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
+  if (post.categoryType === "COMPETITION")
+    return `/competition/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
   if (post.categoryType === "EVENT") return `/events/${post.slug}`;
   return `/knowledge-base/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
 }
@@ -35,7 +36,11 @@ export function SearchResultCard({ post, query }: { post: SearchPost; query: str
           <span>{post.authorDisplayName ?? post.authorUsername}</span>
           <span>·</span>
           <time dateTime={post.publishedAt?.toISOString()}>
-            {post.publishedAt?.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+            {post.publishedAt?.toLocaleDateString("zh-CN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </time>
           {post.categoryName && (
             <>

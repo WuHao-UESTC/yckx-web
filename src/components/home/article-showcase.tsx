@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
-import Link from "next/link";
+import { useState, useMemo, useCallback } from "react";
 import { PostCard } from "@/components/article/post-card";
 import { PostCalendar } from "@/components/home/post-calendar";
 import type { PostCardData } from "@/components/article/post-card";
@@ -18,15 +17,11 @@ interface Props {
   allPosts: PostCardData[]; // 用于按日期筛选
 }
 
-/** 从数组中随机取 n 个不重复元素 */
-function randomPick<T>(arr: T[], n: number): T[] {
+/** 根据用户点击次数轮换展示内容，保持服务端与客户端首次渲染一致。 */
+function rotatePick<T>(arr: T[], n: number, offset: number): T[] {
   if (arr.length <= n) return [...arr];
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(0, n);
+  const start = offset % arr.length;
+  return Array.from({ length: n }, (_, index) => arr[(start + index) % arr.length]);
 }
 
 /** 控制展示卡片数量，保证不溢出视口 */
@@ -39,19 +34,11 @@ function visibleCount(): number {
 export function ArticleShowcase({ featuredPosts, calendarPosts, allPosts }: Props) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [seed, setSeed] = useState(0); // 换一批触发器
-  const [mounted, setMounted] = useState(false);
   const limit = visibleCount();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // 默认模式：服务端/首次渲染取前 N 篇（确定性），客户端水合后执行随机选取
   const featuredDisplay = useMemo(() => {
-    if (!mounted) return featuredPosts.slice(0, limit);
-    return randomPick(featuredPosts, limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [featuredPosts, seed, mounted]);
+    return rotatePick(featuredPosts, limit, seed * limit);
+  }, [featuredPosts, limit, seed]);
 
   // 日期选中模式：该日期的文章
   const dateFilteredPosts = useMemo(() => {
@@ -67,13 +54,16 @@ export function ArticleShowcase({ featuredPosts, calendarPosts, allPosts }: Prop
   const isDateMode = selectedDate !== null;
   const displayPosts = isDateMode ? dateFilteredPosts.slice(0, limit) : featuredDisplay;
 
-  const handleDateSelect = useCallback((date: string) => {
-    if (selectedDate === date) {
-      setSelectedDate(null); // 再次点击取消
-    } else {
-      setSelectedDate(date);
-    }
-  }, [selectedDate]);
+  const handleDateSelect = useCallback(
+    (date: string) => {
+      if (selectedDate === date) {
+        setSelectedDate(null); // 再次点击取消
+      } else {
+        setSelectedDate(date);
+      }
+    },
+    [selectedDate]
+  );
 
   const handleRefresh = useCallback(() => {
     setSeed((s) => s + 1);

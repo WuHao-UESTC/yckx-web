@@ -15,9 +15,15 @@ export function MobileNav() {
         className="flex flex-col gap-1 p-2 -mr-1"
         aria-label="菜单"
       >
-        <span className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "rotate-45 translate-y-[6px]" : ""}`} />
-        <span className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "opacity-0" : ""}`} />
-        <span className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "-rotate-45 -translate-y-[6px]" : ""}`} />
+        <span
+          className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "rotate-45 translate-y-[6px]" : ""}`}
+        />
+        <span
+          className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "opacity-0" : ""}`}
+        />
+        <span
+          className={`block w-5 h-0.5 bg-[#6b6b6b] rounded transition-all ${open ? "-rotate-45 -translate-y-[6px]" : ""}`}
+        />
       </button>
 
       {/* 下拉导航 */}

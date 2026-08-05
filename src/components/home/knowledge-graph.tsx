@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3Force from "d3-force";
 import * as d3Selection from "d3-selection";
 import * as d3Drag from "d3-drag";
@@ -26,6 +26,16 @@ interface SimNode extends d3Force.SimulationNodeDatum {
   radius: number;
 }
 
+const GRAPH_COLORS: Record<string, string> = {
+  main: "#8b5e3c",
+  category: "#6b8b5e",
+  subcategory: "#c4a882",
+};
+
+function coordinate(endpoint: string | number | SimNode, axis: "x" | "y"): number {
+  return typeof endpoint === "object" ? (endpoint[axis] ?? 0) : 0;
+}
+
 interface Props {
   nodes: GraphNode[];
   links: GraphLink[];
@@ -36,14 +46,10 @@ interface Props {
 export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const simRef = useRef<d3Force.Simulation<SimNode, d3Force.SimulationLinkDatum<SimNode>> | null>(null);
+  const simRef = useRef<d3Force.Simulation<SimNode, d3Force.SimulationLinkDatum<SimNode>> | null>(
+    null
+  );
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-
-  const COLORS: Record<string, string> = {
-    main: "#8b5e3c",
-    category: "#6b8b5e",
-    subcategory: "#c4a882",
-  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -68,13 +74,21 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
     }));
 
     // 创建力模拟
-    const sim = d3Force.forceSimulation<SimNode>(simNodes)
-      .force("link", d3Force.forceLink<SimNode, d3Force.SimulationLinkDatum<SimNode>>(simLinks)
-        .id((d) => d.id)
-        .distance(120))
+    const sim = d3Force
+      .forceSimulation<SimNode>(simNodes)
+      .force(
+        "link",
+        d3Force
+          .forceLink<SimNode, d3Force.SimulationLinkDatum<SimNode>>(simLinks)
+          .id((d) => d.id)
+          .distance(120)
+      )
       .force("charge", d3Force.forceManyBody().strength(-350))
       .force("center", d3Force.forceCenter(width / 2, height / 2))
-      .force("collision", d3Force.forceCollide<SimNode>().radius((d) => d.radius + 8))
+      .force(
+        "collision",
+        d3Force.forceCollide<SimNode>().radius((d) => d.radius + 8)
+      )
       .alphaDecay(0.02);
 
     simRef.current = sim;
@@ -85,7 +99,9 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
     svgSel.attr("viewBox", `0 0 ${width} ${height}`);
 
     // 定义箭头 marker（备用）
-    svgSel.append("defs").append("marker")
+    svgSel
+      .append("defs")
+      .append("marker")
       .attr("id", "arrow")
       .attr("viewBox", "0 -5 10 10")
       .attr("refX", 24)
@@ -99,7 +115,8 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
 
     // 连线
     const linkGroup = svgSel.append("g").attr("class", "links");
-    const linkEls = linkGroup.selectAll<SVGLineElement, d3Force.SimulationLinkDatum<SimNode>>("line")
+    const linkEls = linkGroup
+      .selectAll<SVGLineElement, d3Force.SimulationLinkDatum<SimNode>>("line")
       .data(simLinks)
       .join("line")
       .attr("stroke", "#e8e0d5")
@@ -108,12 +125,14 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
 
     // 节点组
     const nodeGroup = svgSel.append("g").attr("class", "nodes");
-    const nodeEls = nodeGroup.selectAll<SVGGElement, SimNode>("g")
+    const nodeEls = nodeGroup
+      .selectAll<SVGGElement, SimNode>("g")
       .data(simNodes)
       .join("g")
       .attr("cursor", "pointer")
       .call(
-        d3Drag.drag<SVGGElement, SimNode>()
+        d3Drag
+          .drag<SVGGElement, SimNode>()
           .on("start", (event, d) => {
             if (!event.active) sim.alphaTarget(0.3).restart();
             d.fx = d.x;
@@ -127,19 +146,21 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
             if (!event.active) sim.alphaTarget(0);
             d.fx = null;
             d.fy = null;
-          }) as any
+          })
       );
 
     // 圆
-    nodeEls.append("circle")
+    nodeEls
+      .append("circle")
       .attr("r", (d) => d.radius)
-      .attr("fill", (d) => COLORS[d.type] || "#c4a882")
+      .attr("fill", (d) => GRAPH_COLORS[d.type] || "#c4a882")
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .attr("opacity", 0.9);
 
     // 标签
-    nodeEls.append("text")
+    nodeEls
+      .append("text")
       .text((d) => d.label)
       .attr("text-anchor", "middle")
       .attr("dy", (d) => d.radius + 14)
@@ -164,10 +185,10 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
     // 每帧更新
     sim.on("tick", () => {
       linkEls
-        .attr("x1", (d) => (d.source as SimNode).x!)
-        .attr("y1", (d) => (d.source as SimNode).y!)
-        .attr("x2", (d) => (d.target as SimNode).x!)
-        .attr("y2", (d) => (d.target as SimNode).y!);
+        .attr("x1", (d) => coordinate(d.source, "x"))
+        .attr("y1", (d) => coordinate(d.source, "y"))
+        .attr("x2", (d) => coordinate(d.target, "x"))
+        .attr("y2", (d) => coordinate(d.target, "y"));
 
       nodeEls.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
@@ -185,7 +206,8 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
     const highlightId = selectedId || hoveredId;
     const sel = d3Selection.select(svg);
 
-    sel.selectAll<SVGCircleElement, SimNode>("circle")
+    sel
+      .selectAll<SVGCircleElement, SimNode>("circle")
       .attr("opacity", (d) => {
         if (!highlightId) return 0.9;
         return d.id === highlightId ? 1 : 0.35;
@@ -199,12 +221,13 @@ export function KnowledgeGraph({ nodes, links, onSelectNode, selectedId }: Props
         return d.id === highlightId ? 3 : 1;
       });
 
-    sel.selectAll<SVGLineElement, d3Force.SimulationLinkDatum<SimNode>>("line")
+    sel
+      .selectAll<SVGLineElement, d3Force.SimulationLinkDatum<SimNode>>("line")
       .attr("stroke-opacity", (d) => {
         if (!highlightId) return 0.7;
         const src = (d.source as SimNode).id;
         const tgt = (d.target as SimNode).id;
-        return (src === highlightId || tgt === highlightId) ? 0.9 : 0.1;
+        return src === highlightId || tgt === highlightId ? 0.9 : 0.1;
       });
   }, [selectedId, hoveredId]);
 

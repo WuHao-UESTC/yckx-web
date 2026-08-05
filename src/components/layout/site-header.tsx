@@ -42,9 +42,18 @@ export async function SiteHeader() {
             className="text-sm text-[#6b6b6b] hover:text-[#8b5e3c] transition-colors px-2 py-1 font-[family-name:var(--font-sans)]"
             aria-label="搜索"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.3-4.3"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
             </svg>
           </Link>
 
@@ -55,7 +64,7 @@ export async function SiteHeader() {
                 href="/dashboard"
                 className="text-sm text-[#6b6b6b] hover:text-[#8b5e3c] transition-colors font-[family-name:var(--font-sans)]"
               >
-                {(user as { name?: string }).name || "后台"}
+                {user.name || "后台"}
               </Link>
               <form
                 action={async () => {

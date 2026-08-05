@@ -1,0 +1,48 @@
+import { z } from "zod";
+
+const nullableReferenceSchema = z.union([z.string().trim().min(1).max(191), z.null()]).optional();
+
+const nullablePathSchema = z.union([z.string().trim().max(2048), z.null()]).optional();
+
+const tagNameSchema = z.string().trim().min(1).max(40);
+
+export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
+export const postTypeSchema = z.enum(["ARTICLE", "NOTE", "PHOTO"]);
+
+export const postListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  categoryId: z.string().trim().min(1).max(191).optional(),
+  tag: z.string().trim().min(1).max(191).optional(),
+  status: z.union([postStatusSchema, z.literal("all")]).default("PUBLISHED"),
+  postType: postTypeSchema.optional(),
+  columnId: z.string().trim().min(1).max(191).optional(),
+  authorId: z.string().trim().min(1).max(191).optional(),
+});
+
+export const createPostSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  content: z.string().trim().min(1).max(2_000_000),
+  categoryId: nullableReferenceSchema,
+  tags: z.array(tagNameSchema).max(20).default([]),
+  coverImage: nullablePathSchema,
+  columnId: nullableReferenceSchema,
+  postType: postTypeSchema.default("ARTICLE"),
+});
+
+export const updatePostSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200).optional(),
+    content: z.string().trim().min(1).max(2_000_000).optional(),
+    categoryId: nullableReferenceSchema,
+    tags: z.array(tagNameSchema).max(20).optional(),
+    coverImage: nullablePathSchema,
+    columnId: nullableReferenceSchema,
+    postType: postTypeSchema.optional(),
+    status: postStatusSchema.optional(),
+  })
+  .refine((value) => Object.values(value).some((item) => item !== undefined), {
+    message: "至少提供一个需要更新的字段",
+  });
+
+export type CreatePostInput = z.infer<typeof createPostSchema>;
+export type UpdatePostInput = z.infer<typeof updatePostSchema>;

@@ -14,7 +14,10 @@ export function StickyNoteForm({ isLoggedIn }: { isLoggedIn: boolean }) {
   if (!isLoggedIn) {
     return (
       <div className="mb-4 p-3 rounded-md bg-[#faf7f2] border border-[#e8e0d5] text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-        <a href="/login" className="text-[#8b5e3c] hover:text-[#5a3a22]">登录</a>后可发布吐槽便签
+        <a href="/login" className="text-[#8b5e3c] hover:text-[#5a3a22]">
+          登录
+        </a>
+        后可发布吐槽便签
       </div>
     );
   }
@@ -22,7 +25,10 @@ export function StickyNoteForm({ isLoggedIn }: { isLoggedIn: boolean }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!content.trim()) return;
-    if (content.length > 200) { setMsg("最多 200 字"); return; }
+    if (content.length > 200) {
+      setMsg("最多 200 字");
+      return;
+    }
     setSending(true);
     setMsg("");
 
@@ -58,17 +64,26 @@ export function StickyNoteForm({ isLoggedIn }: { isLoggedIn: boolean }) {
         />
         <div className="flex items-center justify-between mt-1">
           <label className="flex items-center gap-1 text-xs text-[#6b6b6b] cursor-pointer font-[family-name:var(--font-sans)]">
-            <input type="checkbox" checked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} className="w-3 h-3" />
+            <input
+              type="checkbox"
+              checked={isAnonymous}
+              onChange={(e) => setIsAnonymous(e.target.checked)}
+              className="w-3 h-3"
+            />
             匿名
           </label>
-          <span className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">{content.length}/200</span>
+          <span className="text-[10px] text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+            {content.length}/200
+          </span>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <button type="submit" disabled={sending || !content.trim()} className="btn-primary text-xs">
           {sending ? "发布中…" : "吐槽"}
         </button>
-        {msg && <span className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)]">{msg}</span>}
+        {msg && (
+          <span className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)]">{msg}</span>
+        )}
       </div>
     </form>
   );

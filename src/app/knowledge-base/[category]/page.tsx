@@ -36,9 +36,7 @@ export default async function KnowledgeCategoryPage({ params, searchParams }: Pr
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
       <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">{category.name}</h1>
-      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">
-        共 {total} 篇文章
-      </p>
+      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">共 {total} 篇文章</p>
 
       {posts.length === 0 ? (
         <p className="text-[#6b6b6b]">该分类暂无文章。</p>

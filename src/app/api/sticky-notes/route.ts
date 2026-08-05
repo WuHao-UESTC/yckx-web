@@ -1,28 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createStickyNoteSchema } from "@/modules/routine/sticky-note.schemas";
+import { requireUser } from "@/server/auth/guards";
+import { routeErrorResponse } from "@/server/http/response";
+import { parseJson } from "@/server/http/validation";
 
 const COLORS = ["yellow", "pink", "blue", "green", "purple", "orange"];
 
 // POST: 发布便签（登录用户）
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  try {
+    const user = await requireUser();
+    const input = await parseJson(req, createStickyNoteSchema);
+    const note = await prisma.stickyNote.create({
+      data: {
+        content: input.content,
+        isAnonymous: input.isAnonymous,
+        authorId: user.id,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      },
+      include: { author: { select: { displayName: true, username: true } } },
+    });
 
-  const { content, isAnonymous } = await req.json();
-  if (!content?.trim() || content.length > 200) {
-    return NextResponse.json({ error: "内容1-200字" }, { status: 400 });
+    return NextResponse.json(note, { status: 201 });
+  } catch (error) {
+    return routeErrorResponse(error);
   }
-
-  const note = await prisma.stickyNote.create({
-    data: {
-      content: content.trim(),
-      isAnonymous: !!isAnonymous,
-      authorId: (session.user as { id: string }).id,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    },
-    include: { author: { select: { displayName: true, username: true } } },
-  });
-
-  return NextResponse.json(note, { status: 201 });
 }

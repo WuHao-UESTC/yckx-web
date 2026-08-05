@@ -7,21 +7,21 @@
 
 @theme inline {
   /* 暖色调纸张配色 */
-  --color-bg:        #fdfcf9;
-  --color-text:      #2c2c2c;
-  --color-text-muted:#6b6b6b;
-  --color-heading:   #1a1a1a;
-  --color-accent:    #8b5e3c;
+  --color-bg: #fdfcf9;
+  --color-text: #2c2c2c;
+  --color-text-muted: #6b6b6b;
+  --color-heading: #1a1a1a;
+  --color-accent: #8b5e3c;
   --color-accent-light: #c4a882;
-  --color-border:    #e8e0d5;
-  --color-card:      #faf7f2;
-  --color-code-bg:   #f5f0e8;
-  --color-tag-bg:    #f0ebe0;
+  --color-border: #e8e0d5;
+  --color-card: #faf7f2;
+  --color-code-bg: #f5f0e8;
+  --color-tag-bg: #f0ebe0;
 
   /* 字体栈 */
-  --font-serif:  "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
-  --font-sans:   "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
-  --font-mono:   "JetBrains Mono", "Fira Code", Consolas, monospace;
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+  --font-sans: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
 }
 
 /* 基础排版 */
@@ -40,17 +40,30 @@ body {
 }
 
 /* 标题层级 */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--color-heading);
   font-family: var(--font-serif);
   font-weight: 700;
   line-height: 1.4;
   scroll-margin-top: 80px;
 }
-h1 { font-size: 2em; }
-h2 { font-size: 1.5em; }
-h3 { font-size: 1.2em; }
-h4 { font-size: 1.05em; }
+h1 {
+  font-size: 2em;
+}
+h2 {
+  font-size: 1.5em;
+}
+h3 {
+  font-size: 1.2em;
+}
+h4 {
+  font-size: 1.05em;
+}
 
 /* 链接 */
 a {
@@ -86,7 +99,9 @@ code {
 .prose p {
   margin-bottom: 1em;
 }
-.prose h1 { scroll-margin-top: 80px; }
+.prose h1 {
+  scroll-margin-top: 80px;
+}
 .prose h2 {
   margin-top: 2.5em;
   margin-bottom: 0.6em;
@@ -99,7 +114,9 @@ code {
   margin-bottom: 0.5em;
   scroll-margin-top: 80px;
 }
-.prose h4 { scroll-margin-top: 80px; }
+.prose h4 {
+  scroll-margin-top: 80px;
+}
 .prose blockquote {
   border-left: 3px solid var(--color-accent-light);
   padding: 0.5em 1.2em;
@@ -171,11 +188,13 @@ code {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 1.4em 1.6em;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .card:hover {
   border-color: var(--color-accent-light);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 /* 按钮 */
@@ -234,7 +253,9 @@ html {
 .lazy-section {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
 }
 .lazy-section.visible {
   opacity: 1;
@@ -244,15 +265,52 @@ html {
 /* 打印样式 */
 @media print {
   .no-print,
-  header, footer, nav, button,
-  .snap-section { display: none !important; }
-  body { background: #fff; color: #000; font-size: 12pt; line-height: 1.6; }
-  main { padding: 0 !important; margin: 0 !important; }
-  h1, h2, h3, h4 { page-break-after: avoid; color: #000; }
-  img { max-width: 100% !important; page-break-inside: avoid; }
-  pre, code { background: #f5f5f5 !important; border: 1px solid #ddd; }
-  a { color: #000; text-decoration: underline; }
-  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.8em; }
-  .card { border: 1px solid #ddd; box-shadow: none; }
-  .prose { max-width: 100% !important; }
+  header,
+  footer,
+  nav,
+  button,
+  .snap-section {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    page-break-after: avoid;
+    color: #000;
+  }
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+  pre,
+  code {
+    background: #f5f5f5 !important;
+    border: 1px solid #ddd;
+  }
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+  }
+  .card {
+    border: 1px solid #ddd;
+    box-shadow: none;
+  }
+  .prose {
+    max-width: 100% !important;
+  }
 }

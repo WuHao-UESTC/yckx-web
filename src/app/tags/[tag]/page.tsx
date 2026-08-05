@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PostCard } from "@/components/article/post-card";
@@ -24,7 +23,9 @@ export default async function TagPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
       <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">#{tag.name}</h1>
-      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">{posts.length} 篇文章</p>
+      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">
+        {posts.length} 篇文章
+      </p>
       <div className="space-y-4">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} showExcerpt={false} />

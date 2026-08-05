@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { postUrl, type PostCardData } from "./post-card";
+import { postUrl, type RoutablePost } from "./post-card";
+
+type AdjacentPost = RoutablePost & { title: string };
 
 interface Props {
-  prev: PostCardData | null;
-  next: PostCardData | null;
+  prev: AdjacentPost | null;
+  next: AdjacentPost | null;
 }
 
 export function PostNav({ prev, next }: Props) {
