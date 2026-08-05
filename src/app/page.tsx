@@ -128,17 +128,18 @@ async function getHomeData(): Promise<OceanHomeData> {
     prisma.photo.findMany({
       select: { id: true, imagePath: true, caption: true },
       orderBy: { createdAt: "desc" },
-      take: 5,
+      take: 24,
     }),
     prisma.stickyNote.findMany({
       select: {
         id: true,
         content: true,
+        color: true,
         isAnonymous: true,
         author: { select: { displayName: true, username: true } },
       },
       orderBy: { createdAt: "desc" },
-      take: 3,
+      take: 20,
     }),
     prisma.user.findMany({
       where: { role: { not: "ADMIN" } },
@@ -146,11 +147,13 @@ async function getHomeData(): Promise<OceanHomeData> {
         id: true,
         username: true,
         displayName: true,
-        profile: { select: { title: true } },
+        avatar: true,
+        bio: true,
+        profile: { select: { title: true, avatarUrl: true } },
         _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
       },
       orderBy: { createdAt: "desc" },
-      take: 4,
+      take: 24,
     }),
     prisma.post.aggregate({
       where: { status: "PUBLISHED" },
@@ -205,6 +208,7 @@ async function getHomeData(): Promise<OceanHomeData> {
     notes: notes.map((note) => ({
       id: note.id,
       content: note.content,
+      color: note.color,
       authorName: note.isAnonymous ? "匿名" : (note.author.displayName ?? note.author.username),
     })),
     members: members.map((member) => ({
@@ -212,6 +216,8 @@ async function getHomeData(): Promise<OceanHomeData> {
       username: member.username,
       name: member.displayName ?? member.username,
       title: member.profile?.title ?? "科协成员",
+      avatar: member.profile?.avatarUrl ?? member.avatar,
+      bio: member.bio,
       postCount: member._count.posts,
     })),
     siteActivity: createHomeSiteActivity(

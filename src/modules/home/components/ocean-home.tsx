@@ -1,22 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowDown,
-  ArrowUpRight,
-  Camera,
-  ChevronRight,
-  Compass,
-  Radio,
-  Sparkles,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { ArrowDown, ArrowUpRight, ChevronRight, Compass, Sparkles, Trophy } from "lucide-react";
 import { postUrl } from "@/lib/post-url";
 import type { HomePost, OceanHomeData } from "../home.types";
 import { CompetitionRadar } from "./competition-radar";
 import { DepthNavigation } from "./depth-navigation";
 import { KnowledgeTide } from "./knowledge-tide";
 import { OceanExperience } from "./ocean-experience";
+import { RoutineLights } from "./routine-lights";
 import { TimeEcho } from "./time-echo";
 
 function postHref(post: HomePost): string {
@@ -34,10 +25,6 @@ function ChapterLabel({ depth, children }: { depth: string; children: React.Reac
       <strong>{children}</strong>
     </div>
   );
-}
-
-function EmptySignal({ children }: { children: React.ReactNode }) {
-  return <p className="empty-signal">{children}</p>;
 }
 
 export function OceanHome({ data }: { data: OceanHomeData }) {
@@ -175,72 +162,7 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
       </section>
 
       <section id="routine" className="ocean-chapter ocean-routine" aria-labelledby="routine-title">
-        <div className="station-light station-light--one" aria-hidden="true" />
-        <div className="station-light station-light--two" aria-hidden="true" />
-        <div className="routine-heading">
-          <ChapterLabel depth="1800m">同行灯火</ChapterLabel>
-          <Camera className="chapter-icon" size={34} strokeWidth={1.4} aria-hidden="true" />
-          <h2 id="routine-title">越向深处，同行的灯光越显得珍贵。</h2>
-          <p>实验室里的夜晚、比赛途中的照片、随手留下的一句话，组成技术之外真实的科协。</p>
-        </div>
-
-        <div className="routine-station">
-          <div className="routine-photos">
-            {data.photos.length === 0 ? (
-              <div className="routine-photo routine-photo--empty">
-                <Camera size={28} aria-hidden="true" />
-                <span>等待下一次记录</span>
-              </div>
-            ) : (
-              data.photos.slice(0, 5).map((photo, index) => (
-                <figure key={photo.id} className={`routine-photo routine-photo--${index + 1}`}>
-                  {/* 用户上传路径可能来自 NAS，保持原始图片标签兼容现有配置。 */}
-                  <img src={photo.imagePath} alt={photo.caption ?? "科协日常照片"} loading="lazy" />
-                  {photo.caption && <figcaption>{photo.caption}</figcaption>}
-                </figure>
-              ))
-            )}
-          </div>
-
-          <div className="routine-console">
-            <div className="routine-console__section">
-              <div className="routine-console__title">
-                <Users size={17} aria-hidden="true" />
-                <span>同行者</span>
-                <Link href="/friends">全部成员</Link>
-              </div>
-              <div className="routine-members">
-                {data.members.slice(0, 4).map((member) => (
-                  <Link key={member.id} href={`/friends/${member.username}`}>
-                    <span>{member.name.charAt(0)}</span>
-                    <strong>{member.name}</strong>
-                    <small>{member.title}</small>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="routine-console__section">
-              <div className="routine-console__title">
-                <Radio size={17} aria-hidden="true" />
-                <span>舱内留言</span>
-                <Link href="/routine">进入日常</Link>
-              </div>
-              <div className="routine-notes">
-                {data.notes.length === 0 ? (
-                  <EmptySignal>第一条留言仍在等待。</EmptySignal>
-                ) : (
-                  data.notes.slice(0, 3).map((note) => (
-                    <blockquote key={note.id}>
-                      <p>{note.content}</p>
-                      <cite>{note.authorName}</cite>
-                    </blockquote>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <RoutineLights photos={data.photos} notes={data.notes} members={data.members} />
       </section>
 
       <section id="honors" className="ocean-chapter ocean-honors" aria-labelledby="honors-title">

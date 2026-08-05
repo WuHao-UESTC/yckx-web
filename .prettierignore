@@ -9,5 +9,6 @@ public/uploads
 AGENTS.md
 skills-lock.json
 *.html
+public/images/ocean/routine-whale-mask.svg
 *.vsdx
 *.tsbuildinfo

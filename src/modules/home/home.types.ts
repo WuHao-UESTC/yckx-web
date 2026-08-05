@@ -69,6 +69,7 @@ export type HomeNote = {
   id: string;
   content: string;
   authorName: string;
+  color: string;
 };
 
 export type HomeMember = {
@@ -76,6 +77,8 @@ export type HomeMember = {
   username: string;
   name: string;
   title: string;
+  avatar: string | null;
+  bio: string | null;
   postCount: number;
 };
 
