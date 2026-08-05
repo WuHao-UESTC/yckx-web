@@ -6,8 +6,10 @@ import { Crepe, CrepeFeature } from "@milkdown/crepe";
 import { replaceAll } from "@milkdown/kit/utils";
 import {
   Bold,
+  FileUp,
   FileText,
   GitBranch,
+  ImagePlus,
   Italic,
   Quote,
   Sigma,
@@ -18,6 +20,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { OutlinePanel } from "@/components/editor/outline-panel";
+import { type EditorMediaKind, uploadedMediaMarkdown } from "../editor-media";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 
@@ -99,6 +102,8 @@ export function PostEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const crepeRef = useRef<Crepe | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(initialPost?.title ?? "");
   const [categoryId, setCategoryId] = useState(initialPost?.categoryId ?? "");
   const [columnId, setColumnId] = useState(initialPost?.columnId ?? "");
@@ -162,21 +167,35 @@ export function PostEditor({
     };
   }, [copy.placeholder, initialPost?.content]);
 
-  const insertTemplate = useCallback(
-    (template: string) => {
-      if (!crepeRef.current) return;
-      const updated = markdown + template;
-      setMarkdown(updated);
-      crepeRef.current.editor.action(replaceAll(updated));
-    },
-    [markdown]
-  );
+  const insertTemplate = useCallback((template: string) => {
+    if (!crepeRef.current) return;
+    const updated = mdRef.current + template;
+    mdRef.current = updated;
+    setMarkdown(updated);
+    crepeRef.current.editor.action(replaceAll(updated));
+  }, []);
 
-  const uploadAttachments = useCallback(
-    async (files: FileList | null) => {
+  const uploadFiles = useCallback(
+    async (files: FileList | null, mediaKind?: EditorMediaKind) => {
       if (!files?.length) return;
-      const selectedFiles = Array.from(files).slice(0, Math.max(0, 20 - attachments.length));
+      const availableSlots = Math.max(0, 20 - attachments.length);
+      const selectedFiles = Array.from(files).slice(
+        0,
+        Math.min(availableSlots, mediaKind ? 1 : 20)
+      );
       if (selectedFiles.length === 0) return;
+
+      if (mediaKind === "image" && !selectedFiles[0].type.startsWith("image/")) {
+        setMessage("请选择 JPEG、PNG 或 WebP 图片");
+        if (imageInputRef.current) imageInputRef.current.value = "";
+        return;
+      }
+      if (mediaKind === "pdf" && selectedFiles[0].type !== "application/pdf") {
+        setMessage("请选择 PDF 文件");
+        if (pdfInputRef.current) pdfInputRef.current.value = "";
+        return;
+      }
+
       setUploading(true);
       setMessage("");
 
@@ -192,15 +211,26 @@ export function PostEditor({
           uploaded.push(result as Attachment);
         }
         setAttachments((current) => [...current, ...uploaded]);
-        setMessage(`已上传 ${uploaded.length} 个附件，保存文章后完成绑定`);
+        if (mediaKind && uploaded[0]) {
+          insertTemplate(uploadedMediaMarkdown(uploaded[0], mediaKind));
+          setMessage(
+            mediaKind === "image"
+              ? "图片已上传并插入正文，保存文章后完成绑定"
+              : "PDF 已上传并插入正文，保存文章后完成绑定"
+          );
+        } else {
+          setMessage(`已上传 ${uploaded.length} 个附件，保存文章后完成绑定`);
+        }
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : "附件上传失败");
+        setMessage(error instanceof Error ? error.message : "文件上传失败");
       } finally {
         setUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        if (imageInputRef.current) imageInputRef.current.value = "";
+        if (pdfInputRef.current) pdfInputRef.current.value = "";
       }
     },
-    [attachments.length]
+    [attachments.length, insertTemplate]
   );
 
   const save = useCallback(
@@ -312,11 +342,6 @@ export function PostEditor({
       label: "流程图",
       icon: Workflow,
       template: "\n```mermaid\ngraph TD\n  A[开始] --> B[结束]\n```\n",
-    },
-    {
-      label: "PDF 嵌入",
-      icon: FileText,
-      template: "\n```pdf\nhttps://example.com/file.pdf\n```\n",
     },
   ] as const;
 
@@ -442,11 +467,48 @@ export function PostEditor({
 
       <div className="workspace-editor__toolbar" aria-label="编辑工具">
         {toolButtons.map(({ label, icon: Icon, template }) => (
-          <button key={label} type="button" title={label} onClick={() => insertTemplate(template)}>
+          <button
+            key={label}
+            type="button"
+            aria-label={label}
+            data-tooltip={label}
+            onClick={() => insertTemplate(template)}
+          >
             <Icon size={15} aria-hidden="true" />
-            <span className="sr-only">{label}</span>
           </button>
         ))}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          hidden
+          onChange={(event) => void uploadFiles(event.target.files, "image")}
+        />
+        <button
+          type="button"
+          aria-label="插入图片"
+          data-tooltip="插入图片"
+          disabled={!ready || uploading || attachments.length >= 20}
+          onClick={() => imageInputRef.current?.click()}
+        >
+          <ImagePlus size={15} aria-hidden="true" />
+        </button>
+        <input
+          ref={pdfInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          hidden
+          onChange={(event) => void uploadFiles(event.target.files, "pdf")}
+        />
+        <button
+          type="button"
+          aria-label="插入 PDF"
+          data-tooltip="上传并插入 PDF"
+          disabled={!ready || uploading || attachments.length >= 20}
+          onClick={() => pdfInputRef.current?.click()}
+        >
+          <FileUp size={15} aria-hidden="true" />
+        </button>
       </div>
 
       <div className="workspace-editor__body">
@@ -466,7 +528,7 @@ export function PostEditor({
           type="file"
           multiple
           hidden
-          onChange={(event) => void uploadAttachments(event.target.files)}
+          onChange={(event) => void uploadFiles(event.target.files)}
         />
         <button
           type="button"

@@ -1,8 +1,8 @@
 import { readFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { assertOwnerOrAdmin, requireUser } from "@/server/auth/guards";
-import { BadRequestError, NotFoundError } from "@/server/http/errors";
+import { requireUser } from "@/server/auth/guards";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@/server/http/errors";
 import { routeErrorResponse } from "@/server/http/response";
 import { createContentDisposition, resolveStoredPath } from "@/server/storage/file-storage";
 
@@ -18,16 +18,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         size: true,
         uploaderId: true,
         photo: { select: { isVisible: true } },
+        post: { select: { status: true, authorId: true } },
       },
     });
 
     if (!file) throw new NotFoundError("文件不存在");
-    if (!file.mimeType.startsWith("image/")) throw new BadRequestError("该文件不支持图片预览");
+    const canPreviewInline =
+      file.mimeType.startsWith("image/") || file.mimeType === "application/pdf";
+    if (!canPreviewInline) throw new BadRequestError("该文件不支持内联预览");
 
-    const isPublicPhoto = file.photo?.isVisible === true;
-    if (!isPublicPhoto) {
+    const isPublicFile = file.photo?.isVisible === true || file.post?.status === "PUBLISHED";
+    if (!isPublicFile) {
       const user = await requireUser();
-      assertOwnerOrAdmin(user, file.uploaderId);
+      const canReadPrivateFile =
+        user.role === "ADMIN" || user.id === file.uploaderId || user.id === file.post?.authorId;
+      if (!canReadPrivateFile) throw new ForbiddenError("无权预览该文件");
     }
 
     const content = await readFile(/*turbopackIgnore: true*/ resolveStoredPath(file.storedPath));
