@@ -164,7 +164,7 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
           <header className="time-echo-heading">
             <ChapterLabel depth="900m">时间回声</ChapterLabel>
             <h2 id="events-title">每一次发生，都在深处留下回声。</h2>
-            <p>新闻写进航海日志，大事记沿着回声由远及近，标出科协一路抵达的坐标。</p>
+            <p>新闻收进科协档案夹，大事记沿着回声由远及近，标出科协一路抵达的坐标。</p>
           </header>
 
           <TimeEcho news={data.newsPosts} milestones={data.milestones} />

@@ -45,7 +45,7 @@ function serializePost(post: {
 
 async function getHomepageMilestones() {
   try {
-    return await findRecentMilestones(7);
+    return await findRecentMilestones(12);
   } catch (error) {
     if (isMissingMilestonesTable(error)) return [];
     throw error;
