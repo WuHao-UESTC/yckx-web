@@ -7,17 +7,19 @@ export type RadarTargetLayout = {
   x: number;
   y: number;
   angle: number;
+  bearing: number;
+  distance: number;
   scanDelay: number;
 };
 
 const RADAR_SLOTS = [
-  { x: 35, y: 52 },
-  { x: 77, y: 30 },
-  { x: 24, y: 73 },
-  { x: 50, y: 16 },
-  { x: 58, y: 80 },
-  { x: 22, y: 33 },
-  { x: 67, y: 54 },
+  { x: 34, y: 50 },
+  { x: 78, y: 28 },
+  { x: 23, y: 75 },
+  { x: 48, y: 15 },
+  { x: 60, y: 82 },
+  { x: 20, y: 30 },
+  { x: 72, y: 56 },
 ] as const;
 
 function stableHash(value: string): number {
@@ -42,11 +44,15 @@ export function createRadarTargetLayouts(
       const slot = RADAR_SLOTS[index];
       const angle = (Math.atan2(slot.y - 50, slot.x - 50) * 180) / Math.PI;
       const normalizedAngle = (angle + 360) % 360;
+      const bearing = (normalizedAngle + 90) % 360;
+      const distance = Math.hypot(slot.x - 50, slot.y - 50);
       return {
         id: category.id,
         x: slot.x,
         y: slot.y,
         angle: normalizedAngle,
+        bearing,
+        distance,
         scanDelay: (normalizedAngle / 360) * 10,
       };
     });

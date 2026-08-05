@@ -19,7 +19,7 @@ describe("competition radar layout", () => {
         const first = targets[firstIndex];
         const second = targets[secondIndex];
         const distance = Math.hypot(first.x - second.x, first.y - second.y);
-        expect(distance).toBeGreaterThanOrEqual(23);
+        expect(distance).toBeGreaterThanOrEqual(24);
       }
     }
   });
@@ -28,6 +28,11 @@ describe("competition radar layout", () => {
     for (const target of createRadarTargetLayouts(categories)) {
       expect(target.angle).toBeGreaterThanOrEqual(0);
       expect(target.angle).toBeLessThan(360);
+      expect(target.bearing).toBeGreaterThanOrEqual(0);
+      expect(target.bearing).toBeLessThan(360);
+      expect(target.bearing).toBeCloseTo((target.angle + 90) % 360);
+      expect(target.distance).toBeGreaterThan(0);
+      expect(target.distance).toBeLessThan(50);
       expect(target.scanDelay).toBeCloseTo((target.angle / 360) * 10);
     }
   });
