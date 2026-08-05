@@ -207,9 +207,8 @@ export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: Ar
             <p>未经许可，禁止转载。</p>
           </footer>
         </article>
-
-        <ArticleOutline content={post.content} />
       </div>
+      <ArticleOutline content={post.content} />
     </InteriorPage>
   );
 }

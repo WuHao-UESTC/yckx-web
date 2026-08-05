@@ -25,7 +25,7 @@ function parseHeadings(markdown: string): { level: number; text: string }[] {
   return headings;
 }
 
-/** 移动端顶部可折叠目录，仅在 <lg 断点显示 */
+/** 空间不足以容纳视口侧栏时使用的顶部可折叠目录 */
 export function MobileTOC({ content }: { content: string }) {
   const [open, setOpen] = useState(false);
 
