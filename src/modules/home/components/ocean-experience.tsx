@@ -446,7 +446,7 @@ export function OceanExperience({ children }: { children: React.ReactNode }) {
 
   return (
     <div ref={rootRef} className="ocean-home" data-depth={DEPTHS[activeDepth]}>
-      <div className="ocean-environment" aria-hidden="true">
+      <div className="ocean-environment" aria-hidden="true" suppressHydrationWarning>
         {DEPTHS.map((depth) => (
           <span
             key={depth}
