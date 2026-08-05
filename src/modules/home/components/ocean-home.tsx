@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import type { HomePost, OceanHomeData } from "../home.types";
+import { CompetitionRadar } from "./competition-radar";
 import { DepthNavigation } from "./depth-navigation";
 import { KnowledgeTide } from "./knowledge-tide";
 import { OceanExperience } from "./ocean-experience";
@@ -154,52 +155,7 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
         className="ocean-chapter ocean-competition"
         aria-labelledby="competition-title"
       >
-        <div className="sonar-field" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <i />
-        </div>
-        <div className="ocean-section-layout ocean-section-layout--reverse">
-          <div className="competition-routes" aria-label="竞赛分类">
-            <div className="competition-routes__axis" aria-hidden="true" />
-            {data.competitionCategories.length === 0 ? (
-              <EmptySignal>新的竞赛航线即将出现。</EmptySignal>
-            ) : (
-              data.competitionCategories.slice(0, 7).map((category, index) => (
-                <Link
-                  key={category.id}
-                  href={`/competition/${category.slug}`}
-                  className="competition-route"
-                  style={{ "--route-index": index } as React.CSSProperties}
-                >
-                  <span className="competition-route__signal" aria-hidden="true" />
-                  <span>
-                    <small>ROUTE {String(index + 1).padStart(2, "0")}</small>
-                    <strong>{category.name}</strong>
-                  </span>
-                  <b>{category.count}</b>
-                </Link>
-              ))
-            )}
-          </div>
-
-          <div className="ocean-section-copy ocean-section-copy--right">
-            <ChapterLabel depth="300m">竞赛航线</ChapterLabel>
-            <Trophy
-              className="chapter-icon chapter-icon--gold"
-              size={34}
-              strokeWidth={1.4}
-              aria-hidden="true"
-            />
-            <h2 id="competition-title">把未知拆成问题，把问题变成可以抵达的坐标。</h2>
-            <p>经验、资料、队伍与成果沿着同一条航线沉淀。这里不仅记录奖项，也记录每一次试错。</p>
-            <Link href="/competition" className="ocean-button ocean-button--gold">
-              查看全部航线
-              <ChevronRight size={17} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
+        <CompetitionRadar categories={data.competitionCategories} />
       </section>
 
       <section id="events" className="ocean-chapter ocean-events" aria-labelledby="events-title">

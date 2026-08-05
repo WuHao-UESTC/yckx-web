@@ -1590,110 +1590,528 @@ code {
   mask-image: linear-gradient(90deg, #000, transparent 75%);
 }
 
-.sonar-field {
-  position: absolute;
-  top: 50%;
-  left: 25%;
-  width: min(58vw, 750px);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
+.competition-radar {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-areas:
+    "sonar heading"
+    "sonar constellation";
+  grid-template-columns: minmax(420px, 1.08fr) minmax(440px, 0.92fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: center;
+  width: min(100% - 120px, 1240px);
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  column-gap: clamp(40px, 6vw, 96px);
+  row-gap: 12px;
+  padding-top: var(--ocean-safe-top);
+  padding-bottom: clamp(82px, 10vh, 108px);
 }
 
-.sonar-field span {
+.competition-sonar {
+  position: relative;
+  grid-area: sonar;
+  align-self: center;
+  justify-self: center;
+  width: min(46vw, 590px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  isolation: isolate;
+}
+
+.competition-sonar__rings {
   position: absolute;
-  inset: var(--sonar-inset, 0);
-  border: 1px solid rgba(126, 215, 226, 0.11);
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid rgba(142, 222, 231, 0.2);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 157, 174, 0.07), transparent 66%);
+  box-shadow: inset 0 0 70px rgba(55, 173, 186, 0.06);
+}
+
+.competition-sonar__rings > span {
+  position: absolute;
+  inset: var(--sonar-inset, 16.5%);
+  border: 1px solid rgba(142, 222, 231, 0.15);
   border-radius: 50%;
 }
 
-.sonar-field span:nth-child(2) {
-  --sonar-inset: 17%;
+.competition-sonar__rings > span:nth-child(2) {
+  --sonar-inset: 33%;
 }
 
-.sonar-field span:nth-child(3) {
-  --sonar-inset: 34%;
+.competition-sonar__rings > span:nth-child(3) {
+  --sonar-inset: 49.25%;
 }
 
-.sonar-field i {
+.competition-sonar__rings > i,
+.competition-sonar__rings > b {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: rgba(144, 222, 231, 0.1);
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.competition-sonar__rings > i {
+  width: 100%;
+  height: 1px;
+}
+
+.competition-sonar__rings > b {
+  width: 1px;
+  height: 100%;
+}
+
+.competition-sonar__rings::after {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(213, 246, 249, 0.72);
+  border-radius: 50%;
+  background: #0b5968;
+  box-shadow: 0 0 18px rgba(151, 233, 240, 0.52);
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.competition-sonar__sweep {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  transform-origin: center;
+  animation: sonar-sweep 10s linear infinite;
+  pointer-events: none;
+}
+
+.competition-sonar__sweep::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    22deg,
+    transparent 43%,
+    rgba(106, 221, 226, 0.04) 55%,
+    rgba(113, 226, 230, 0.16) 75%,
+    rgba(181, 244, 246, 0.28) 100%
+  );
+  clip-path: polygon(50% 50%, 100% 18%, 100% 50%);
+  content: "";
+}
+
+.competition-sonar__sweep::after {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 49%;
   height: 1px;
-  background: linear-gradient(90deg, rgba(137, 224, 236, 0.52), transparent);
+  background: linear-gradient(90deg, rgba(210, 250, 251, 0.82), rgba(120, 222, 230, 0.08));
+  box-shadow: 0 0 10px rgba(151, 236, 240, 0.42);
+  content: "";
+  transform: translateY(-50%);
   transform-origin: left center;
-  animation: sonar-sweep 10s linear infinite;
 }
 
-.competition-routes {
-  position: relative;
-  align-self: center;
-  width: min(100%, 570px);
-  padding: 10px 0;
-}
-
-.competition-routes__axis {
+.competition-sonar__target {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 10px;
-  width: 1px;
-  background: linear-gradient(transparent, rgba(242, 198, 109, 0.45), transparent);
-}
-
-.competition-route {
-  position: relative;
+  z-index: 3;
+  top: var(--target-y);
+  left: var(--target-x);
   display: grid;
-  grid-template-columns: 24px 1fr auto;
+  grid-template-columns: 11px minmax(0, 1fr);
   align-items: center;
-  min-height: 65px;
-  margin-left: calc(var(--route-index) * 10px);
-  border-bottom: 1px solid rgba(188, 228, 236, 0.12);
-  padding: 8px 12px 8px 0;
-  color: #e9f7fa;
+  width: 122px;
+  min-height: 42px;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 5px 7px;
+  background: rgba(4, 48, 61, 0.34);
+  color: rgba(231, 248, 250, 0.84);
+  cursor: pointer;
+  text-align: left;
+  transform: translate(-50%, -50%);
 }
 
-.competition-route:hover {
-  border-color: rgba(242, 198, 109, 0.38);
-  color: #fff;
-  transform: translateX(7px);
+.competition-sonar__target::after {
+  position: absolute;
+  inset: -2px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  content: "";
+  opacity: 0;
+  animation: sonar-target-echo 10s linear var(--scan-delay) infinite;
+  pointer-events: none;
 }
 
-.competition-route__signal {
-  z-index: 1;
-  width: 9px;
-  height: 9px;
-  border: 2px solid #f2cf7e;
+.competition-sonar__target > i {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(189, 239, 244, 0.72);
   border-radius: 50%;
-  background: #063449;
-  box-shadow: 0 0 12px rgba(242, 198, 109, 0.38);
+  background: rgba(103, 210, 219, 0.34);
+  box-shadow: 0 0 9px rgba(130, 225, 233, 0.36);
 }
 
-.competition-route span:nth-child(2) {
-  display: flex;
-  flex-direction: column;
+.competition-sonar__target > span,
+.competition-sonar__target strong,
+.competition-sonar__target small {
+  display: block;
+  min-width: 0;
 }
 
-.competition-route small {
-  color: rgba(191, 224, 232, 0.44);
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-}
-
-.competition-route strong {
+.competition-sonar__target strong {
   overflow: hidden;
-  margin-top: 2px;
   font-family: var(--font-serif);
-  font-size: 0.93rem;
-  font-weight: 500;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.competition-route b {
-  color: rgba(242, 208, 132, 0.7);
+.competition-sonar__target small {
+  margin-top: 1px;
+  color: rgba(191, 225, 231, 0.48);
   font-family: var(--font-mono);
+  font-size: 0.45rem;
+}
+
+.competition-sonar__target:hover,
+.competition-sonar__target:focus-visible {
+  border-color: rgba(184, 238, 242, 0.5);
+  color: #fff;
+  outline: none;
+  box-shadow: 0 0 18px rgba(126, 219, 227, 0.14);
+}
+
+.competition-sonar__target[aria-pressed="true"] {
+  border-color: rgba(242, 198, 109, 0.76);
+  background: rgba(70, 65, 39, 0.28);
+  color: #ffe1a0;
+  box-shadow:
+    inset 0 0 18px rgba(242, 198, 109, 0.08),
+    0 0 20px rgba(242, 198, 109, 0.2);
+}
+
+.competition-sonar__target[aria-pressed="true"] > i {
+  border-color: #f2c66d;
+  background: rgba(242, 198, 109, 0.56);
+  box-shadow: 0 0 13px rgba(242, 198, 109, 0.68);
+}
+
+.competition-sonar__empty {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: 180px;
+  margin: 0;
+  color: rgba(209, 237, 241, 0.58);
   font-size: 0.72rem;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.competition-radar__heading {
+  grid-area: heading;
+  align-self: end;
+  width: min(100%, 520px);
+}
+
+.competition-radar__heading .chapter-label {
+  margin-bottom: 9px;
+  font-size: 0.62rem;
+}
+
+.competition-radar__heading .chapter-icon {
+  width: 25px;
+  height: 25px;
+  margin-bottom: 7px;
+}
+
+.competition-radar__heading h2 {
+  max-width: 500px;
+  margin: 0;
+  color: #f5fbff;
+  font-family: var(--font-serif);
+  font-size: clamp(1.45rem, 2.3vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.competition-radar__heading > p {
+  margin: 9px 0 0;
+  color: rgba(211, 237, 242, 0.68);
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+
+.competition-constellation {
+  display: grid;
+  grid-area: constellation;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-self: stretch;
+  width: min(100%, 560px);
+  min-height: 0;
+  border-top: 1px solid rgba(152, 221, 230, 0.13);
+  border-bottom: 1px solid rgba(152, 221, 230, 0.1);
+}
+
+.competition-constellation__header,
+.competition-constellation__footer {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.competition-constellation__header {
+  min-height: 48px;
+  padding: 7px 2px 6px;
+}
+
+.competition-constellation__header span {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(154, 221, 230, 0.5);
+  font-family: var(--font-mono);
+  font-size: 0.46rem;
+}
+
+.competition-constellation__header h3 {
+  margin: 0;
+  color: #eaf8fa;
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.competition-radar[data-selected="true"] .competition-constellation__header span,
+.competition-radar[data-selected="true"] .competition-constellation__header h3 {
+  color: #f2cf7e;
+}
+
+.competition-constellation__close {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(218, 241, 244, 0.62);
+  cursor: pointer;
+}
+
+.competition-constellation__close:hover,
+.competition-constellation__close:focus-visible {
+  color: var(--star-gold);
+  outline: 1px solid rgba(242, 198, 109, 0.45);
+}
+
+.competition-constellation__map {
+  position: relative;
+  min-height: 230px;
+}
+
+.competition-constellation__map > svg {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.competition-constellation__map polyline {
+  fill: none;
+  stroke: rgba(139, 220, 230, 0.25);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.45;
+  vector-effect: non-scaling-stroke;
+}
+
+.competition-constellation__star,
+.competition-constellation__loading-star {
+  position: absolute;
+  z-index: 1;
+  top: var(--star-y);
+  left: var(--star-x);
+}
+
+.competition-constellation__star {
+  width: 0;
+  height: 0;
+  color: rgba(224, 244, 247, 0.84);
+  opacity: 0;
+  animation: constellation-star-in 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.competition-constellation__star > i,
+.competition-constellation__loading-star {
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(210, 244, 247, 0.7);
+  border-radius: 50%;
+  background: #bcecf0;
+  box-shadow:
+    0 0 8px rgba(164, 232, 238, 0.72),
+    0 0 18px rgba(91, 197, 208, 0.28);
+}
+
+.competition-constellation__star > i {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+}
+
+.competition-constellation__star > span {
+  position: absolute;
+  width: 128px;
+}
+
+.competition-constellation__star[data-label="above"] > span {
+  transform: translate(-50%, calc(-100% - 10px));
+}
+
+.competition-constellation__star[data-label="above-start"] > span {
+  transform: translate(0, calc(-100% - 10px));
+}
+
+.competition-constellation__star[data-label="below"] > span {
+  transform: translate(-50%, 11px);
+}
+
+.competition-constellation__star[data-label="below-end"] > span {
+  transform: translate(-100%, 11px);
+}
+
+.competition-constellation__star small,
+.competition-constellation__star strong {
+  display: block;
+}
+
+.competition-constellation__star small {
+  overflow: hidden;
+  color: rgba(174, 216, 223, 0.5);
+  font-family: var(--font-mono);
+  font-size: 0.42rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.competition-constellation__star strong {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-shadow: 0 2px 8px rgba(0, 25, 34, 0.8);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.competition-constellation__star:hover,
+.competition-constellation__star:focus-visible {
+  color: #ffe1a0;
+  outline: none;
+}
+
+.competition-constellation__star:hover > i,
+.competition-constellation__star:focus-visible > i {
+  border-color: #f2cf7e;
+  background: #f2c66d;
+  box-shadow:
+    0 0 10px rgba(242, 198, 109, 0.9),
+    0 0 24px rgba(242, 198, 109, 0.46);
+}
+
+.competition-constellation__loading-star {
+  opacity: 0;
+  animation: radar-loading-star 1.4s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+}
+
+.competition-constellation__message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  color: rgba(205, 233, 238, 0.58);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.competition-constellation__message p {
+  margin: 0;
+}
+
+.competition-constellation__message button {
+  border: 0;
+  border-bottom: 1px solid rgba(242, 198, 109, 0.45);
+  padding: 2px 0;
+  background: transparent;
+  color: var(--star-gold);
+  cursor: pointer;
+}
+
+.competition-constellation__footer {
+  min-height: 42px;
+  gap: 14px;
+  border-top: 1px solid rgba(151, 220, 229, 0.09);
+  padding: 5px 1px;
+}
+
+.competition-constellation__batch,
+.competition-constellation__enter {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  font-size: 0.66rem;
+}
+
+.competition-constellation__batch {
+  color: rgba(205, 235, 239, 0.66);
+  cursor: pointer;
+}
+
+.competition-constellation__batch:hover,
+.competition-constellation__batch:focus-visible {
+  color: #fff;
+}
+
+.competition-constellation__batch:disabled {
+  opacity: 0.4;
+  cursor: wait;
+}
+
+.competition-constellation__enter {
+  margin-left: auto;
+  border-bottom: 1px solid rgba(242, 198, 109, 0.44);
+  color: #f2cf7e;
+}
+
+.competition-constellation__enter:hover {
+  color: #ffe3a0;
 }
 
 /* Events */
@@ -2706,7 +3124,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 .ocean-home.is-enhanced .ocean-section-copy > *,
 .ocean-home.is-enhanced .routine-heading > *,
 .ocean-home.is-enhanced .knowledge-tide,
-.ocean-home.is-enhanced .competition-routes,
+.ocean-home.is-enhanced .competition-radar,
 .ocean-home.is-enhanced .event-transmissions,
 .ocean-home.is-enhanced .routine-station,
 .ocean-home.is-enhanced .honor-constellation,
@@ -2724,7 +3142,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 .ocean-home.is-enhanced .ocean-chapter.is-future .ocean-section-copy > *,
 .ocean-home.is-enhanced .ocean-chapter.is-future .routine-heading > *,
 .ocean-home.is-enhanced .ocean-chapter.is-future .knowledge-tide,
-.ocean-home.is-enhanced .ocean-chapter.is-future .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-future .competition-radar,
 .ocean-home.is-enhanced .ocean-chapter.is-future .event-transmissions,
 .ocean-home.is-enhanced .ocean-chapter.is-future .routine-station,
 .ocean-home.is-enhanced .ocean-chapter.is-future .honor-constellation,
@@ -2739,7 +3157,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 .ocean-home.is-enhanced .ocean-chapter.is-past .ocean-section-copy > *,
 .ocean-home.is-enhanced .ocean-chapter.is-past .routine-heading > *,
 .ocean-home.is-enhanced .ocean-chapter.is-past .knowledge-tide,
-.ocean-home.is-enhanced .ocean-chapter.is-past .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-past .competition-radar,
 .ocean-home.is-enhanced .ocean-chapter.is-past .event-transmissions,
 .ocean-home.is-enhanced .ocean-chapter.is-past .routine-station,
 .ocean-home.is-enhanced .ocean-chapter.is-past .honor-constellation,
@@ -2754,7 +3172,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 .ocean-home.is-enhanced .ocean-chapter.is-current .ocean-section-copy > *,
 .ocean-home.is-enhanced .ocean-chapter.is-current .routine-heading > *,
 .ocean-home.is-enhanced .ocean-chapter.is-current .knowledge-tide,
-.ocean-home.is-enhanced .ocean-chapter.is-current .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-current .competition-radar,
 .ocean-home.is-enhanced .ocean-chapter.is-current .event-transmissions,
 .ocean-home.is-enhanced .ocean-chapter.is-current .routine-station,
 .ocean-home.is-enhanced .ocean-chapter.is-current .honor-constellation,
@@ -2764,7 +3182,7 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 .ocean-home.is-enhanced .ocean-chapter.is-next .ocean-section-copy > *,
 .ocean-home.is-enhanced .ocean-chapter.is-next .routine-heading > *,
 .ocean-home.is-enhanced .ocean-chapter.is-next .knowledge-tide,
-.ocean-home.is-enhanced .ocean-chapter.is-next .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-next .competition-radar,
 .ocean-home.is-enhanced .ocean-chapter.is-next .event-transmissions,
 .ocean-home.is-enhanced .ocean-chapter.is-next .routine-station,
 .ocean-home.is-enhanced .ocean-chapter.is-next .honor-constellation,
@@ -2948,6 +3366,51 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 @keyframes sonar-sweep {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes sonar-target-echo {
+  0%,
+  3% {
+    border-color: rgba(242, 198, 109, 0.92);
+    box-shadow:
+      inset 0 0 10px rgba(242, 198, 109, 0.1),
+      0 0 18px rgba(242, 198, 109, 0.42);
+    opacity: 1;
+  }
+  13% {
+    border-color: rgba(242, 198, 109, 0.18);
+    box-shadow: 0 0 24px rgba(242, 198, 109, 0);
+    opacity: 0;
+  }
+  14%,
+  100% {
+    border-color: transparent;
+    box-shadow: none;
+    opacity: 0;
+  }
+}
+
+@keyframes constellation-star-in {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes radar-loading-star {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.86;
   }
 }
 
@@ -3247,28 +3710,102 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
     display: none;
   }
 
-  .ocean-competition .ocean-section-layout {
+  .competition-radar {
+    grid-template-areas:
+      "heading"
+      "sonar"
+      "constellation";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(150px, 34%) minmax(180px, 1fr);
+    width: calc(100% - 42px);
+    gap: 7px;
+    padding-top: var(--ocean-safe-top);
     padding-bottom: 48px;
   }
 
-  .ocean-section-layout--reverse .competition-routes {
-    order: 2;
+  .competition-radar__heading {
+    align-self: start;
+    width: 100%;
   }
 
-  .ocean-section-layout--reverse .ocean-section-copy {
-    order: 1;
+  .competition-radar__heading .chapter-label {
+    margin-bottom: 5px;
   }
 
-  .competition-routes {
-    align-self: center;
-    max-height: 38vh;
-    overflow: hidden;
+  .competition-radar__heading .chapter-icon {
+    display: none;
   }
 
-  .sonar-field {
-    top: 70%;
-    left: 50%;
-    width: 96vw;
+  .competition-radar__heading h2 {
+    max-width: 620px;
+    font-size: clamp(1.25rem, 4.8vw, 1.7rem);
+    line-height: 1.24;
+  }
+
+  .competition-radar__heading > p {
+    margin-top: 5px;
+    font-size: 0.66rem;
+  }
+
+  .competition-sonar {
+    width: min(62vw, 270px);
+  }
+
+  .competition-sonar__target {
+    width: 82px;
+    min-height: 34px;
+    grid-template-columns: 8px minmax(0, 1fr);
+    gap: 4px;
+    padding: 3px 4px;
+  }
+
+  .competition-sonar__target > i {
+    width: 6px;
+    height: 6px;
+  }
+
+  .competition-sonar__target strong {
+    font-size: 0.56rem;
+  }
+
+  .competition-sonar__target small {
+    font-size: 0.38rem;
+  }
+
+  .competition-constellation {
+    justify-self: center;
+    width: min(100%, 620px);
+  }
+
+  .competition-constellation__header {
+    min-height: 38px;
+    padding: 4px 1px;
+  }
+
+  .competition-constellation__header h3 {
+    font-size: 0.78rem;
+  }
+
+  .competition-constellation__map {
+    min-height: 142px;
+  }
+
+  .competition-constellation__star > span {
+    width: 92px;
+  }
+
+  .competition-constellation__star small {
+    display: none;
+  }
+
+  .competition-constellation__star strong {
+    font-size: 0.52rem;
+    line-height: 1.3;
+  }
+
+  .competition-constellation__footer {
+    min-height: 34px;
+    padding: 2px 0;
   }
 
   .event-transmissions {
@@ -3463,13 +4000,31 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
     padding: 14px 13px;
   }
 
-  .competition-route {
-    min-height: 54px;
-    margin-left: calc(var(--route-index) * 3px);
+  .competition-radar {
+    grid-template-rows: auto minmax(142px, 32%) minmax(170px, 1fr);
+    width: calc(100% - 36px);
+    padding-top: 34px;
+    padding-bottom: 38px;
   }
 
-  .competition-route:nth-of-type(n + 6) {
-    display: none;
+  .competition-sonar {
+    width: min(66vw, 244px);
+  }
+
+  .competition-sonar__target {
+    width: 74px;
+  }
+
+  .competition-sonar__target strong {
+    font-size: 0.52rem;
+  }
+
+  .competition-constellation__star > span {
+    width: 78px;
+  }
+
+  .competition-constellation__star strong {
+    font-size: 0.48rem;
   }
 
   .event-transmission--lead {

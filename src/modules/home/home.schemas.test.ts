@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { graphPostsQuerySchema } from "./home.schemas";
+import { competitionRadarQuerySchema, graphPostsQuerySchema } from "./home.schemas";
 
 describe("home schemas", () => {
   it("defaults knowledge graph batches to five posts", () => {
@@ -20,5 +20,17 @@ describe("home schemas", () => {
         cursor: "clx1234560000abcdefghijk",
       }).cursor
     ).toBe("clx1234560000abcdefghijk");
+  });
+
+  it("defaults competition radar batches to seven posts", () => {
+    expect(competitionRadarQuerySchema.parse({})).toEqual({ limit: 7 });
+  });
+
+  it("accepts a competition category and rejects oversized radar batches", () => {
+    expect(competitionRadarQuerySchema.parse({ slug: "electronic-design" })).toEqual({
+      slug: "electronic-design",
+      limit: 7,
+    });
+    expect(() => competitionRadarQuerySchema.parse({ limit: "8" })).toThrow();
   });
 });
