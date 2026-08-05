@@ -1,11 +1,16 @@
 import { revalidatePath } from "next/cache";
 import { CalendarClock, Plus, Save, Trash2 } from "lucide-react";
-import { prisma } from "@/lib/prisma";
 import {
   milestoneFormSchema,
   resourceIdSchema,
   updateMilestoneFormSchema,
 } from "@/modules/admin/admin.schemas";
+import {
+  createMilestone as createMilestoneRecord,
+  deleteMilestone as deleteMilestoneRecord,
+  findMilestones,
+  updateMilestone as updateMilestoneRecord,
+} from "@/modules/milestones/server/milestone-service";
 import { requireAdmin } from "@/server/auth/guards";
 import { parseFormData } from "@/server/http/validation";
 
@@ -20,15 +25,13 @@ function dateInputValue(date: Date): string {
 
 export default async function AdminMilestonesPage() {
   await requireAdmin();
-  const milestones = await prisma.milestone.findMany({
-    orderBy: [{ occurredAt: "desc" }, { createdAt: "desc" }],
-  });
+  const milestones = await findMilestones();
 
   async function createMilestone(formData: FormData) {
     "use server";
     await requireAdmin();
     const input = parseFormData(formData, milestoneFormSchema);
-    await prisma.milestone.create({ data: input });
+    await createMilestoneRecord(input);
     refreshMilestones();
   }
 
@@ -36,7 +39,7 @@ export default async function AdminMilestonesPage() {
     "use server";
     await requireAdmin();
     const { id, ...input } = parseFormData(formData, updateMilestoneFormSchema);
-    await prisma.milestone.update({ where: { id }, data: input });
+    await updateMilestoneRecord(id, input);
     refreshMilestones();
   }
 
@@ -44,7 +47,7 @@ export default async function AdminMilestonesPage() {
     "use server";
     await requireAdmin();
     const id = resourceIdSchema.parse(formData.get("id"));
-    await prisma.milestone.delete({ where: { id } });
+    await deleteMilestoneRecord(id);
     refreshMilestones();
   }
 

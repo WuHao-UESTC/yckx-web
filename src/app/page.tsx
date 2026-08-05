@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { OceanHome } from "@/modules/home/components/ocean-home";
+import {
+  findRecentMilestones,
+  isMissingMilestonesTable,
+} from "@/modules/milestones/server/milestone-service";
 import { generateExcerpt } from "@/modules/posts/post-text";
 import type { HomePost, OceanHomeData } from "@/modules/home/home.types";
 
@@ -37,6 +41,15 @@ function serializePost(post: {
     categorySlug: post.category?.slug ?? null,
     categoryType: post.category?.type ?? null,
   };
+}
+
+async function getHomepageMilestones() {
+  try {
+    return await findRecentMilestones(7);
+  } catch (error) {
+    if (isMissingMilestonesTable(error)) return [];
+    throw error;
+  }
 }
 
 async function getHomeData(): Promise<OceanHomeData> {
@@ -81,11 +94,7 @@ async function getHomeData(): Promise<OceanHomeData> {
       orderBy: { publishedAt: "desc" },
       take: 8,
     }),
-    prisma.milestone.findMany({
-      select: { id: true, title: true, description: true, occurredAt: true },
-      orderBy: { occurredAt: "desc" },
-      take: 7,
-    }),
+    getHomepageMilestones(),
     prisma.category.findMany({
       where: { type: "KNOWLEDGE" },
       select: {
