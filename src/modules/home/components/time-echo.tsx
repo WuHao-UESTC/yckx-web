@@ -316,9 +316,9 @@ export function TimeEcho({
             <svg className="echo-readout__connector" viewBox="0 0 720 440" aria-hidden="true">
               <polyline
                 points={`${activeMarker.x * 7.2},${activeMarker.y * 4.4} ${Math.max(
-                  190,
+                  150,
                   activeMarker.x * 7.2 - 62
-                )},${Math.max(56, activeMarker.y * 4.4 - 38)} 158,38`}
+                )},${Math.max(58, activeMarker.y * 4.4 - 38)} 104,44`}
               />
             </svg>
             <article className="echo-readout" aria-live="polite">
