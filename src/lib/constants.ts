@@ -28,7 +28,7 @@ export const ALLOWED_MIME_TYPES = [
 export const NAV_LINKS = [
   { label: "技术支持", href: "/knowledge-base" },
   { label: "竞赛", href: "/competition" },
-  { label: "大事记", href: "/events" },
+  { label: "新闻与大事记", href: "/archive" },
   { label: "科协日常", href: "/routine" },
   { label: "友链", href: "/friends" },
 ] as const;

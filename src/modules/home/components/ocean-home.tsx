@@ -11,6 +11,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { postUrl } from "@/lib/post-url";
 import type { HomePost, OceanHomeData } from "../home.types";
 import { CompetitionRadar } from "./competition-radar";
 import { DepthNavigation } from "./depth-navigation";
@@ -19,12 +20,10 @@ import { OceanExperience } from "./ocean-experience";
 import { TimeEcho } from "./time-echo";
 
 function postHref(post: HomePost): string {
-  if (post.categoryType === "COMPETITION") {
-    return `/competition/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
-  }
-  if (post.categoryType === "NEWS") return `/news/${post.slug}`;
-  if (post.categoryType === "EVENT") return `/events/${post.slug}`;
-  return `/knowledge-base/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
+  return postUrl({
+    slug: post.slug,
+    category: { slug: post.categorySlug, type: post.categoryType },
+  });
 }
 
 function ChapterLabel({ depth, children }: { depth: string; children: React.ReactNode }) {

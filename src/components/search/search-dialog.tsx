@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { postUrl } from "@/lib/post-url";
 import { HighlightText } from "./highlight-text";
 
 interface SearchResult {
@@ -15,12 +16,10 @@ interface SearchResult {
 }
 
 function resultUrl(result: SearchResult): string {
-  if (result.categoryType === "COMPETITION") {
-    return `/competition/${result.categorySlug ?? "uncategorized"}/${result.slug}`;
-  }
-  if (result.categoryType === "NEWS") return `/news/${result.slug}`;
-  if (result.categoryType === "EVENT") return `/events/${result.slug}`;
-  return `/knowledge-base/${result.categorySlug ?? "uncategorized"}/${result.slug}`;
+  return postUrl({
+    slug: result.slug,
+    category: { slug: result.categorySlug, type: result.categoryType },
+  });
 }
 
 export function SearchDialog() {

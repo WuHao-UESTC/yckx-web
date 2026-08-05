@@ -443,13 +443,13 @@ export function TimeEcho({
                     {formatDate(currentNews.publishedAt)}
                   </time>
                 </div>
-                <Link href={`/news/${currentNews.slug}`} className="archive-sheet__title">
+                <Link href={`/archive/news/${currentNews.slug}`} className="archive-sheet__title">
                   {currentNews.title}
                 </Link>
                 <p className="archive-sheet__byline">撰稿人：{currentNews.authorName}</p>
                 <p className="archive-sheet__excerpt">{currentNews.excerpt}</p>
                 <div className="archive-sheet__footer">
-                  <Link href={`/news/${currentNews.slug}`}>
+                  <Link href={`/archive/news/${currentNews.slug}`}>
                     阅读完整新闻稿
                     <ExternalLink size={14} aria-hidden="true" />
                   </Link>
@@ -505,7 +505,7 @@ export function TimeEcho({
             >
               <ChevronLeft size={17} aria-hidden="true" />
             </button>
-            <Link href="/news">进入科协新闻</Link>
+            <Link href="/archive">进入新闻与大事记</Link>
             <button
               type="button"
               onClick={() => setPageIndex((current) => Math.min(news.length - 1, current + 1))}

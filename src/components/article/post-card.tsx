@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Post, User, Category, Tag } from "@/generated/prisma/client";
+import { postUrl } from "@/lib/post-url";
 
 /** 文章卡片最小所需字段 */
 export type PostCardData = Post & {
@@ -7,22 +8,6 @@ export type PostCardData = Post & {
   category?: Pick<Category, "id" | "name" | "slug" | "type"> | null;
   tags?: { tag: Pick<Tag, "id" | "name" | "slug"> }[];
 };
-
-export type RoutablePost = {
-  slug: string;
-  category?: Pick<Category, "slug" | "type"> | null;
-};
-
-/** 根据文章分类类型生成文章链接 */
-export function postUrl(post: RoutablePost): string {
-  const type = post.category?.type;
-  const catSlug = post.category?.slug ?? "uncategorized";
-
-  if (type === "COMPETITION") return `/competition/${catSlug}/${post.slug}`;
-  if (type === "NEWS") return `/news/${post.slug}`;
-  if (type === "EVENT") return `/events/${post.slug}`;
-  return `/knowledge-base/${catSlug}/${post.slug}`;
-}
 
 interface Props {
   post: PostCardData;

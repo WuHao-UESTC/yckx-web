@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { postUrl } from "@/lib/post-url";
 import { HighlightText } from "./highlight-text";
 
 interface SearchPost {
@@ -13,18 +14,15 @@ interface SearchPost {
   categoryType: string | null;
 }
 
-function postUrl(post: SearchPost): string {
-  if (post.categoryType === "COMPETITION")
-    return `/competition/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
-  if (post.categoryType === "NEWS") return `/news/${post.slug}`;
-  if (post.categoryType === "EVENT") return `/events/${post.slug}`;
-  return `/knowledge-base/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
-}
-
 export function SearchResultCard({ post, query }: { post: SearchPost; query: string }) {
   return (
     <article className="card group">
-      <Link href={postUrl(post)}>
+      <Link
+        href={postUrl({
+          slug: post.slug,
+          category: { slug: post.categorySlug, type: post.categoryType },
+        })}
+      >
         <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors leading-snug">
           <HighlightText text={post.title} query={query} />
         </h3>

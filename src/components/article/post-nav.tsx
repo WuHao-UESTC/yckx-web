@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { postUrl, type RoutablePost } from "./post-card";
+import { postUrl, type RoutablePost } from "@/lib/post-url";
 
 type AdjacentPost = RoutablePost & { title: string };
 
