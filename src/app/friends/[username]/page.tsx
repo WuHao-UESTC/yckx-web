@@ -1,6 +1,13 @@
 import { notFound } from "next/navigation";
+import { Code2, Globe2, PlaySquare } from "lucide-react";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
 import { PostCard } from "@/components/article/post-card";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -27,39 +34,42 @@ export default async function PersonalPage({ params }: Props) {
     orderBy: { publishedAt: "desc" },
   });
 
+  const copy = HOME_CHAPTER_COPY.routine;
+  const name = user.displayName ?? user.username;
+
   return (
-    <div className="mx-auto max-w-3xl px-5 py-8">
-      {/* 个人信息卡片 */}
-      <div className="card mb-8 text-center">
-        <div className="w-20 h-20 mx-auto rounded-full bg-[#f5f0e8] flex items-center justify-center text-3xl text-[#8b5e3c] font-bold mb-3">
+    <InteriorPage
+      theme="routine"
+      depth={copy.depth}
+      section="同行者记录"
+      title={name}
+      description={user.bio ?? "每一位同行者，都在共同航线上留下自己的光。"}
+      contentWidth="reading"
+    >
+      <section className="friend-profile">
+        <div className="friend-profile__avatar">
           {(user.displayName ?? user.username).charAt(0)}
         </div>
-        <h1 className="text-2xl font-bold text-[#1a1a1a]">{user.displayName ?? user.username}</h1>
-        {user.profile?.title && (
-          <p className="text-[#8b5e3c] text-sm mt-1 font-[family-name:var(--font-sans)]">
-            {user.profile.title}
-          </p>
-        )}
-        {user.bio && (
-          <p className="text-[#6b6b6b] text-sm mt-2 max-w-md mx-auto font-[family-name:var(--font-sans)]">
-            {user.bio}
-          </p>
-        )}
-        <div className="flex justify-center gap-4 mt-3 text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-          <span>{user._count.posts} 篇文章</span>
-          <span>·</span>
-          <span>加入于 {user.createdAt.toLocaleDateString("zh-CN")}</span>
+        <div className="friend-profile__readout">
+          <span>
+            <small>身份</small>
+            <strong>{user.profile?.title || "科协成员"}</strong>
+          </span>
+          <span>
+            <small>公开记录</small>
+            <strong>{user._count.posts} 篇</strong>
+          </span>
+          <span>
+            <small>加入航线</small>
+            <strong>{user.createdAt.toLocaleDateString("zh-CN")}</strong>
+          </span>
         </div>
         {user.profile && (
-          <div className="flex justify-center gap-3 mt-3">
+          <div className="friend-profile__links">
             {user.profile.website && (
-              <a
-                href={user.profile.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-[#8b5e3c]"
-              >
-                🌐 网站
+              <a href={user.profile.website} target="_blank" rel="noopener noreferrer">
+                <Globe2 size={15} aria-hidden="true" />
+                网站
               </a>
             )}
             {user.profile.github && (
@@ -67,9 +77,9 @@ export default async function PersonalPage({ params }: Props) {
                 href={`https://github.com/${user.profile.github}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-[#8b5e3c]"
               >
-                💻 GitHub
+                <Code2 size={15} aria-hidden="true" />
+                GitHub
               </a>
             )}
             {user.profile.bilibili && (
@@ -77,28 +87,25 @@ export default async function PersonalPage({ params }: Props) {
                 href={`https://space.bilibili.com/${user.profile.bilibili}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-[#8b5e3c]"
               >
-                📺 B站
+                <PlaySquare size={15} aria-hidden="true" />
+                B站
               </a>
             )}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* 文章列表 */}
-      <h2 className="text-xl font-bold text-[#1a1a1a] mb-4 pb-2 border-b border-[#e8e0d5]">
-        发表的文章
-      </h2>
+      <InteriorSectionHeading title="发表的文章" meta={`${posts.length} 个知识光点`} />
       {posts.length === 0 ? (
-        <p className="text-[#6b6b6b]">暂无文章。</p>
+        <InteriorEmpty>这位同行者还没有公开文章。</InteriorEmpty>
       ) : (
-        <div className="space-y-3">
+        <div className="post-signal-list">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} showExcerpt={false} />
           ))}
         </div>
       )}
-    </div>
+    </InteriorPage>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight, Camera, ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react";
+import { HOME_CHAPTER_COPY } from "../home-copy";
 import type { HomeMember, HomeNote, HomePhoto } from "../home.types";
 
 const NOTE_BATCH_SIZE = 5;
@@ -188,13 +189,13 @@ export function RoutineLights({
       <div className="routine-lights__top">
         <header className="routine-lights__heading">
           <div className="chapter-label">
-            <span>1800m</span>
+            <span>{HOME_CHAPTER_COPY.routine.depth}</span>
             <i aria-hidden="true" />
-            <strong>同行灯火</strong>
+            <strong>{HOME_CHAPTER_COPY.routine.label}</strong>
           </div>
           <Camera className="chapter-icon" size={30} strokeWidth={1.35} aria-hidden="true" />
-          <h2 id="routine-title">越向深处，同行的灯光越显得珍贵。</h2>
-          <p>实验室里的夜晚、比赛途中的照片和随手留下的话，拼成技术之外真实的科协。</p>
+          <h2 id="routine-title">{HOME_CHAPTER_COPY.routine.title}</h2>
+          <p>{HOME_CHAPTER_COPY.routine.description}</p>
         </header>
 
         <div className="routine-whale-stage">

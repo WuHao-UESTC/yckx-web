@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowUpRight } from "lucide-react";
+import { InteriorEmpty, InteriorPage } from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -21,35 +24,36 @@ export default async function ColumnPage({ params }: Props) {
     },
   });
   if (!column) notFound();
+  const copy = HOME_CHAPTER_COPY.archive;
 
   return (
-    <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="mb-2 text-3xl font-bold text-[#1a1a1a]">{column.title}</h1>
-      {column.description && (
-        <p className="mb-8 font-[family-name:var(--font-sans)] text-[#6b6b6b]">
-          {column.description}
-        </p>
-      )}
-      <div className="space-y-4">
+    <InteriorPage
+      theme="archive"
+      depth={copy.depth}
+      section={`${copy.label} · 专栏`}
+      title={column.title}
+      description={column.description ?? copy.description}
+      contentWidth="reading"
+      className="archive-column-page"
+    >
+      <div className="archive-column-register" aria-label={`${column.title}文章目录`}>
         {column.posts.map((post) => (
-          <article key={post.id} className="card group">
+          <article key={post.id}>
             <Link href={`/archive/events/${post.slug}`}>
-              <h2 className="text-lg font-bold text-[#1a1a1a] transition-colors group-hover:text-[#8b5e3c]">
-                {post.title}
-              </h2>
-              {post.excerpt && (
-                <p className="mt-1 line-clamp-2 font-[family-name:var(--font-sans)] text-sm text-[#6b6b6b]">
-                  {post.excerpt}
-                </p>
-              )}
-              <div className="mt-2 font-[family-name:var(--font-sans)] text-xs text-[#6b6b6b]">
-                {post.author.displayName ?? post.author.username} ·{" "}
-                {post.publishedAt?.toLocaleDateString("zh-CN")}
+              <time dateTime={post.publishedAt?.toISOString()}>
+                {post.publishedAt?.toLocaleDateString("zh-CN") ?? "未标注日期"}
+              </time>
+              <div>
+                <h2>{post.title}</h2>
+                {post.excerpt && <p>{post.excerpt}</p>}
+                <small>{post.author.displayName ?? post.author.username}</small>
               </div>
+              <ArrowUpRight size={18} aria-hidden="true" />
             </Link>
           </article>
         ))}
+        {column.posts.length === 0 && <InteriorEmpty>这个专栏还没有公开档案。</InteriorEmpty>}
       </div>
-    </div>
+    </InteriorPage>
   );
 }

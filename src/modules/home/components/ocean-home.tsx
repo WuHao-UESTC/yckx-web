@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, ArrowUpRight, ChevronRight, Compass, Sparkles, Trophy } from "lucide-react";
 import { postUrl } from "@/lib/post-url";
+import { HOME_CHAPTER_COPY } from "../home-copy";
 import type { HomePost, OceanHomeData } from "../home.types";
 import { CompetitionRadar } from "./competition-radar";
 import { DepthNavigation } from "./depth-navigation";
@@ -108,11 +109,11 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
         <div className="ocean-knowledge__veil" />
         <div className="ocean-section-layout">
           <div className="ocean-section-copy">
-            <ChapterLabel depth="80m">知识潮汐</ChapterLabel>
-            <h2 id="knowledge-title">知识不是孤岛，它在分享中形成洋流。</h2>
-            <p>
-              从嵌入式系统到信号处理，从基础工具到项目复盘，每一篇记录都成为后来者可以辨认的光点。
-            </p>
+            <ChapterLabel depth={HOME_CHAPTER_COPY.knowledge.depth}>
+              {HOME_CHAPTER_COPY.knowledge.label}
+            </ChapterLabel>
+            <h2 id="knowledge-title">{HOME_CHAPTER_COPY.knowledge.title}</h2>
+            <p>{HOME_CHAPTER_COPY.knowledge.description}</p>
             <Link href="/knowledge-base" className="ocean-button ocean-button--gold">
               进入知识库
               <ChevronRight size={17} aria-hidden="true" />
@@ -148,9 +149,11 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
         <div className="ocean-events__glow" aria-hidden="true" />
         <div className="time-echo-layout">
           <header className="time-echo-heading">
-            <ChapterLabel depth="900m">时间回声</ChapterLabel>
-            <h2 id="events-title">每一次发生，都在深处留下回声。</h2>
-            <p>新闻收进科协档案夹，大事记沿着回声由远及近，标出科协一路抵达的坐标。</p>
+            <ChapterLabel depth={HOME_CHAPTER_COPY.archive.depth}>
+              {HOME_CHAPTER_COPY.archive.label}
+            </ChapterLabel>
+            <h2 id="events-title">{HOME_CHAPTER_COPY.archive.title}</h2>
+            <p>{HOME_CHAPTER_COPY.archive.description}</p>
           </header>
 
           <TimeEcho
@@ -176,15 +179,17 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
         <div className="ocean-honors__veil" />
         <div className="honors-layout">
           <div className="ocean-section-copy">
-            <ChapterLabel depth="4000m">海底星图</ChapterLabel>
+            <ChapterLabel depth={HOME_CHAPTER_COPY.honors.depth}>
+              {HOME_CHAPTER_COPY.honors.label}
+            </ChapterLabel>
             <Sparkles
               className="chapter-icon chapter-icon--gold"
               size={34}
               strokeWidth={1.4}
               aria-hidden="true"
             />
-            <h2 id="honors-title">星光沉入海底，成为我们共同抵达过的坐标。</h2>
-            <p>让知识被分享，让热爱被看见，让每一次实践都成为抵达未知的航线。</p>
+            <h2 id="honors-title">{HOME_CHAPTER_COPY.honors.title}</h2>
+            <p>{HOME_CHAPTER_COPY.honors.description}</p>
           </div>
 
           <div className="honor-constellation">

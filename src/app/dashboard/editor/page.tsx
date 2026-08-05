@@ -173,7 +173,7 @@ export default function NewEditorPage() {
   };
 
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 100px)" }}>
+    <div className="workspace-editor flex flex-col">
       <h1 className="text-xl font-bold text-[#1a1a1a] mb-2">写文章</h1>
 
       <input

@@ -1,5 +1,11 @@
-import Link from "next/link";
+import { DomainIndexItem } from "@/components/interior/domain-index-item";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 export const revalidate = 300;
 
@@ -10,22 +16,33 @@ export default async function CompetitionPage() {
     orderBy: { sortOrder: "asc" },
   });
 
+  const copy = HOME_CHAPTER_COPY.competition;
+
   return (
-    <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">竞赛</h1>
-      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">按竞赛分类浏览文章</p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((cat) => (
-          <Link key={cat.id} href={`/competition/${cat.slug}`} className="card group">
-            <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors">
-              {cat.name}
-            </h3>
-            <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-              {cat._count.posts} 篇文章
-            </p>
-          </Link>
-        ))}
-      </div>
-    </div>
+    <InteriorPage
+      theme="competition"
+      depth={copy.depth}
+      section={copy.label}
+      title={copy.title}
+      description={copy.description}
+    >
+      <InteriorSectionHeading title="声纳目标" meta={`${categories.length} 条竞赛航线`} />
+      {categories.length === 0 ? (
+        <InteriorEmpty>新的竞赛航线即将出现。</InteriorEmpty>
+      ) : (
+        <div className="domain-index domain-index--sonar">
+          {categories.map((category, index) => (
+            <DomainIndexItem
+              key={category.id}
+              href={`/competition/${category.slug}`}
+              index={index}
+              title={category.name}
+              count={category._count.posts}
+              countLabel="篇信号"
+            />
+          ))}
+        </div>
+      )}
+    </InteriorPage>
   );
 }

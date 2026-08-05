@@ -1,6 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import {
+  ArrowUpRight,
+  FileText,
+  Image,
+  KeyRound,
+  ListTree,
+  Orbit,
+  Settings,
+  UsersRound,
+} from "lucide-react";
 import { requireAdmin } from "@/server/auth/guards";
+
+const ADMIN_STATIONS = [
+  { href: "/admin/posts", label: "文章管理", meta: "公开信号与状态", icon: FileText },
+  { href: "/admin/users", label: "用户管理", meta: "成员身份与权限", icon: UsersRound },
+  { href: "/admin/categories", label: "分类管理", meta: "知识与竞赛坐标", icon: ListTree },
+  { href: "/admin/photos", label: "照片墙管理", meta: "同行灯火影像", icon: Image },
+  { href: "/admin/milestones", label: "大事记编辑", meta: "时间回声节点", icon: Orbit },
+  { href: "/admin/invitations", label: "邀请码管理", meta: "新成员通行信号", icon: KeyRound },
+  { href: "/admin/config", label: "站点配置", meta: "全站基础参数", icon: Settings },
+] as const;
 
 export default async function AdminPage() {
   await requireAdmin();
@@ -16,72 +36,64 @@ export default async function AdminPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6">管理面板</h1>
-      <div className="grid gap-4 sm:grid-cols-3 mb-8">
-        <div className="card">
-          <p className="text-3xl font-bold text-[#8b5e3c]">{userCount}</p>
-          <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-            注册用户
-          </p>
-        </div>
-        <div className="card">
-          <p className="text-3xl font-bold text-[#8b5e3c]">{postPublishedCount}</p>
-          <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-            已发布文章
-          </p>
-        </div>
-        <div className="card">
-          <p className="text-3xl font-bold text-[#5a8a6a]">{postCount}</p>
-          <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-            文章总数（含草稿）
-          </p>
-        </div>
-      </div>
+    <div className="admin-overview">
+      <header className="workspace-panel-heading">
+        <span>STATION OVERVIEW</span>
+        <h1>管理观测总览</h1>
+        <p>校准内容、成员与站点配置，维持公开星图的准确性。</p>
+      </header>
 
-      {/* 最近注册 */}
+      <dl className="workspace-readouts">
+        <div>
+          <dt>注册用户</dt>
+          <dd>{userCount}</dd>
+          <small>IDENTIFIED MEMBERS</small>
+        </div>
+        <div>
+          <dt>已发布文章</dt>
+          <dd>{postPublishedCount}</dd>
+          <small>VISIBLE SIGNALS</small>
+        </div>
+        <div>
+          <dt>文章总数</dt>
+          <dd>{postCount}</dd>
+          <small>ALL RECORDS</small>
+        </div>
+      </dl>
+
       {recentUsers.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-sm font-bold text-[#1a1a1a] mb-3 font-[family-name:var(--font-sans)]">
-            最近注册
-          </h2>
-          <div className="space-y-1">
+        <section className="admin-recent-users">
+          <div className="admin-section-heading">
+            <h2>最近识别的成员</h2>
+            <span>{recentUsers.length} 条读数</span>
+          </div>
+          <div>
             {recentUsers.map((u) => (
-              <div key={u.username} className="card flex items-center gap-3 py-2.5 px-4">
-                <span className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)] w-24">
+              <div key={u.username}>
+                <time dateTime={u.createdAt.toISOString()}>
                   {u.createdAt.toLocaleDateString("zh-CN")}
-                </span>
-                <span className="text-sm font-bold text-[#1a1a1a]">
-                  {u.displayName ?? u.username}
-                </span>
+                </time>
+                <strong>{u.displayName ?? u.username}</strong>
+                <small>@{u.username}</small>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
-      <div className="flex flex-wrap gap-3">
-        <Link href="/admin/invitations" className="btn-primary">
-          邀请码管理
-        </Link>
-        <Link href="/admin/users" className="btn-primary">
-          用户管理
-        </Link>
-        <Link href="/admin/categories" className="btn-primary">
-          分类管理
-        </Link>
-        <Link href="/admin/photos" className="btn-primary">
-          照片墙管理
-        </Link>
-        <Link href="/admin/posts" className="btn-primary">
-          文章管理
-        </Link>
-        <Link href="/admin/milestones" className="btn-primary">
-          大事记编辑
-        </Link>
-        <Link href="/admin/config" className="btn-primary">
-          站点配置
-        </Link>
-      </div>
+
+      <section className="admin-station-index" aria-label="管理功能">
+        {ADMIN_STATIONS.map(({ href, label, meta, icon: Icon }, index) => (
+          <Link href={href} key={href}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <Icon size={19} strokeWidth={1.5} aria-hidden="true" />
+            <div>
+              <strong>{label}</strong>
+              <small>{meta}</small>
+            </div>
+            <ArrowUpRight size={17} aria-hidden="true" />
+          </Link>
+        ))}
+      </section>
     </div>
   );
 }

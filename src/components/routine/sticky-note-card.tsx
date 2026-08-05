@@ -45,7 +45,7 @@ export function StickyNoteCard({
 
   return (
     <div
-      className={`${colorClass} break-inside-avoid mb-4 p-4 rounded-sm shadow-sm hover:shadow-md hover:scale-[1.02] hover:-rotate-0 transition-all duration-200 relative group`}
+      className={`${colorClass} routine-note group relative mb-4 break-inside-avoid rounded-sm p-4 shadow-sm transition-all duration-200 hover:-rotate-0 hover:scale-[1.02] hover:shadow-md`}
       style={{ transform: `rotate(${rotation}deg)` }}
     >
       <p className="text-sm text-[#2c2c2c] leading-relaxed whitespace-pre-wrap font-[family-name:var(--font-sans)]">

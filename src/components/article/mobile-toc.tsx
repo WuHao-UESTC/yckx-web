@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { slugify } from "@/lib/slugify";
 
 interface Heading {
@@ -48,21 +49,28 @@ export function MobileTOC({ content }: { content: string }) {
   if (headings.length === 0) return null;
 
   return (
-    <div className="lg:hidden mb-6">
+    <div className="mobile-toc">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-sm font-bold text-[#8b5e3c] py-2 px-3 rounded-md border border-[#e8e0d5] bg-[#faf7f2] hover:bg-[#f0ebe0] transition-colors font-[family-name:var(--font-sans)] w-full"
+        className="mobile-toc__trigger"
+        aria-expanded={open}
       >
-        <span>{open ? "▾" : "▸"}</span>
+        {open ? (
+          <ChevronDown size={16} aria-hidden="true" />
+        ) : (
+          <ChevronRight size={16} aria-hidden="true" />
+        )}
         <span>目录</span>
-        <span className="text-xs text-[#6b6b6b] ml-auto">{headings.length} 个标题</span>
+        <small>{headings.length} 个标题</small>
       </button>
       {open && (
-        <nav className="mt-2 p-3 border border-[#e8e0d5] rounded-md bg-[#faf7f2] max-h-[50vh] overflow-y-auto">
+        <nav className="mobile-toc__list" aria-label="文章目录">
           {headings.map((h) => (
             <button
+              type="button"
               key={h.id}
-              className="block w-full text-left px-1.5 py-1 text-sm text-[#6b6b6b] hover:text-[#8b5e3c] hover:bg-[#f0ebe0]/50 rounded transition-colors font-[family-name:var(--font-sans)] truncate"
+              className="mobile-toc__item"
               style={{ paddingLeft: `${8 + (h.level - 1) * 14}px` }}
               onClick={() => jumpTo(h.id)}
             >

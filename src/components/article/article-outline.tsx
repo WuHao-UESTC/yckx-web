@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { slugify } from "@/lib/slugify";
 
 interface Heading {
@@ -140,35 +141,35 @@ export function ArticleOutline({ content }: { content: string }) {
 
       return (
         <div key={h.id}>
-          <button
-            className={
-              "flex items-center w-full text-left px-1.5 py-[3px] rounded transition-colors group " +
-              (isActive
-                ? "bg-[#f0ebe0] text-[#8b5e3c] font-medium"
-                : "text-[#6b6b6b] hover:text-[#8b5e3c] hover:bg-[#f0ebe0]/50")
-            }
+          <div
+            className={`article-outline__row${isActive ? " is-active" : ""}`}
             style={{ paddingLeft: `${6 + depth * 14}px` }}
-            onClick={() => jumpTo(h.id)}
-            title={h.text}
           >
-            {/* 折叠/展开箭头 */}
             {hasChildren ? (
-              <span
-                className="shrink-0 w-3.5 text-[#c4a882] hover:text-[#8b5e3c] cursor-pointer mr-0.5 leading-none"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleCollapse(h.id);
-                }}
+              <button
+                type="button"
+                className="article-outline__toggle"
+                onClick={() => toggleCollapse(h.id)}
+                aria-label={isCollapsed ? `展开 ${h.text}` : `折叠 ${h.text}`}
               >
-                {isCollapsed ? "▸" : "▾"}
-              </span>
+                {isCollapsed ? (
+                  <ChevronRight size={13} aria-hidden="true" />
+                ) : (
+                  <ChevronDown size={13} aria-hidden="true" />
+                )}
+              </button>
             ) : (
-              <span className="shrink-0 w-3.5 mr-0.5" />
+              <span className="article-outline__toggle" aria-hidden="true" />
             )}
-            {/* 标题文本 */}
-            <span className="truncate text-[13px] leading-relaxed">{h.text}</span>
-          </button>
-          {/* 子标题 */}
+            <button
+              type="button"
+              className="article-outline__jump"
+              onClick={() => jumpTo(h.id)}
+              title={h.text}
+            >
+              {h.text}
+            </button>
+          </div>
           {hasChildren && !isCollapsed && <div>{renderNodes(h.children, depth + 1)}</div>}
         </div>
       );
@@ -176,14 +177,9 @@ export function ArticleOutline({ content }: { content: string }) {
   }
 
   return (
-    <nav
-      className="w-[220px] shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-8rem)] overflow-y-auto"
-      aria-label="文章大纲"
-    >
-      <p className="text-xs font-bold text-[#1a1a1a] mb-2.5 px-1.5 font-[family-name:var(--font-sans)]">
-        目录
-      </p>
-      <div className="font-[family-name:var(--font-sans)]">{renderNodes(tree)}</div>
+    <nav className="article-outline" aria-label="文章大纲">
+      <p>目录</p>
+      <div>{renderNodes(tree)}</div>
     </nav>
   );
 }

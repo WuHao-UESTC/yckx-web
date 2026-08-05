@@ -1,4 +1,6 @@
 import { SearchResultCard } from "@/components/search/search-result-card";
+import { InteriorEmpty, InteriorPage } from "@/components/interior/interior-page";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -6,11 +8,18 @@ interface Props {
 
 export default async function SearchPage({ searchParams }: Props) {
   const { q } = await searchParams;
+  const copy = HOME_CHAPTER_COPY.knowledge;
 
   return (
-    <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="text-3xl font-bold text-[#1a1a1a] mb-6">搜索</h1>
-      <form className="flex gap-3 mb-8">
+    <InteriorPage
+      theme="knowledge"
+      depth={copy.depth}
+      section="信号检索"
+      title="沿知识潮汐追踪一个关键词。"
+      description={copy.title}
+      contentWidth="reading"
+    >
+      <form className="interior-search-form">
         <input
           type="text"
           name="q"
@@ -26,9 +35,9 @@ export default async function SearchPage({ searchParams }: Props) {
       {q ? (
         <SearchResults query={q} />
       ) : (
-        <p className="text-[#6b6b6b] font-[family-name:var(--font-sans)]">输入关键词搜索文章。</p>
+        <InteriorEmpty>输入关键词，开始追踪站内内容。</InteriorEmpty>
       )}
-    </div>
+    </InteriorPage>
   );
 }
 
@@ -99,15 +108,13 @@ async function SearchResults({ query }: { query: string }) {
       });
 
       if (fallback.length === 0) {
-        return <p className="text-[#6b6b6b]">未找到包含“{query}”的文章。</p>;
+        return <InteriorEmpty>未找到包含“{query}”的文章。</InteriorEmpty>;
       }
 
       return (
         <div>
-          <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">
-            找到 {fallback.length} 篇相关文章
-          </p>
-          <div className="space-y-4">
+          <p className="interior-result-count">找到 {fallback.length} 篇相关文章</p>
+          <div className="post-signal-list">
             {fallback.map((p) => (
               <SearchResultCard
                 key={p.id}
@@ -129,16 +136,14 @@ async function SearchResults({ query }: { query: string }) {
         </div>
       );
     } catch {
-      return <p className="text-[#6b6b6b]">搜索服务暂不可用。</p>;
+      return <InteriorEmpty>搜索服务暂不可用。</InteriorEmpty>;
     }
   }
 
   return (
     <div>
-      <p className="text-[#6b6b6b] mb-4 font-[family-name:var(--font-sans)]">
-        找到 {posts.length} 篇相关文章
-      </p>
-      <div className="space-y-4">
+      <p className="interior-result-count">找到 {posts.length} 篇相关文章</p>
+      <div className="post-signal-list">
         {posts.map((post) => (
           <SearchResultCard key={post.slug} post={post} query={query} />
         ))}

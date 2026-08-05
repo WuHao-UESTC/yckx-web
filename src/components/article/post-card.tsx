@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import type { Post, User, Category, Tag } from "@/generated/prisma/client";
 import { postUrl } from "@/lib/post-url";
 
@@ -23,42 +24,31 @@ export function PostCard({ post, showExcerpt = true, showTags = false, maxTags =
   const tags = post.tags ?? [];
 
   return (
-    <article className="card group">
-      <Link href={postUrl(post)}>
-        <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors leading-snug">
-          {post.title}
-        </h3>
-        {showExcerpt && post.excerpt && (
-          <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1.5 leading-relaxed font-[family-name:var(--font-sans)]">
-            {post.excerpt}
-          </p>
-        )}
-        <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#6b6b6b] mt-2.5 font-[family-name:var(--font-sans)]">
-          <span>{post.author.displayName ?? post.author.username}</span>
-          <span>·</span>
-          <time dateTime={post.publishedAt?.toISOString()}>
-            {post.publishedAt?.toLocaleDateString("zh-CN", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </time>
-          {post.category && (
-            <>
-              <span>·</span>
-              <span className="tag">{post.category.name}</span>
-            </>
-          )}
-          {showTags && tags.length > 0 && (
-            <>
-              {tags.slice(0, maxTags).map((pt) => (
+    <article className="post-signal group">
+      <Link href={postUrl(post)} className="post-signal__link">
+        <span className="post-signal__beacon" aria-hidden="true" />
+        <span className="post-signal__body">
+          <h3>{post.title}</h3>
+          {showExcerpt && post.excerpt && <p className="post-signal__excerpt">{post.excerpt}</p>}
+          <span className="post-signal__meta">
+            <span>{post.author.displayName ?? post.author.username}</span>
+            <time dateTime={post.publishedAt?.toISOString()}>
+              {post.publishedAt?.toLocaleDateString("zh-CN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </time>
+            {post.category && <span className="tag">{post.category.name}</span>}
+            {showTags &&
+              tags.slice(0, maxTags).map((pt) => (
                 <span key={pt.tag.id} className="tag">
                   {pt.tag.name}
                 </span>
               ))}
-            </>
-          )}
-        </div>
+          </span>
+        </span>
+        <ArrowUpRight className="post-signal__arrow" size={17} aria-hidden="true" />
       </Link>
     </article>
   );

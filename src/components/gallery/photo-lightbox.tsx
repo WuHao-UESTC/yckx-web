@@ -38,11 +38,11 @@ export function PhotoLightbox({ photos }: { photos: Photo[] }) {
   return (
     <>
       {/* Masonry 照片墙 */}
-      <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
+      <div className="routine-gallery columns-2 gap-3 space-y-3 sm:columns-3 lg:columns-4">
         {photos.map((photo, i) => (
           <div
             key={photo.id}
-            className="break-inside-avoid group relative rounded-md overflow-hidden bg-[#f5f0e8] cursor-zoom-in"
+            className="routine-gallery__item group relative break-inside-avoid cursor-zoom-in overflow-hidden bg-[#f5f0e8]"
             onClick={() => open(i)}
           >
             <img

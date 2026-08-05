@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { LogIn } from "lucide-react";
+import { AuthShell } from "@/components/interior/auth-shell";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,56 +36,46 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center py-20 px-5">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-6 text-center">登录</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded font-[family-name:var(--font-sans)]">
-              {error}
-            </p>
-          )}
-
-          <div>
-            <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
-              邮箱
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field w-full"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-[#6b6b6b] mb-1 font-[family-name:var(--font-sans)]">
-              密码
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field w-full"
-              required
-            />
-          </div>
-
-          <button type="submit" disabled={loading} className="btn-primary w-full text-center">
-            {loading ? "登录中..." : "登录"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-          还没有账号？{" "}
-          <Link href="/register" className="text-[#8b5e3c] hover:text-[#5a3a22]">
-            注册
-          </Link>
+    <AuthShell
+      title="登录"
+      description="验证身份后继续进入同行工作台。"
+      footer={
+        <p>
+          还没有账号？ <Link href="/register">使用邀请码注册</Link>
         </p>
-      </div>
-    </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="auth-form">
+        {error && <p className="auth-form__error">{error}</p>}
+
+        <label>
+          <span>邮箱</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input-field w-full"
+            required
+            autoFocus
+          />
+        </label>
+
+        <label>
+          <span>密码</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input-field w-full"
+            required
+          />
+        </label>
+
+        <button type="submit" disabled={loading} className="btn-primary auth-form__submit">
+          <LogIn size={16} aria-hidden="true" />
+          {loading ? "登录中..." : "登录"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

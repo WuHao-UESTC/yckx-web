@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { POSTS_PER_PAGE } from "@/lib/constants";
 import { PostCard } from "@/components/article/post-card";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
+import { POSTS_PER_PAGE } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 interface Props {
   params: Promise<{ category: string }>;
@@ -33,15 +39,22 @@ export default async function KnowledgeCategoryPage({ params, searchParams }: Pr
     prisma.post.count({ where: { categoryId: category.id, status: "PUBLISHED" } }),
   ]);
 
-  return (
-    <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">{category.name}</h1>
-      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">共 {total} 篇文章</p>
+  const copy = HOME_CHAPTER_COPY.knowledge;
 
+  return (
+    <InteriorPage
+      theme="knowledge"
+      depth={copy.depth}
+      section={copy.label}
+      title={category.name}
+      description={copy.title}
+      contentWidth="reading"
+    >
+      <InteriorSectionHeading title="知识记录" meta={`共 ${total} 篇 · 第 ${page} 页`} />
       {posts.length === 0 ? (
-        <p className="text-[#6b6b6b]">该分类暂无文章。</p>
+        <InteriorEmpty>这个潮源还没有公开记录。</InteriorEmpty>
       ) : (
-        <div className="space-y-4">
+        <div className="post-signal-list">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} showTags />
           ))}
@@ -49,19 +62,19 @@ export default async function KnowledgeCategoryPage({ params, searchParams }: Pr
       )}
 
       {total > POSTS_PER_PAGE && (
-        <div className="flex justify-center gap-4 mt-8 font-[family-name:var(--font-sans)]">
+        <nav className="interior-pager" aria-label="知识文章分页">
           {page > 1 && (
             <Link href={`/knowledge-base/${slug}?page=${page - 1}`} className="btn-primary">
-              ← 上一页
+              上一页
             </Link>
           )}
           {page * POSTS_PER_PAGE < total && (
             <Link href={`/knowledge-base/${slug}?page=${page + 1}`} className="btn-primary">
-              下一页 →
+              下一页
             </Link>
           )}
-        </div>
+        </nav>
       )}
-    </div>
+    </InteriorPage>
   );
 }

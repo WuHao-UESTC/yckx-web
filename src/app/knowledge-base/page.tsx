@@ -1,5 +1,11 @@
-import Link from "next/link";
+import { DomainIndexItem } from "@/components/interior/domain-index-item";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 export const revalidate = 300;
 
@@ -10,27 +16,32 @@ export default async function KnowledgeBasePage() {
     orderBy: { sortOrder: "asc" },
   });
 
-  return (
-    <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">知识库</h1>
-      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">按分类浏览技术文章</p>
+  const copy = HOME_CHAPTER_COPY.knowledge;
 
+  return (
+    <InteriorPage
+      theme="knowledge"
+      depth={copy.depth}
+      section={copy.label}
+      title={copy.title}
+      description={copy.description}
+    >
+      <InteriorSectionHeading title="潮汐分类" meta={`${categories.length} 个知识方向`} />
       {categories.length === 0 ? (
-        <p className="text-[#6b6b6b]">暂无分类。</p>
+        <InteriorEmpty>新的知识光点仍在等待接入。</InteriorEmpty>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((cat) => (
-            <Link key={cat.id} href={`/knowledge-base/${cat.slug}`} className="card group">
-              <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors">
-                {cat.name}
-              </h3>
-              <p className="text-sm text-[#6b6b6b] mt-1 font-[family-name:var(--font-sans)]">
-                {cat._count.posts} 篇文章
-              </p>
-            </Link>
+        <div className="domain-index">
+          {categories.map((category, index) => (
+            <DomainIndexItem
+              key={category.id}
+              href={`/knowledge-base/${category.slug}`}
+              index={index}
+              title={category.name}
+              count={category._count.posts}
+            />
           ))}
         </div>
       )}
-    </div>
+    </InteriorPage>
   );
 }

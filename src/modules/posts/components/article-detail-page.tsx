@@ -4,7 +4,9 @@ import { GiscusComments } from "@/components/article/giscus-comments";
 import { MobileTOC } from "@/components/article/mobile-toc";
 import { PostNav } from "@/components/article/post-nav";
 import { ViewTracker } from "@/components/article/view-tracker";
+import { InteriorPage, type InteriorTheme } from "@/components/interior/interior-page";
 import { MarkdownRenderer } from "@/components/markdown/markdown-renderer";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 import {
   findAdjacentPosts,
   findPublishedArticle,
@@ -51,49 +53,109 @@ const ARTICLE_OPTIONS: Record<
   },
 };
 
+const ARTICLE_PRESENTATION: Record<
+  ArticleKind,
+  { theme: InteriorTheme; depth: string; section: string; recordLabel: string }
+> = {
+  KNOWLEDGE: {
+    theme: "knowledge",
+    depth: HOME_CHAPTER_COPY.knowledge.depth,
+    section: HOME_CHAPTER_COPY.knowledge.label,
+    recordLabel: "知识记录",
+  },
+  COMPETITION: {
+    theme: "competition",
+    depth: HOME_CHAPTER_COPY.competition.depth,
+    section: HOME_CHAPTER_COPY.competition.label,
+    recordLabel: "航线记录",
+  },
+  EVENT: {
+    theme: "archive",
+    depth: HOME_CHAPTER_COPY.archive.depth,
+    section: HOME_CHAPTER_COPY.archive.label,
+    recordLabel: "大事记档案",
+  },
+  NEWS: {
+    theme: "archive",
+    depth: HOME_CHAPTER_COPY.archive.depth,
+    section: HOME_CHAPTER_COPY.archive.label,
+    recordLabel: "新闻档案",
+  },
+};
+
 export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: ArticleKind }) {
   const post = await findPublishedArticle(slug, kind);
   if (!post) notFound();
 
   const [prevPost, nextPost] = await findAdjacentPosts(post, kind);
   const options = ARTICLE_OPTIONS[kind];
+  const presentation = ARTICLE_PRESENTATION[kind];
   const displayDate = post.publishedAt ?? (options.useCreatedAtFallback ? post.createdAt : null);
+  const authorName = post.author.displayName ?? post.author.username;
+  const metadata = [
+    authorName,
+    displayDate?.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    options.showViewCount ? `${post.viewCount} 次阅读` : null,
+    options.showCategory && post.category ? post.category.name : null,
+  ].filter(Boolean);
 
   return (
-    <div className="mx-auto max-w-[1200px] px-5 py-8 flex justify-center gap-10">
+    <InteriorPage
+      theme={presentation.theme}
+      depth={presentation.depth}
+      section={presentation.section}
+      title={post.title}
+      description={metadata.join(" · ")}
+      contentWidth="reading"
+      className="article-page"
+    >
       <ViewTracker slug={post.slug} />
-      <div className="min-w-0 max-w-3xl flex-1">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-[#1a1a1a] leading-tight mb-4">{post.title}</h1>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-            <span>{post.author.displayName ?? post.author.username}</span>
-            {displayDate && (
-              <>
-                <span>·</span>
-                <time>
-                  {displayDate.toLocaleDateString("zh-CN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </time>
-              </>
+      <div className="article-reading-frame">
+        <article className="article-reading-sheet">
+          <header className="article-reading-sheet__header">
+            <span>{presentation.recordLabel}</span>
+            <small>YCKX / {post.slug}</small>
+            {post.tags.length > 0 && (
+              <div className="article-reading-sheet__tags">
+                {post.tags.map(({ tag }) => (
+                  <a key={tag.id} href={`/tags/${tag.slug}`} className="tag">
+                    {tag.name}
+                  </a>
+                ))}
+              </div>
             )}
-            {options.showViewCount && (
-              <>
-                <span>·</span>
-                <span>{post.viewCount} 次阅读</span>
-              </>
-            )}
-            {options.showCategory && post.category && (
-              <>
-                <span>·</span>
-                <span className="tag">{post.category.name}</span>
-              </>
-            )}
-          </div>
-          {post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
+          </header>
+
+          {post.coverImage && (
+            <figure className="article-reading-sheet__cover">
+              <img src={post.coverImage} alt={post.title} />
+            </figure>
+          )}
+
+          <MobileTOC content={post.content} />
+          <MarkdownRenderer content={post.content} />
+
+          {options.showAttachments && post.files.length > 0 && (
+            <section className="article-attachments" aria-labelledby="article-attachments-title">
+              <h3 id="article-attachments-title">附件下载</h3>
+              <ul>
+                {post.files.map((file) => (
+                  <li key={file.id}>
+                    <a href={`/api/files/${file.id}`}>
+                      {file.filename} ({(file.size / 1024).toFixed(0)} KB)
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {options.showBottomTags && post.tags.length > 0 && (
+            <div className="article-bottom-tags">
               {post.tags.map(({ tag }) => (
                 <a key={tag.id} href={`/tags/${tag.slug}`} className="tag">
                   {tag.name}
@@ -101,61 +163,18 @@ export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: Ar
               ))}
             </div>
           )}
-        </header>
 
-        {post.coverImage && (
-          <div className="mb-6 rounded-md overflow-hidden bg-[#f5f0e8]">
-            <img
-              src={post.coverImage}
-              alt={post.title}
-              className="w-full h-auto object-cover max-h-[400px]"
-            />
-          </div>
-        )}
+          <PostNav prev={prevPost} next={nextPost} />
+          <GiscusComments />
 
-        <MobileTOC content={post.content} />
-        <MarkdownRenderer content={post.content} />
+          <footer className="article-copyright">
+            <p>© {authorName} · 英才科协</p>
+            <p>未经许可，禁止转载。</p>
+          </footer>
+        </article>
 
-        {options.showAttachments && post.files.length > 0 && (
-          <div className="mt-8 p-4 bg-[#faf7f2] rounded-md border border-[#e8e0d5]">
-            <h3 className="text-sm font-bold text-[#1a1a1a] mb-2 font-[family-name:var(--font-sans)]">
-              附件下载
-            </h3>
-            <ul className="space-y-1">
-              {post.files.map((file) => (
-                <li key={file.id}>
-                  <a
-                    href={`/api/files/${file.id}`}
-                    className="text-sm text-[#8b5e3c] hover:text-[#5a3a22] font-[family-name:var(--font-sans)]"
-                  >
-                    {file.filename} ({(file.size / 1024).toFixed(0)} KB)
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {options.showBottomTags && post.tags.length > 0 && (
-          <div className="mt-8 flex flex-wrap gap-1.5">
-            {post.tags.map(({ tag }) => (
-              <a key={tag.id} href={`/tags/${tag.slug}`} className="tag">
-                {tag.name}
-              </a>
-            ))}
-          </div>
-        )}
-
-        <PostNav prev={prevPost} next={nextPost} />
-        <GiscusComments />
-
-        <div className="mt-8 pt-6 border-t border-[#e8e0d5] text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
-          <p>© {post.author.displayName ?? post.author.username} · 英才科协</p>
-          <p className="mt-1">未经许可，禁止转载。</p>
-        </div>
+        <ArticleOutline content={post.content} />
       </div>
-
-      <ArticleOutline content={post.content} />
-    </div>
+    </InteriorPage>
   );
 }

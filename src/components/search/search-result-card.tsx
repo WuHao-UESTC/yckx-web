@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { postUrl } from "@/lib/post-url";
 import { HighlightText } from "./highlight-text";
 
@@ -16,38 +17,37 @@ interface SearchPost {
 
 export function SearchResultCard({ post, query }: { post: SearchPost; query: string }) {
   return (
-    <article className="card group">
+    <article className="post-signal group">
       <Link
         href={postUrl({
           slug: post.slug,
           category: { slug: post.categorySlug, type: post.categoryType },
         })}
+        className="post-signal__link"
       >
-        <h3 className="text-lg font-bold text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors leading-snug">
-          <HighlightText text={post.title} query={query} />
-        </h3>
-        {post.excerpt && (
-          <p className="text-sm text-[#6b6b6b] line-clamp-2 mt-1.5 leading-relaxed font-[family-name:var(--font-sans)]">
-            <HighlightText text={post.excerpt} query={query} />
-          </p>
-        )}
-        <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#6b6b6b] mt-2.5 font-[family-name:var(--font-sans)]">
-          <span>{post.authorDisplayName ?? post.authorUsername}</span>
-          <span>·</span>
-          <time dateTime={post.publishedAt?.toISOString()}>
-            {post.publishedAt?.toLocaleDateString("zh-CN", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </time>
-          {post.categoryName && (
-            <>
-              <span>·</span>
-              <span className="tag">{post.categoryName}</span>
-            </>
+        <span className="post-signal__beacon" aria-hidden="true" />
+        <span className="post-signal__body">
+          <h3>
+            <HighlightText text={post.title} query={query} />
+          </h3>
+          {post.excerpt && (
+            <p className="post-signal__excerpt">
+              <HighlightText text={post.excerpt} query={query} />
+            </p>
           )}
-        </div>
+          <span className="post-signal__meta">
+            <span>{post.authorDisplayName ?? post.authorUsername}</span>
+            <time dateTime={post.publishedAt?.toISOString()}>
+              {post.publishedAt?.toLocaleDateString("zh-CN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </time>
+            {post.categoryName && <span className="tag">{post.categoryName}</span>}
+          </span>
+        </span>
+        <ArrowUpRight className="post-signal__arrow" size={17} aria-hidden="true" />
       </Link>
     </article>
   );

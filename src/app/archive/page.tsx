@@ -1,7 +1,12 @@
-import { CalendarClock, Files, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { PostCard } from "@/components/article/post-card";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 export const revalidate = 300;
 
@@ -40,110 +45,72 @@ export default async function ArchivePage() {
 
   const eventYears = [...groupedEvents.keys()].sort((left, right) => right - left);
 
-  return (
-    <div className="mx-auto max-w-6xl px-5 py-8">
-      <header className="mb-8 border-b border-[#d7e4ea] pb-5">
-        <div className="mb-2 flex items-center gap-2 text-[#0b6d9b]">
-          <Files size={20} aria-hidden="true" />
-          <span className="font-[family-name:var(--font-mono)] text-xs">YCKX ARCHIVE</span>
-        </div>
-        <h1 className="m-0 text-3xl font-bold text-[#071d34]">新闻与大事记</h1>
-        <p className="mt-2 text-sm text-[#60788d]">在同一处查阅科协新闻、工作记录与专题归档。</p>
-      </header>
+  const copy = HOME_CHAPTER_COPY.archive;
 
+  return (
+    <InteriorPage
+      theme="archive"
+      depth={copy.depth}
+      section={copy.label}
+      title={copy.title}
+      description={copy.description}
+    >
       {columns.length > 0 && (
-        <nav className="mb-8 flex flex-wrap gap-3" aria-label="大事记专栏">
-          {columns.map((column) => (
-            <Link key={column.id} href={`/archive/columns/${column.slug}`} className="btn-primary">
-              {column.title} ({column._count.posts})
+        <nav className="archive-spines" aria-label="大事记专栏">
+          {columns.map((column, index) => (
+            <Link key={column.id} href={`/archive/columns/${column.slug}`}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{column.title}</strong>
+              <small>{column._count.posts} 篇</small>
             </Link>
           ))}
         </nav>
       )}
 
-      <div className="grid gap-10 lg:grid-cols-2">
-        <section aria-labelledby="archive-news-title">
-          <div className="mb-5 flex items-center gap-2 text-[#071d34]">
-            <Newspaper size={20} aria-hidden="true" />
-            <h2 id="archive-news-title" className="m-0 text-2xl">
-              科协新闻
-            </h2>
-          </div>
-          <div className="space-y-3">
+      <div className="archive-ledger">
+        <section aria-label="科协新闻">
+          <InteriorSectionHeading title="科协新闻" meta={`${newsPosts.length} 份公开档案`} />
+          <div className="post-signal-list">
             {newsPosts.map((post) => (
               <PostCard key={post.id} post={post} showTags />
             ))}
-            {newsPosts.length === 0 && (
-              <p className="rounded-md border border-dashed border-[#b9d1dc] px-5 py-10 text-center text-sm text-[#60788d]">
-                暂无公开新闻稿。
-              </p>
-            )}
+            {newsPosts.length === 0 && <InteriorEmpty>暂无公开新闻稿。</InteriorEmpty>}
           </div>
         </section>
 
-        <section aria-labelledby="archive-events-title">
-          <div className="mb-5 flex items-center gap-2 text-[#071d34]">
-            <CalendarClock size={20} aria-hidden="true" />
-            <h2 id="archive-events-title" className="m-0 text-2xl">
-              大事记
-            </h2>
-          </div>
+        <section aria-label="大事记">
+          <InteriorSectionHeading title="大事记" meta={`${eventPosts.length} 个时间坐标`} />
           {eventYears.length > 1 && (
-            <nav
-              className="mb-6 flex flex-wrap gap-2 font-[family-name:var(--font-sans)]"
-              aria-label="按年份浏览大事记"
-            >
+            <nav className="archive-year-index" aria-label="按年份浏览大事记">
               {eventYears.map((year) => (
-                <a
-                  key={year}
-                  href={`#year-${year}`}
-                  className="rounded-full border border-[#d7e4ea] px-3 py-1 text-sm text-[#60788d] transition-colors hover:border-[#7bc9df] hover:bg-[#e3f1f4] hover:text-[#0b6d9b]"
-                >
+                <a key={year} href={`#year-${year}`}>
                   {year}
                 </a>
               ))}
             </nav>
           )}
           {eventYears.map((year) => (
-            <section key={year} id={`year-${year}`} className="mb-8 scroll-mt-20">
-              <h3 className="sticky top-16 z-10 mb-4 bg-[#f4f8fb] py-2 text-xl text-[#071d34]">
-                {year}
-              </h3>
-              <div className="relative ml-3 space-y-5 border-l-2 border-[#d7e4ea] pl-6">
+            <section key={year} id={`year-${year}`} className="archive-year-block">
+              <h3>{year}</h3>
+              <div className="archive-timeline">
                 {groupedEvents.get(year)?.map((post) => (
-                  <article key={post.id} className="relative">
-                    <span
-                      className="absolute -left-[29px] top-2 h-3 w-3 rounded-full bg-[#0b6d9b]"
-                      aria-hidden="true"
-                    />
-                    <Link href={`/archive/events/${post.slug}`} className="card group block">
-                      <time
-                        dateTime={post.createdAt.toISOString()}
-                        className="font-[family-name:var(--font-sans)] text-xs text-[#60788d]"
-                      >
+                  <article key={post.id} className="archive-event">
+                    <span className="archive-event__echo" aria-hidden="true" />
+                    <Link href={`/archive/events/${post.slug}`}>
+                      <time dateTime={post.createdAt.toISOString()}>
                         {post.createdAt.toLocaleDateString("zh-CN")}
                       </time>
-                      <h4 className="mt-1 text-base font-bold text-[#1a1a1a] transition-colors group-hover:text-[#0b6d9b]">
-                        {post.title}
-                      </h4>
-                      {post.excerpt && (
-                        <p className="mt-1 line-clamp-2 font-[family-name:var(--font-sans)] text-sm text-[#60788d]">
-                          {post.excerpt}
-                        </p>
-                      )}
+                      <h4>{post.title}</h4>
+                      {post.excerpt && <p>{post.excerpt}</p>}
                     </Link>
                   </article>
                 ))}
               </div>
             </section>
           ))}
-          {eventPosts.length === 0 && (
-            <p className="rounded-md border border-dashed border-[#b9d1dc] px-5 py-10 text-center text-sm text-[#60788d]">
-              暂无公开大事记文章。
-            </p>
-          )}
+          {eventPosts.length === 0 && <InteriorEmpty>暂无公开大事记文章。</InteriorEmpty>}
         </section>
       </div>
-    </div>
+    </InteriorPage>
   );
 }

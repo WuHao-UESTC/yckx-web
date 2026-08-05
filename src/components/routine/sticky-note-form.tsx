@@ -13,7 +13,7 @@ export function StickyNoteForm({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   if (!isLoggedIn) {
     return (
-      <div className="mb-4 p-3 rounded-md bg-[#faf7f2] border border-[#e8e0d5] text-center text-sm text-[#6b6b6b] font-[family-name:var(--font-sans)]">
+      <div className="routine-note-form routine-note-form--locked mb-4 border p-3 text-center font-[family-name:var(--font-sans)] text-sm">
         <a href="/login" className="text-[#8b5e3c] hover:text-[#5a3a22]">
           登录
         </a>
@@ -51,7 +51,7 @@ export function StickyNoteForm({ isLoggedIn }: { isLoggedIn: boolean }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-5 card flex gap-3 items-end flex-wrap">
+    <form onSubmit={handleSubmit} className="routine-note-form mb-5 flex flex-wrap items-end gap-3">
       <div className="flex-1 min-w-[150px]">
         <textarea
           ref={textareaRef}

@@ -9,6 +9,7 @@ import {
 } from "../competition-constellation-layout";
 import { selectCompetitionConstellation } from "../competition-constellations";
 import { createRadarTargetLayouts } from "../competition-radar-layout";
+import { HOME_CHAPTER_COPY } from "../home-copy";
 import type { HomeCategory } from "../home.types";
 
 type RadarPost = {
@@ -405,9 +406,9 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
 
       <header className="competition-radar__heading">
         <div className="chapter-label">
-          <span>300m</span>
+          <span>{HOME_CHAPTER_COPY.competition.depth}</span>
           <i aria-hidden="true" />
-          <strong>竞赛航线</strong>
+          <strong>{HOME_CHAPTER_COPY.competition.label}</strong>
         </div>
         <Trophy
           className="chapter-icon chapter-icon--gold"
@@ -415,8 +416,8 @@ export function CompetitionRadar({ categories }: { categories: HomeCategory[] })
           strokeWidth={1.35}
           aria-hidden="true"
         />
-        <h2 id="competition-title">把未知拆成问题，把问题变成可以抵达的坐标。</h2>
-        <p>声纳捕获竞赛方向，星座航图记录经验、资料与成果。</p>
+        <h2 id="competition-title">{HOME_CHAPTER_COPY.competition.title}</h2>
+        <p>{HOME_CHAPTER_COPY.competition.description}</p>
       </header>
 
       <section

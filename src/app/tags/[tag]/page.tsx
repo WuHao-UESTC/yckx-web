@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PostCard } from "@/components/article/post-card";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
+import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -20,17 +26,27 @@ export default async function TagPage({ params }: Props) {
     orderBy: { publishedAt: "desc" },
   });
 
+  const copy = HOME_CHAPTER_COPY.knowledge;
+
   return (
-    <div className="mx-auto max-w-4xl px-5 py-8">
-      <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">#{tag.name}</h1>
-      <p className="text-[#6b6b6b] mb-8 font-[family-name:var(--font-sans)]">
-        {posts.length} 篇文章
-      </p>
-      <div className="space-y-4">
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} showExcerpt={false} />
-        ))}
-      </div>
-    </div>
+    <InteriorPage
+      theme="knowledge"
+      depth={copy.depth}
+      section="标签聚合"
+      title={`#${tag.name}`}
+      description="沿同一个信号标记，查看散落在不同知识方向中的记录。"
+      contentWidth="reading"
+    >
+      <InteriorSectionHeading title="关联记录" meta={`${posts.length} 篇文章`} />
+      {posts.length === 0 ? (
+        <InteriorEmpty>这个标签下还没有公开文章。</InteriorEmpty>
+      ) : (
+        <div className="post-signal-list">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} showExcerpt={false} />
+          ))}
+        </div>
+      )}
+    </InteriorPage>
   );
 }

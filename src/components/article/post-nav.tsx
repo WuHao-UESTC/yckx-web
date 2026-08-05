@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { postUrl, type RoutablePost } from "@/lib/post-url";
 
 type AdjacentPost = RoutablePost & { title: string };
@@ -12,32 +13,29 @@ export function PostNav({ prev, next }: Props) {
   if (!prev && !next) return null;
 
   return (
-    <nav
-      className="mt-10 pt-6 border-t border-[#e8e0d5] grid grid-cols-2 gap-4 font-[family-name:var(--font-sans)]"
-      aria-label="文章导航"
-    >
-      <div>
+    <nav className="article-post-nav" aria-label="文章导航">
+      <div className="article-post-nav__previous">
         {prev ? (
-          <Link href={postUrl(prev)} className="block group">
-            <span className="text-xs text-[#6b6b6b]">← 上一篇</span>
-            <p className="text-sm text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mt-0.5 line-clamp-1">
-              {prev.title}
-            </p>
+          <Link href={postUrl(prev)}>
+            <span>
+              <ArrowLeft size={14} aria-hidden="true" /> 上一篇
+            </span>
+            <p>{prev.title}</p>
           </Link>
         ) : (
-          <span className="text-xs text-[#c4a882]">已是第一篇</span>
+          <span className="article-post-nav__empty">已是第一篇</span>
         )}
       </div>
-      <div className="text-right">
+      <div className="article-post-nav__next">
         {next ? (
-          <Link href={postUrl(next)} className="block group">
-            <span className="text-xs text-[#6b6b6b]">下一篇 →</span>
-            <p className="text-sm text-[#1a1a1a] group-hover:text-[#8b5e3c] transition-colors mt-0.5 line-clamp-1">
-              {next.title}
-            </p>
+          <Link href={postUrl(next)}>
+            <span>
+              下一篇 <ArrowRight size={14} aria-hidden="true" />
+            </span>
+            <p>{next.title}</p>
           </Link>
         ) : (
-          <span className="text-xs text-[#c4a882]">已是最后一篇</span>
+          <span className="article-post-nav__empty">已是最后一篇</span>
         )}
       </div>
     </nav>
