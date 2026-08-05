@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { createHomeSiteActivity } from "@/modules/home/home-activity";
 import { OceanHome } from "@/modules/home/components/ocean-home";
 import {
   findRecentMilestones,
@@ -18,6 +19,11 @@ const EMPTY_HOME_DATA: OceanHomeData = {
   photos: [],
   notes: [],
   members: [],
+  siteActivity: createHomeSiteActivity(
+    { totalPosts: 0, totalCategories: 0, totalMembers: 0, totalViews: 0 },
+    [],
+    []
+  ),
   totals: { posts: 0, categories: 0, members: 0 },
 };
 
@@ -53,6 +59,8 @@ async function getHomepageMilestones() {
 }
 
 async function getHomeData(): Promise<OceanHomeData> {
+  const activityNow = new Date();
+  const activitySince = new Date(activityNow.getTime() - 370 * 24 * 60 * 60 * 1000);
   const [
     featuredPosts,
     newsPosts,
@@ -62,9 +70,11 @@ async function getHomeData(): Promise<OceanHomeData> {
     photos,
     notes,
     members,
-    postCount,
+    postSummary,
     categoryCount,
     memberCount,
+    siteCategories,
+    activityPosts,
   ] = await Promise.all([
     prisma.post.findMany({
       where: { status: "PUBLISHED", isFeatured: true },
@@ -142,10 +152,26 @@ async function getHomeData(): Promise<OceanHomeData> {
       orderBy: { createdAt: "desc" },
       take: 4,
     }),
-    prisma.post.count({ where: { status: "PUBLISHED" } }),
+    prisma.post.aggregate({
+      where: { status: "PUBLISHED" },
+      _count: { _all: true },
+      _sum: { viewCount: true },
+    }),
     prisma.category.count(),
     prisma.user.count({ where: { role: { not: "ADMIN" } } }),
+    prisma.category.findMany({
+      select: {
+        type: true,
+        _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+      },
+    }),
+    prisma.post.findMany({
+      where: { status: "PUBLISHED", publishedAt: { gte: activitySince } },
+      select: { publishedAt: true },
+    }),
   ]);
+
+  const postCount = postSummary._count._all;
 
   return {
     featuredPosts: featuredPosts.map(serializePost),
@@ -188,6 +214,20 @@ async function getHomeData(): Promise<OceanHomeData> {
       title: member.profile?.title ?? "科协成员",
       postCount: member._count.posts,
     })),
+    siteActivity: createHomeSiteActivity(
+      {
+        totalPosts: postCount,
+        totalCategories: categoryCount,
+        totalMembers: memberCount,
+        totalViews: postSummary._sum.viewCount ?? 0,
+      },
+      siteCategories.map((category) => ({
+        type: category.type,
+        posts: category._count.posts,
+      })),
+      activityPosts.map((post) => post.publishedAt),
+      activityNow
+    ),
     totals: { posts: postCount, categories: categoryCount, members: memberCount },
   };
 }

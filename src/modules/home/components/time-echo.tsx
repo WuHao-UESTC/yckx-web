@@ -4,7 +4,8 @@ import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Archive, ChevronLeft, ChevronRight, ExternalLink, Newspaper, X } from "lucide-react";
-import type { HomeMilestone, HomeNews } from "../home.types";
+import type { HomeMilestone, HomeNews, HomeSiteActivity } from "../home.types";
+import { SiteActivityConsole } from "./site-activity-console";
 
 type EchoMarker = HomeMilestone & {
   ring: number;
@@ -231,7 +232,15 @@ function EchoParticles({ marker }: { marker: EchoMarker | null }) {
   return <canvas ref={canvasRef} className="echo-particles" aria-hidden="true" />;
 }
 
-export function TimeEcho({ news, milestones }: { news: HomeNews[]; milestones: HomeMilestone[] }) {
+export function TimeEcho({
+  news,
+  milestones,
+  activity,
+}: {
+  news: HomeNews[];
+  milestones: HomeMilestone[];
+  activity: HomeSiteActivity;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
   const [hoveredMilestoneId, setHoveredMilestoneId] = useState<string | null>(null);
@@ -303,18 +312,28 @@ export function TimeEcho({ news, milestones }: { news: HomeNews[]; milestones: H
         <EchoParticles marker={hoveredMarker} />
 
         {activeMarker && (
-          <article className="echo-readout" aria-live="polite">
-            <span>回声读数 · RING {String(activeMarker.ring + 1).padStart(2, "0")}</span>
-            <time dateTime={activeMarker.occurredAt}>
-              {formatDate(activeMarker.occurredAt, {
-                year: "numeric",
-                month: "2-digit",
-                timeZone: "UTC",
-              })}
-            </time>
-            <strong>{activeMarker.title}</strong>
-            <p>{activeMarker.description}</p>
-          </article>
+          <>
+            <svg className="echo-readout__connector" viewBox="0 0 720 440" aria-hidden="true">
+              <polyline
+                points={`${activeMarker.x * 7.2},${activeMarker.y * 4.4} ${Math.max(
+                  190,
+                  activeMarker.x * 7.2 - 62
+                )},${Math.max(56, activeMarker.y * 4.4 - 38)} 158,38`}
+              />
+            </svg>
+            <article className="echo-readout" aria-live="polite">
+              <span>回声读数 · RING {String(activeMarker.ring + 1).padStart(2, "0")}</span>
+              <time dateTime={activeMarker.occurredAt}>
+                {formatDate(activeMarker.occurredAt, {
+                  year: "numeric",
+                  month: "2-digit",
+                  timeZone: "UTC",
+                })}
+              </time>
+              <strong>{activeMarker.title}</strong>
+              <p>{activeMarker.description}</p>
+            </article>
+          </>
         )}
 
         {echoMarkers.map((marker) => (
@@ -356,20 +375,26 @@ export function TimeEcho({ news, milestones }: { news: HomeNews[]; milestones: H
       </div>
 
       {!isOpen ? (
-        <button
-          type="button"
-          className="archive-folder archive-folder--closed"
-          onClick={openArchive}
-        >
-          <span className="archive-folder__spine" aria-hidden="true" />
-          <span className="archive-folder__wear" aria-hidden="true" />
-          <i className="archive-folder__corner archive-folder__corner--top" aria-hidden="true" />
-          <i className="archive-folder__corner archive-folder__corner--bottom" aria-hidden="true" />
-          <Archive size={23} strokeWidth={1.35} aria-hidden="true" />
-          <small>900m · YCKX ARCHIVE</small>
-          <strong>科协档案夹</strong>
-          <span>打开并读取最新新闻</span>
-        </button>
+        <>
+          <button
+            type="button"
+            className="archive-folder archive-folder--closed"
+            onClick={openArchive}
+          >
+            <span className="archive-folder__spine" aria-hidden="true" />
+            <span className="archive-folder__wear" aria-hidden="true" />
+            <i className="archive-folder__corner archive-folder__corner--top" aria-hidden="true" />
+            <i
+              className="archive-folder__corner archive-folder__corner--bottom"
+              aria-hidden="true"
+            />
+            <Archive size={23} strokeWidth={1.35} aria-hidden="true" />
+            <small>900m · YCKX ARCHIVE</small>
+            <strong>科协档案夹</strong>
+            <span>打开并读取最新新闻</span>
+          </button>
+          <SiteActivityConsole activity={activity} />
+        </>
       ) : (
         <div className="archive-folder archive-folder--open" aria-live="polite">
           <div className="archive-folder__shell" aria-hidden="true">
@@ -394,9 +419,22 @@ export function TimeEcho({ news, milestones }: { news: HomeNews[]; milestones: H
               <b>/ {String(news.length).padStart(2, "0")}</b>
             </div>
             <p>由新至旧</p>
+            {currentNews && (
+              <dl>
+                <div>
+                  <dt>DATE</dt>
+                  <dd>{formatDate(currentNews.publishedAt)}</dd>
+                </div>
+                <div>
+                  <dt>AUTHOR</dt>
+                  <dd>{currentNews.authorName}</dd>
+                </div>
+              </dl>
+            )}
           </aside>
 
           <article key={currentNews?.id ?? "empty"} className="archive-sheet">
+            <span className="archive-sheet__clip" aria-hidden="true" />
             {currentNews ? (
               <>
                 <div className="archive-sheet__head">
@@ -427,9 +465,15 @@ export function TimeEcho({ news, milestones }: { news: HomeNews[]; milestones: H
             )}
           </article>
 
-          {news.length > 1 && (
-            <div className="archive-folder__tabs" aria-label="选择新闻档案">
-              {news.map((item, index) => (
+          <nav className="archive-folder__register" aria-label="选择新闻档案">
+            <header>
+              <span>档案目录</span>
+              <small>INDEX / {String(news.length).padStart(2, "0")}</small>
+            </header>
+            {news.length === 0 ? (
+              <p>等待第一份新闻档案。</p>
+            ) : (
+              news.map((item, index) => (
                 <button
                   key={item.id}
                   type="button"
@@ -438,11 +482,18 @@ export function TimeEcho({ news, milestones }: { news: HomeNews[]; milestones: H
                   aria-label={`查看第 ${index + 1} 条新闻：${item.title}`}
                   title={item.title}
                 >
-                  {String(index + 1).padStart(2, "0")}
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <strong>{item.title}</strong>
+                  <time dateTime={item.publishedAt ?? undefined}>
+                    {formatDate(item.publishedAt, {
+                      year: "2-digit",
+                      month: "2-digit",
+                    })}
+                  </time>
                 </button>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </nav>
 
           <div className="archive-folder__controls">
             <button

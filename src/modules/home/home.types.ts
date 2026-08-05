@@ -33,6 +33,32 @@ export type HomeMilestone = {
   occurredAt: string;
 };
 
+export type HomeActivityPoint = {
+  key: string;
+  label: string;
+  count: number;
+};
+
+export type HomeSectionStat = {
+  type: string;
+  label: string;
+  categories: number;
+  posts: number;
+};
+
+export type HomeSiteActivity = {
+  totalPosts: number;
+  totalCategories: number;
+  totalMembers: number;
+  totalViews: number;
+  sections: HomeSectionStat[];
+  series: {
+    week: HomeActivityPoint[];
+    month: HomeActivityPoint[];
+    year: HomeActivityPoint[];
+  };
+};
+
 export type HomePhoto = {
   id: string;
   imagePath: string;
@@ -62,6 +88,7 @@ export type OceanHomeData = {
   photos: HomePhoto[];
   notes: HomeNote[];
   members: HomeMember[];
+  siteActivity: HomeSiteActivity;
   totals: {
     posts: number;
     categories: number;

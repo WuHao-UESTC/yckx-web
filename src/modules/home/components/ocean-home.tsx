@@ -167,7 +167,11 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
             <p>新闻收进科协档案夹，大事记沿着回声由远及近，标出科协一路抵达的坐标。</p>
           </header>
 
-          <TimeEcho news={data.newsPosts} milestones={data.milestones} />
+          <TimeEcho
+            news={data.newsPosts}
+            milestones={data.milestones}
+            activity={data.siteActivity}
+          />
         </div>
       </section>
 
