@@ -17,9 +17,11 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
       kind: true,
       authorId: true,
       categoryId: true,
+      category: { select: { type: true } },
       columnId: true,
       renderStyle: true,
       technicalColumns: { select: { columnId: true } },
+      newsColumns: { select: { columnId: true } },
       tags: { select: { tag: { select: { name: true } } } },
       files: {
         orderBy: { sortOrder: "asc" },
@@ -48,6 +50,9 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
           ...(post.kind === "TECHNICAL" && post.technicalColumns.length > 0
             ? [{ id: { in: post.technicalColumns.map(({ columnId }) => columnId) } }]
             : []),
+          ...(post.kind === "NEWS" && post.newsColumns.length > 0
+            ? [{ id: { in: post.newsColumns.map(({ columnId }) => columnId) } }]
+            : []),
         ],
       },
       select: { id: true, title: true, type: true, categoryId: true, isActive: true },
@@ -63,8 +68,10 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
     status: post.status,
     kind: post.kind,
     categoryId: post.categoryId,
+    categoryType: post.category?.type ?? null,
     columnId: post.columnId,
     technicalColumnIds: post.technicalColumns.map(({ columnId }) => columnId),
+    newsColumnIds: post.newsColumns.map(({ columnId }) => columnId),
     renderStyle: post.renderStyle,
     tags: post.tags.map(({ tag }) => tag.name),
     files: post.files,

@@ -56,8 +56,10 @@ export type EditorInitialPost = {
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   kind: EditorPostKind;
   categoryId: string | null;
+  categoryType: string | null;
   columnId: string | null;
   technicalColumnIds: string[];
+  newsColumnIds: string[];
   renderStyle: "DEFAULT" | "TECHNICAL" | "PAPER";
   tags: string[];
   files: Attachment[];
@@ -110,6 +112,7 @@ export function PostEditor({
   const [technicalColumnIds, setTechnicalColumnIds] = useState<string[]>(
     initialPost?.technicalColumnIds ?? []
   );
+  const [newsColumnIds, setNewsColumnIds] = useState<string[]>(initialPost?.newsColumnIds ?? []);
   const [renderStyle, setRenderStyle] = useState<"DEFAULT" | "TECHNICAL" | "PAPER">(
     initialPost?.renderStyle ?? "DEFAULT"
   );
@@ -124,6 +127,7 @@ export function PostEditor({
   const [postStatus, setPostStatus] = useState(initialPost?.status ?? "DRAFT");
   const mdRef = useRef(markdown);
   const copy = KIND_COPY[kind];
+  const isLegacyEventPost = kind === "NEWS" && initialPost?.categoryType === "EVENT";
 
   useEffect(() => {
     mdRef.current = markdown;
@@ -243,8 +247,9 @@ export function PostEditor({
         title: title || "未命名文章",
         content: markdown,
         categoryId: categoryId || null,
-        columnId: columnId || null,
+        columnId: kind === "DAILY" ? columnId || null : null,
         technicalColumnIds,
+        newsColumnIds,
         renderStyle,
         tags: tags
           .split(",")
@@ -308,6 +313,7 @@ export function PostEditor({
       router,
       tags,
       technicalColumnIds,
+      newsColumnIds,
       title,
     ]
   );
@@ -395,12 +401,11 @@ export function PostEditor({
           </label>
         )}
 
-        {kind !== "TECHNICAL" && (
+        {kind === "DAILY" && (
           <label>
-            <span>{kind === "NEWS" ? "新闻专栏" : "日常专栏"}</span>
+            <span>日常专栏</span>
             <select value={columnId} onChange={(event) => setColumnId(event.target.value)}>
-              {kind === "NEWS" && <option value="">普通新闻，不加入专栏</option>}
-              {kind === "DAILY" && <option value="">不加入专栏，仅收录到日常文章</option>}
+              <option value="">不加入专栏，仅收录到日常文章</option>
               {columns.map((column) => (
                 <option key={column.id} value={column.id}>
                   {column.title}
@@ -461,6 +466,36 @@ export function PostEditor({
             {columns.filter(
               (column) => column.type === "TECHNICAL" && column.categoryId === categoryId
             ).length === 0 && <p>当前分类还没有专栏，可在“分类与专栏”中创建。</p>}
+          </div>
+        </fieldset>
+      )}
+
+      {kind === "NEWS" && !isLegacyEventPost && (
+        <fieldset className="workspace-editor__technical-columns">
+          <legend>所属新闻专栏（可多选）</legend>
+          <div>
+            {columns
+              .filter((column) => column.type === "NEWS")
+              .map((column) => (
+                <label key={column.id}>
+                  <input
+                    type="checkbox"
+                    checked={newsColumnIds.includes(column.id)}
+                    onChange={(event) =>
+                      setNewsColumnIds((current) =>
+                        event.target.checked
+                          ? [...current, column.id]
+                          : current.filter((id) => id !== column.id)
+                      )
+                    }
+                  />
+                  <span>{column.title}</span>
+                  {!column.isActive && <small>已停用</small>}
+                </label>
+              ))}
+            {columns.filter((column) => column.type === "NEWS").length === 0 && (
+              <p>还没有新闻专栏，可在“分类与专栏”中创建。</p>
+            )}
           </div>
         </fieldset>
       )}

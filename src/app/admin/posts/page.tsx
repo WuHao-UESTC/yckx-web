@@ -32,7 +32,7 @@ export default async function AdminPostsPage({
     ? { OR: [{ title: { contains: q } }, { content: { contains: q } }] }
     : {};
 
-  const [posts, total, technicalColumns] = await Promise.all([
+  const [posts, total, columns] = await Promise.all([
     prisma.post.findMany({
       where,
       include: {
@@ -40,6 +40,7 @@ export default async function AdminPostsPage({
         category: true,
         column: true,
         technicalColumns: { select: { columnId: true } },
+        newsColumns: { select: { columnId: true } },
       },
       orderBy: { updatedAt: "desc" },
       skip: (page - 1) * perPage,
@@ -47,9 +48,9 @@ export default async function AdminPostsPage({
     }),
     prisma.post.count({ where }),
     prisma.column.findMany({
-      where: { type: "TECHNICAL" },
-      select: { id: true, title: true, categoryId: true, isActive: true },
-      orderBy: [{ categoryId: "asc" }, { sortOrder: "asc" }],
+      where: { type: { in: ["TECHNICAL", "NEWS"] } },
+      select: { id: true, title: true, type: true, categoryId: true, isActive: true },
+      orderBy: [{ type: "asc" }, { categoryId: "asc" }, { sortOrder: "asc" }],
     }),
   ]);
 
@@ -173,12 +174,20 @@ export default async function AdminPostsPage({
               </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              {post.kind === "TECHNICAL" && (
+              {(post.kind === "TECHNICAL" ||
+                (post.kind === "NEWS" && post.category?.type !== "EVENT")) && (
                 <PostColumnManager
+                  kind={post.kind === "TECHNICAL" ? "TECHNICAL" : "NEWS"}
                   slug={post.slug}
                   categoryId={post.categoryId}
-                  selectedIds={post.technicalColumns.map(({ columnId }) => columnId)}
-                  columns={technicalColumns}
+                  selectedIds={
+                    post.kind === "TECHNICAL"
+                      ? post.technicalColumns.map(({ columnId }) => columnId)
+                      : post.newsColumns.map(({ columnId }) => columnId)
+                  }
+                  columns={columns.filter((column) =>
+                    post.kind === "TECHNICAL" ? column.type === "TECHNICAL" : column.type === "NEWS"
+                  )}
                 />
               )}
               {/* 置顶 */}

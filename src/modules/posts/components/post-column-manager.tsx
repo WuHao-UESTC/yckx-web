@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Columns3, Save } from "lucide-react";
 
-type TechnicalColumnOption = {
+type ColumnOption = {
   id: string;
   title: string;
   categoryId: string | null;
@@ -12,15 +12,17 @@ type TechnicalColumnOption = {
 };
 
 export function PostColumnManager({
+  kind,
   slug,
   categoryId,
   selectedIds,
   columns,
 }: {
+  kind: "TECHNICAL" | "NEWS";
   slug: string;
   categoryId: string | null;
   selectedIds: string[];
-  columns: TechnicalColumnOption[];
+  columns: ColumnOption[];
 }) {
   const router = useRouter();
   const [selection, setSelection] = useState(selectedIds);
@@ -28,7 +30,8 @@ export function PostColumnManager({
   const [message, setMessage] = useState("");
   const options = columns.filter(
     (column) =>
-      column.categoryId === categoryId && (column.isActive || selectedIds.includes(column.id))
+      (kind === "NEWS" || column.categoryId === categoryId) &&
+      (column.isActive || selectedIds.includes(column.id))
   );
 
   async function save() {
@@ -38,7 +41,9 @@ export function PostColumnManager({
       const response = await fetch(`/api/posts/${slug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ technicalColumnIds: selection }),
+        body: JSON.stringify(
+          kind === "TECHNICAL" ? { technicalColumnIds: selection } : { newsColumnIds: selection }
+        ),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "专栏更新失败");
@@ -77,7 +82,7 @@ export function PostColumnManager({
             </label>
           ))
         ) : (
-          <p>当前分类没有可用专栏。</p>
+          <p>{kind === "TECHNICAL" ? "当前分类没有可用专栏。" : "暂无可用新闻专栏。"}</p>
         )}
         <button type="button" disabled={pending} onClick={() => void save()}>
           <Save size={13} aria-hidden="true" />

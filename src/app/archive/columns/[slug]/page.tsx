@@ -1,62 +1,70 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
-import { InteriorEmpty, InteriorPage } from "@/components/interior/interior-page";
+import { PostCard } from "@/components/article/post-card";
+import {
+  InteriorEmpty,
+  InteriorPage,
+  InteriorSectionHeading,
+} from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
 import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
-import { postUrl } from "@/lib/post-url";
+import { PublicPostPager } from "@/modules/posts/components/public-post-pager";
+import { PublicPostToolbar } from "@/modules/posts/components/public-post-toolbar";
+import { findPublicPostPage, parsePublicPostQuery } from "@/modules/posts/server/public-post-list";
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string; sort?: string; page?: string }>;
 }
 
-export default async function ColumnPage({ params }: Props) {
-  const { slug } = await params;
+export default async function ColumnPage({ params, searchParams }: Props) {
+  const [{ slug }, rawQuery] = await Promise.all([params, searchParams]);
+  const query = parsePublicPostQuery(rawQuery);
   const column = await prisma.column.findFirst({
-    where: { slug, type: "NEWS" },
-    include: {
-      posts: {
-        where: { status: "PUBLISHED" },
-        include: {
-          author: { select: { id: true, username: true, displayName: true } },
-          category: true,
-          column: true,
-        },
-        orderBy: { publishedAt: "desc" },
-      },
-    },
+    where: { slug, type: "NEWS", isActive: true },
+    select: { id: true, title: true, description: true },
   });
   if (!column) notFound();
+
+  const articlePage = await findPublicPostPage({
+    scope: {
+      kind: "NEWS",
+      NOT: { category: { type: "EVENT" } },
+      newsColumns: { some: { columnId: column.id } },
+    },
+    ...query,
+  });
   const copy = HOME_CHAPTER_COPY.archive;
+  const pathname = `/archive/columns/${slug}`;
 
   return (
     <InteriorPage
       theme="archive"
       depth={copy.depth}
-      section={`${copy.label} · 专栏`}
+      section={`${copy.label} · 新闻专栏`}
       title={column.title}
-      description={column.description ?? copy.description}
+      description={column.description ?? "新闻专栏文章目录"}
       contentWidth="reading"
       className="archive-column-page"
     >
-      <div className="archive-column-register" aria-label={`${column.title}文章目录`}>
-        {column.posts.map((post) => (
-          <article key={post.id}>
-            <Link href={postUrl(post)}>
-              <time dateTime={post.publishedAt?.toISOString()}>
-                {post.publishedAt?.toLocaleDateString("zh-CN") ?? "未标注日期"}
-              </time>
-              <div>
-                <h2>{post.title}</h2>
-                {post.excerpt && <p>{post.excerpt}</p>}
-                <small>{post.author.displayName ?? post.author.username}</small>
-              </div>
-              <ArrowUpRight size={18} aria-hidden="true" />
-            </Link>
-          </article>
-        ))}
-        {column.posts.length === 0 && <InteriorEmpty>这个专栏还没有公开档案。</InteriorEmpty>}
-      </div>
+      <InteriorSectionHeading title="文章列表" meta={`共 ${articlePage.total} 篇文章`} />
+      <PublicPostToolbar query={query.q} sort={query.sort} placeholder="搜索当前新闻专栏" />
+      {articlePage.posts.length > 0 ? (
+        <div className="post-signal-list">
+          {articlePage.posts.map((post) => (
+            <PostCard key={post.id} post={post} showTags />
+          ))}
+        </div>
+      ) : (
+        <InteriorEmpty>
+          {query.q ? `没有找到“${query.q}”相关的新闻。` : "这个专栏还没有公开文章。"}
+        </InteriorEmpty>
+      )}
+      <PublicPostPager
+        pathname={pathname}
+        query={query}
+        totalPages={articlePage.totalPages}
+        label="新闻专栏文章分页"
+      />
     </InteriorPage>
   );
 }

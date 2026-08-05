@@ -47,7 +47,7 @@ export default async function AdminCategoriesPage() {
       include: {
         creator: { select: { username: true, displayName: true } },
         category: { select: { name: true } },
-        _count: { select: { posts: true, technicalPosts: true } },
+        _count: { select: { posts: true, technicalPosts: true, newsPosts: true } },
       },
       orderBy: [{ type: "asc" }, { sortOrder: "asc" }],
     }),
@@ -250,7 +250,12 @@ export default async function AdminCategoriesPage() {
             <span>{TYPE_LABELS[column.type]}</span>
             <strong>{column.title}</strong>
             <small>
-              {column.type === "TECHNICAL" ? column._count.technicalPosts : column._count.posts} 篇
+              {column.type === "TECHNICAL"
+                ? column._count.technicalPosts
+                : column.type === "NEWS"
+                  ? column._count.newsPosts
+                  : column._count.posts}{" "}
+              篇
             </small>
             {column.category && <small>{column.category.name}</small>}
             <small>

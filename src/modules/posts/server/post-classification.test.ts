@@ -42,7 +42,7 @@ describe("post classification", () => {
         categoryId: "knowledge",
         columnId: null,
       })
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
   });
 
   it("accepts ordinary news and legacy column categories", async () => {
@@ -52,7 +52,7 @@ describe("post classification", () => {
         categoryId: null,
         columnId: null,
       })
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
 
     const legacyClient = createClient({
       category: { id: "legacy", name: "Legacy", type: "COLUMN", isActive: true },
@@ -63,7 +63,7 @@ describe("post classification", () => {
         categoryId: "legacy",
         columnId: null,
       })
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
   });
 
   it("allows standalone daily posts and validates optional daily columns", async () => {
@@ -73,7 +73,7 @@ describe("post classification", () => {
         categoryId: null,
         columnId: null,
       })
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
 
     const client = createClient({
       column: { id: "daily", title: "Daily", type: "DAILY", isActive: true },
@@ -84,7 +84,7 @@ describe("post classification", () => {
         categoryId: null,
         columnId: "daily",
       })
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
 
     const newsColumnClient = createClient({
       column: { id: "news", title: "News", type: "NEWS", isActive: true },
@@ -117,7 +117,7 @@ describe("post classification", () => {
         categoryId: "disabled",
         columnId: null,
       })
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
   });
 
   it("accepts multiple technical columns from the selected category", async () => {
@@ -148,7 +148,10 @@ describe("post classification", () => {
         columnId: null,
         technicalColumnIds: ["guide", "review"],
       })
-    ).resolves.toEqual(["guide", "review"]);
+    ).resolves.toEqual({
+      technicalColumnIds: ["guide", "review"],
+      newsColumnIds: [],
+    });
   });
 
   it("removes old technical columns when the article changes category", async () => {
@@ -180,6 +183,63 @@ describe("post classification", () => {
           technicalColumnIds: ["old-column"],
         }
       )
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ technicalColumnIds: [], newsColumnIds: [] });
+  });
+
+  it("accepts multiple news columns for ordinary news", async () => {
+    const client = createClient({
+      technicalColumns: [
+        {
+          id: "dispatches",
+          title: "Dispatches",
+          type: "NEWS",
+          categoryId: null,
+          isActive: true,
+        },
+        {
+          id: "awards",
+          title: "Awards",
+          type: "NEWS",
+          categoryId: null,
+          isActive: true,
+        },
+      ],
+    });
+
+    await expect(
+      assertValidPostClassification(client, {
+        kind: "NEWS",
+        categoryId: null,
+        columnId: null,
+        newsColumnIds: ["dispatches", "awards"],
+      })
+    ).resolves.toEqual({
+      technicalColumnIds: [],
+      newsColumnIds: ["dispatches", "awards"],
+    });
+  });
+
+  it("rejects news columns for legacy event articles", async () => {
+    const client = createClient({
+      category: { id: "event", name: "Event", type: "EVENT", isActive: true },
+      technicalColumns: [
+        {
+          id: "dispatches",
+          title: "Dispatches",
+          type: "NEWS",
+          categoryId: null,
+          isActive: true,
+        },
+      ],
+    });
+
+    await expect(
+      assertValidPostClassification(client, {
+        kind: "NEWS",
+        categoryId: "event",
+        columnId: null,
+        newsColumnIds: ["dispatches"],
+      })
+    ).rejects.toMatchObject({ status: 400, code: "BAD_REQUEST" });
   });
 });

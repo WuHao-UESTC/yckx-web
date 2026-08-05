@@ -81,11 +81,12 @@ export async function createPost(input: CreatePostInput, authorId: string) {
   return prisma.$transaction(async (tx) => {
     const categoryId = input.categoryId || null;
     const columnId = input.columnId || null;
-    const technicalColumnIds = await assertValidPostClassification(tx, {
+    const { technicalColumnIds, newsColumnIds } = await assertValidPostClassification(tx, {
       kind: input.kind,
       categoryId,
       columnId,
       technicalColumnIds: input.technicalColumnIds,
+      newsColumnIds: input.newsColumnIds,
     });
     const slug = await createUniqueSlug(tx, input.title);
 
@@ -114,6 +115,14 @@ export async function createPost(input: CreatePostInput, authorId: string) {
         })),
       });
     }
+    if (newsColumnIds.length > 0) {
+      await tx.postNewsColumn.createMany({
+        data: newsColumnIds.map((newsColumnId) => ({
+          postId: post.id,
+          columnId: newsColumnId,
+        })),
+      });
+    }
 
     await syncPostAttachments(tx, post.id, input.attachmentIds, authorId);
     return tx.post.findUniqueOrThrow({ where: { id: post.id }, select: postApiSelect });
@@ -135,6 +144,7 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
         categoryId: true,
         columnId: true,
         technicalColumns: { select: { columnId: true } },
+        newsColumns: { select: { columnId: true } },
       },
     });
 
@@ -147,12 +157,18 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
       columnId: input.columnId === undefined ? post.columnId : input.columnId,
       technicalColumnIds:
         input.technicalColumnIds ?? post.technicalColumns.map(({ columnId }) => columnId),
+      newsColumnIds: input.newsColumnIds ?? post.newsColumns.map(({ columnId }) => columnId),
     };
-    const technicalColumnIds = await assertValidPostClassification(tx, classification, {
-      categoryId: post.categoryId,
-      columnId: post.columnId,
-      technicalColumnIds: post.technicalColumns.map(({ columnId }) => columnId),
-    });
+    const { technicalColumnIds, newsColumnIds } = await assertValidPostClassification(
+      tx,
+      classification,
+      {
+        categoryId: post.categoryId,
+        columnId: post.columnId,
+        technicalColumnIds: post.technicalColumns.map(({ columnId }) => columnId),
+        newsColumnIds: post.newsColumns.map(({ columnId }) => columnId),
+      }
+    );
 
     const nextStatus = input.status ?? post.status;
     const nextTitle = input.title ?? post.title;
@@ -198,6 +214,15 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
         data: technicalColumnIds.map((technicalColumnId) => ({
           postId: post.id,
           columnId: technicalColumnId,
+        })),
+      });
+    }
+    await tx.postNewsColumn.deleteMany({ where: { postId: post.id } });
+    if (newsColumnIds.length > 0) {
+      await tx.postNewsColumn.createMany({
+        data: newsColumnIds.map((newsColumnId) => ({
+          postId: post.id,
+          columnId: newsColumnId,
         })),
       });
     }

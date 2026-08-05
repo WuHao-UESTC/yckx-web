@@ -22,6 +22,7 @@ describe("post schemas", () => {
     expect(result.kind).toBe("TECHNICAL");
     expect(result.attachmentIds).toEqual([]);
     expect(result.technicalColumnIds).toEqual([]);
+    expect(result.newsColumnIds).toEqual([]);
     expect(result.renderStyle).toBe("DEFAULT");
   });
 

@@ -67,6 +67,8 @@ pnpm dev
 
 技术专栏与 Markdown 风格更新包含新的 `TECHNICAL` 专栏枚举、文章专栏关联表和文章渲染风格字段，同样不能只执行 `git pull`。即使没有新增 npm 依赖，也必须在备份后执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，并停止旧的 NAS 开发进程后重新运行 `pnpm dev`。
 
+Archive 星链与新闻多专栏更新包含新的 `post_news_columns` 关联表和现有新闻专栏关系回填，也不能只执行 `git pull`。迁移前必须备份 PostgreSQL 和 `UPLOAD_DIR`；拉取后执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，再停止旧的 NAS 开发进程并重新运行 `pnpm dev`。
+
 如果应用由 Docker Compose 构建和运行，则依赖安装、迁移、构建和重启应在对应容器或镜像流程中完成。禁止猜测服务名后直接操作生产容器。
 
 部署后至少检查：
