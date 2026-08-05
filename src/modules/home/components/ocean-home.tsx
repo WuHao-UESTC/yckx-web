@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   ArrowDown,
   ArrowUpRight,
-  BookOpen,
   Camera,
   ChevronRight,
   Compass,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import type { HomePost, OceanHomeData } from "../home.types";
 import { DepthNavigation } from "./depth-navigation";
+import { KnowledgeTide } from "./knowledge-tide";
 import { OceanExperience } from "./ocean-experience";
 
 function postHref(post: HomePost): string {
@@ -112,7 +112,7 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
         aria-labelledby="knowledge-title"
       >
         <Image
-          src="/images/ocean/knowledge-descent.webp"
+          src="/images/ocean/knowledge-descent-clean.webp"
           alt="座头鲸穿过月光与海草，游向发光的知识网络"
           fill
           sizes="100vw"
@@ -122,7 +122,6 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
         <div className="ocean-section-layout">
           <div className="ocean-section-copy">
             <ChapterLabel depth="80m">知识潮汐</ChapterLabel>
-            <BookOpen className="chapter-icon" size={34} strokeWidth={1.4} aria-hidden="true" />
             <h2 id="knowledge-title">知识不是孤岛，它在分享中形成洋流。</h2>
             <p>
               从嵌入式系统到信号处理，从基础工具到项目复盘，每一篇记录都成为后来者可以辨认的光点。
@@ -133,23 +132,7 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
             </Link>
           </div>
 
-          <div className="knowledge-constellation" aria-label="知识库分类">
-            <span className="knowledge-constellation__orbit" aria-hidden="true" />
-            {data.knowledgeCategories.length === 0 ? (
-              <EmptySignal>知识节点正在汇聚。</EmptySignal>
-            ) : (
-              data.knowledgeCategories.slice(0, 6).map((category, index) => (
-                <Link
-                  key={category.id}
-                  href={`/knowledge-base/${category.slug}`}
-                  className={`knowledge-node knowledge-node--${(index % 6) + 1}`}
-                >
-                  <span>{category.name}</span>
-                  <small>{category.count} 篇</small>
-                </Link>
-              ))
-            )}
-          </div>
+          <KnowledgeTide categories={data.knowledgeCategories} />
         </div>
 
         {data.featuredPosts.length > 0 && (
