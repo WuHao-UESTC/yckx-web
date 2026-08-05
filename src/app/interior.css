@@ -2929,7 +2929,7 @@ body:has(.interior-page) .site-footer {
   width: auto;
 }
 
-.public-post-directory,
+.public-post-directory:not(:first-child),
 .technical-column-directory {
   margin-top: clamp(34px, 6vw, 62px);
 }
@@ -2939,9 +2939,13 @@ body:has(.interior-page) .site-footer {
   grid-template-columns: minmax(0, 1fr) minmax(170px, 220px) auto;
   gap: 9px;
   margin-bottom: 18px;
-  border-top: 1px solid var(--interior-line);
   border-bottom: 1px solid var(--interior-line);
   padding: 13px 0;
+}
+
+.public-post-toolbar + .post-signal-list,
+.public-post-toolbar + .interior-empty {
+  border-top: 0;
 }
 
 .public-post-toolbar label {

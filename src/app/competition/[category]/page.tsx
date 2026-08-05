@@ -73,40 +73,42 @@ export default async function CompetitionCategoryPage({ params, searchParams }: 
         </section>
       )}
 
-      <InteriorSectionHeading title="文章列表" meta={`共 ${articlePage.total} 篇文章`} />
-      <PublicPostToolbar query={query.q} sort={query.sort} placeholder="搜索当前竞赛分类" />
-      {articlePage.posts.length === 0 ? (
-        <InteriorEmpty>
-          {query.q ? `没有找到“${query.q}”相关的文章。` : "这个分类还没有公开文章。"}
-        </InteriorEmpty>
-      ) : (
-        <div className="post-signal-list">
-          {articlePage.posts.map((post) => (
-            <PostCard key={post.id} post={post} showTags />
-          ))}
-        </div>
-      )}
+      <section className="public-post-directory">
+        <InteriorSectionHeading title="文章列表" meta={`共 ${articlePage.total} 篇文章`} />
+        <PublicPostToolbar query={query.q} sort={query.sort} placeholder="搜索当前竞赛分类" />
+        {articlePage.posts.length === 0 ? (
+          <InteriorEmpty>
+            {query.q ? `没有找到“${query.q}”相关的文章。` : "这个分类还没有公开文章。"}
+          </InteriorEmpty>
+        ) : (
+          <div className="post-signal-list">
+            {articlePage.posts.map((post) => (
+              <PostCard key={post.id} post={post} showTags />
+            ))}
+          </div>
+        )}
 
-      {articlePage.totalPages > 1 && (
-        <nav className="interior-pager" aria-label="竞赛文章分页">
-          {query.page > 1 && (
-            <Link
-              href={publicPostListHref(pathname, { ...query, page: query.page - 1 })}
-              className="btn-primary"
-            >
-              上一页
-            </Link>
-          )}
-          {query.page < articlePage.totalPages && (
-            <Link
-              href={publicPostListHref(pathname, { ...query, page: query.page + 1 })}
-              className="btn-primary"
-            >
-              下一页
-            </Link>
-          )}
-        </nav>
-      )}
+        {articlePage.totalPages > 1 && (
+          <nav className="interior-pager" aria-label="竞赛文章分页">
+            {query.page > 1 && (
+              <Link
+                href={publicPostListHref(pathname, { ...query, page: query.page - 1 })}
+                className="btn-primary"
+              >
+                上一页
+              </Link>
+            )}
+            {query.page < articlePage.totalPages && (
+              <Link
+                href={publicPostListHref(pathname, { ...query, page: query.page + 1 })}
+                className="btn-primary"
+              >
+                下一页
+              </Link>
+            )}
+          </nav>
+        )}
+      </section>
     </InteriorPage>
   );
 }
