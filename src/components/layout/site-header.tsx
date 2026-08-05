@@ -34,7 +34,11 @@ export async function SiteHeader() {
 
           {user ? (
             <>
-              <Link href="/dashboard" className="site-user-link" title="进入工作台">
+              <Link
+                href={user.role === "GUEST" ? "/guest" : "/dashboard"}
+                className="site-user-link"
+                title="进入个人后台"
+              >
                 <LayoutDashboard size={15} aria-hidden="true" />
                 <span>{user.name || "工作台"}</span>
               </Link>

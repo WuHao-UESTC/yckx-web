@@ -11,9 +11,11 @@ datasource db {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
+  emailVerifiedAt DateTime?
   username     String   @unique
   displayName  String?
   passwordHash String
+  passwordChangedAt DateTime?
   avatar       String?
   avatarFileId String?  @unique
   avatarFile   File?    @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
@@ -31,6 +33,9 @@ model User {
   photos      Photo[]
   comments    Comment[]
   stickyNotes StickyNote[]
+  verificationChallenges VerificationChallenge[]
+  subscriptions Subscription[]
+  emailOutbox EmailOutbox[]
 
   @@map("users")
 }
@@ -38,6 +43,42 @@ model User {
 enum Role {
   ADMIN
   MEMBER
+  GUEST
+}
+
+enum VerificationPurpose {
+  REGISTER
+  RESET_PASSWORD
+}
+
+enum VerificationChallengeStatus {
+  PENDING
+  CONSUMED
+  EXPIRED
+}
+
+model VerificationChallenge {
+  id            String                       @id @default(cuid())
+  purpose       VerificationPurpose
+  status        VerificationChallengeStatus @default(PENDING)
+  email         String
+  username      String?
+  displayName   String?
+  passwordHash  String?
+  role          Role?
+  inviteCode    String?
+  userId        String?
+  user          User?                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash      String
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  attempts      Int                          @default(0)
+  requestIp     String?
+  createdAt     DateTime                     @default(now())
+
+  @@index([email, purpose, status, createdAt])
+  @@index([expiresAt])
+  @@map("verification_challenges")
 }
 
 model Invitation {
@@ -87,6 +128,7 @@ model Category {
   technicalColumns Column[]     @relation("TechnicalColumnCategory")
   createdById      String?
   creator          User?        @relation("CategoryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  subscriptions    Subscription[]
   isActive         Boolean      @default(true)
   sortOrder        Int          @default(0)
   createdAt        DateTime     @default(now())
@@ -134,6 +176,7 @@ model Column {
   dailyPosts     PostDailyColumn[]
   createdById    String?
   creator        User?                 @relation("ColumnCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  subscriptions  Subscription[]
   isActive       Boolean               @default(true)
   sortOrder      Int                   @default(0)
   createdAt      DateTime              @default(now())
@@ -173,6 +216,7 @@ model Post {
   tags             PostTag[]
   files            File[]
   comments         Comment[]
+  emailOutbox      EmailOutbox[]
   viewCount        Int                   @default(0)
   isPinned         Boolean               @default(false)
   isFeatured       Boolean               @default(false)
@@ -276,8 +320,73 @@ model Comment {
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentReplies")
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  status    CommentStatus @default(APPROVED)
+  moderatedAt DateTime?
+  moderatedById String?
 
+  @@index([postId, status, createdAt])
   @@map("comments")
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionTargetType {
+  SITE
+  CATEGORY
+  COLUMN
+}
+
+model Subscription {
+  id         String                 @id @default(cuid())
+  userId     String
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType SubscriptionTargetType
+  targetKey  String
+  categoryId String?
+  category   Category?              @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  columnId   String?
+  column     Column?                @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  createdAt  DateTime               @default(now())
+
+  @@unique([userId, targetKey])
+  @@index([targetType, categoryId])
+  @@index([targetType, columnId])
+  @@map("subscriptions")
+}
+
+enum EmailOutboxStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+model EmailOutbox {
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId       String
+  post         Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  dedupeKey    String           @unique
+  recipient    String
+  subject      String
+  html         String           @db.Text
+  status       EmailOutboxStatus @default(PENDING)
+  attempts     Int              @default(0)
+  lastError    String?
+  nextAttemptAt DateTime         @default(now())
+  sentAt       DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([userId, createdAt])
+  @@map("email_outbox")
 }
 
 // ========== 文件 ==========

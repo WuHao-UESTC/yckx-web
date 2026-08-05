@@ -40,7 +40,7 @@ export function TaxonomyManager({
 }: {
   categories: CategoryItem[];
   columns: ColumnItem[];
-  currentUser: { id: string; role: "ADMIN" | "MEMBER" };
+  currentUser: { id: string; role: "ADMIN" | "MEMBER" | "GUEST" };
 }) {
   const router = useRouter();
   const [values, setValues] = useState<Record<string, string>>({});

@@ -36,6 +36,7 @@ const ADMIN_ITEMS = [
   { href: "/admin", label: "观测总览", icon: LayoutDashboard, exact: true },
   { href: "/admin/posts", label: "文章管理", icon: FileText },
   { href: "/admin/users", label: "用户管理", icon: UsersRound },
+  { href: "/admin/comments", label: "评论管理", icon: MessageSquareText },
   { href: "/admin/categories", label: "分类管理", icon: ListTree },
   { href: "/admin/photos", label: "照片墙", icon: Image },
   { href: "/admin/milestones", label: "大事记", icon: Orbit },
@@ -43,24 +44,42 @@ const ADMIN_ITEMS = [
   { href: "/admin/config", label: "站点配置", icon: Settings },
 ] as const;
 
+const GUEST_ITEMS = [
+  { href: "/guest", label: "游客概览", icon: Gauge, exact: true },
+  { href: "/guest/subscriptions", label: "我的订阅", icon: Newspaper },
+  { href: "/guest/profile", label: "账号资料", icon: UserRound },
+] as const;
+
 export function InteriorWorkspaceNav({
   variant,
   label,
   showAdminLink = false,
 }: {
-  variant: "workspace" | "admin";
+  variant: "workspace" | "admin" | "guest";
   label: string;
   showAdminLink?: boolean;
 }) {
   const pathname = usePathname();
-  const items = variant === "admin" ? ADMIN_ITEMS : WORKSPACE_ITEMS;
+  const items =
+    variant === "admin" ? ADMIN_ITEMS : variant === "guest" ? GUEST_ITEMS : WORKSPACE_ITEMS;
 
   return (
-    <nav className="workspace-nav" aria-label={variant === "admin" ? "管理导航" : "工作台导航"}>
+    <nav
+      className="workspace-nav"
+      aria-label={
+        variant === "admin" ? "管理导航" : variant === "guest" ? "游客导航" : "工作台导航"
+      }
+    >
       <div className="workspace-nav__identity">
         <span aria-hidden="true" />
         <div>
-          <small>{variant === "admin" ? "ABYSSAL STATION" : "RESEARCH LOG"}</small>
+          <small>
+            {variant === "admin"
+              ? "ABYSSAL STATION"
+              : variant === "guest"
+                ? "PUBLIC READER"
+                : "RESEARCH LOG"}
+          </small>
           <strong>{label}</strong>
         </div>
       </div>

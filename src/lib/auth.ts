@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user) return null;
+        if (!user.emailVerifiedAt) return null;
 
         const isValid = await compare(parsed.data.password, user.passwordHash);
         if (!isValid) return null;
@@ -50,7 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        if (token.role === "ADMIN" || token.role === "MEMBER") {
+        if (token.role === "ADMIN" || token.role === "MEMBER" || token.role === "GUEST") {
           session.user.role = token.role;
         }
         if (typeof token.id === "string") {

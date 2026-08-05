@@ -136,7 +136,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     <span
                       className={`tag text-xs ${user.role === "ADMIN" ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"}`}
                     >
-                      {user.role === "ADMIN" ? "管理员" : "成员"}
+                      {user.role === "ADMIN" ? "管理员" : user.role === "GUEST" ? "游客" : "成员"}
                     </span>
                   </p>
                   <p className="text-xs text-[#6b6b6b] font-[family-name:var(--font-sans)] truncate">

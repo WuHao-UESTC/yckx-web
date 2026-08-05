@@ -6,6 +6,7 @@ import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 
 export default async function FriendsPage() {
   const users = await prisma.user.findMany({
+    where: { role: { not: "GUEST" } },
     include: {
       profile: true,
       _count: { select: { posts: { where: { status: "PUBLISHED" } } } },

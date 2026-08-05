@@ -24,6 +24,10 @@ app route/page
 - `src/server/storage`：NAS 文件路径、文件类型、配额和文件生命周期。
 - `src/modules/*/server`：领域查询和修改逻辑。
 
+外部用户能力沿用同一单体边界：`modules/auth` 负责邮箱验证码、注册和密码重置，`modules/comments` 负责站内评论，`modules/subscriptions` 负责订阅匹配和邮件 Outbox。文章首次发布时在同一数据库事务内写入通知任务；NAS 定时任务调用受密钥保护的邮件处理 Route Handler，避免在发布请求中同步依赖 SMTP。
+
+用户角色分为 `ADMIN`、`MEMBER` 和 `GUEST`。游客只允许访问游客后台、评论和订阅；内部成员写接口统一经过 `requireUser`/`requireAdmin` 服务端鉴权，游客不能通过直接调用 API 绕过页面限制。
+
 ## 数据访问
 
 - 查询使用最小 `select`，关联选择器集中复用。

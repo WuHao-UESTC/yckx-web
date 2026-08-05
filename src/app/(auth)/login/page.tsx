@@ -41,7 +41,7 @@ export default function LoginPage() {
       description="验证身份后继续进入同行工作台。"
       footer={
         <p>
-          还没有账号？ <Link href="/register">使用邀请码注册</Link>
+          还没有账号？ <Link href="/register">注册账号</Link>
         </p>
       }
     >
@@ -59,6 +59,10 @@ export default function LoginPage() {
             autoFocus
           />
         </label>
+
+        <p className="text-sm text-right">
+          <Link href="/forgot-password">忘记密码？</Link>
+        </p>
 
         <label>
           <span>密码</span>

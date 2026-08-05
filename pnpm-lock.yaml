@@ -7,9 +7,6 @@ settings:
 importers:
   .:
     dependencies:
-      "@giscus/react":
-        specifier: ^3.1.0
-        version: 3.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       "@milkdown/crepe":
         specifier: ^7.21.3
         version: 7.21.3(prosemirror-model@1.25.11)(prosemirror-state@1.4.4)(prosemirror-view@1.42.2)(supports-color@7.2.0)(typescript@5.9.3)
@@ -37,6 +34,9 @@ importers:
       "@types/d3-selection":
         specifier: ^3.0.11
         version: 3.0.11
+      "@types/nodemailer":
+        specifier: ^8.0.1
+        version: 8.0.1
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -75,7 +75,10 @@ importers:
         version: 16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-auth:
         specifier: 5.0.0-beta.32
-        version: 5.0.0-beta.32(next@16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+        version: 5.0.0-beta.32(next@16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(nodemailer@9.0.4)(react@19.2.4)
+      nodemailer:
+        specifier: ^9.0.4
+        version: 9.0.4
       pg:
         specifier: ^8.22.0
         version: 8.22.0
@@ -883,15 +886,6 @@ packages:
         integrity: sha512-EOqf31IATRE6zS1W1EoWmXZhGfLAoO9FIlwTtHduSrBdud4npYBxYAkv8dZ5hudDPwJeeSjn40kbCL4wAzr8dA==,
       }
 
-  "@giscus/react@3.1.0":
-    resolution:
-      {
-        integrity: sha512-0TCO2TvL43+oOdyVVGHDItwxD1UMKP2ZYpT6gXmhFOqfAJtZxTzJ9hkn34iAF/b6YzyJ4Um89QIt9z/ajmAEeg==,
-      }
-    peerDependencies:
-      react: ^16 || ^17 || ^18 || ^19
-      react-dom: ^16 || ^17 || ^18 || ^19
-
   "@humanfs/core@0.19.2":
     resolution:
       {
@@ -1534,18 +1528,6 @@ packages:
     resolution:
       {
         integrity: sha512-2lrrHqxalACEbxIbsjhqGpSW8kWpUKuY6RHgnSAFZa6qK62wvnPxA8hGOwOoDbwHcOFs5M4o27mjGu+P7TvBmw==,
-      }
-
-  "@lit-labs/ssr-dom-shim@1.6.0":
-    resolution:
-      {
-        integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==,
-      }
-
-  "@lit/reactive-element@2.1.2":
-    resolution:
-      {
-        integrity: sha512-pbCDiVMnne1lYUIaYNN5wrwQXDtHaYtg7YEFPeW+hws6U47WeFvISGUWekPGKWOP1ygrs0ef0o1VJMk1exos5A==,
       }
 
   "@marijn/find-cluster-break@1.0.3":
@@ -2815,6 +2797,12 @@ packages:
     resolution:
       {
         integrity: sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==,
+      }
+
+  "@types/nodemailer@8.0.1":
+    resolution:
+      {
+        integrity: sha512-PxpaInm8V1JQDd4j0ds5HfvWQk8JupS1C0Picb96QJsrrRDjBH+DlK7L4ZdNSqNULhiZRQHc40nLVShaGxXAMw==,
       }
 
   "@types/pg@8.20.0":
@@ -4849,12 +4837,6 @@ packages:
       }
     hasBin: true
 
-  giscus@1.6.0:
-    resolution:
-      {
-        integrity: sha512-Zrsi8r4t1LVW950keaWcsURuZUQwUaMKjvJgTCY125vkW6OiEBkatE7ScJDbpqKHdZwb///7FVC21SE3iFK3PQ==,
-      }
-
   glob-parent@5.1.2:
     resolution:
       {
@@ -5767,24 +5749,6 @@ packages:
         integrity: sha512-ONTm2jCMAVZjgQa/Fy1kScXsuOoF5NPTsoFBdE1KVIZ2vAh/r9+Bqo+0jINCBYnavTPQZz38QzFTme79ENoN3Q==,
       }
 
-  lit-element@4.2.2:
-    resolution:
-      {
-        integrity: sha512-aFKhNToWxoyhkNDmWZwEva2SlQia+jfG0fjIWV//YeTaWrVnOxD89dPKfigCUspXFmjzOEUQpOkejH5Ly6sG0w==,
-      }
-
-  lit-html@3.3.3:
-    resolution:
-      {
-        integrity: sha512-el8M6jK2o3RXBnrSHX3ZKrsN8zEV63pSExTO1wYJz7QndGYZ8353e2a5PPX+qHe2aGayfnchQmkAojaWAREOIA==,
-      }
-
-  lit@3.3.3:
-    resolution:
-      {
-        integrity: sha512-fycuvZg/hkpozL00lm1pEJH5nN/lr9ZXd6mJI2HSN4+Bzc+LDNdEApJ6HFbPkdFNHLvOplIIuJvxkS4XUxqirw==,
-      }
-
   locate-path@6.0.0:
     resolution:
       {
@@ -6414,6 +6378,13 @@ packages:
         integrity: sha512-wRNIrw4DmVLKQlbgOMdkMx27Wrpzes2hh5Jtbi2bjPd+4wJstWIqP5A+lscnqbm0xxmT5Bpg8Lec5ItEBwx6BQ==,
       }
     engines: { node: ">=18" }
+
+  nodemailer@9.0.4:
+    resolution:
+      {
+        integrity: sha512-LmJNRVRtfSCULxcZpy0Cpg4WWenlUZ9+zbmTO+S7v9wD6XreYLjXRFtDjtV/4F0HT5p1GyZfA0Ux/myxHb18CQ==,
+      }
+    engines: { node: ">=6.0.0" }
 
   npm2url@0.2.4:
     resolution:
@@ -8108,13 +8079,15 @@ snapshots:
       package-manager-detector: 1.8.0
       tinyexec: 1.2.4
 
-  "@auth/core@0.41.3":
+  "@auth/core@0.41.3(nodemailer@9.0.4)":
     dependencies:
       "@panva/hkdf": 1.2.1
       jose: 6.2.5
       oauth4webapi: 3.8.6
       preact: 10.24.3
       preact-render-to-string: 6.5.11(preact@10.24.3)
+    optionalDependencies:
+      nodemailer: 9.0.4
 
   "@babel/code-frame@7.29.7":
     dependencies:
@@ -8650,12 +8623,6 @@ snapshots:
     dependencies:
       "@babel/runtime": 7.29.7
 
-  "@giscus/react@3.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)":
-    dependencies:
-      giscus: 1.6.0
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-
   "@humanfs/core@0.19.2":
     dependencies:
       "@humanfs/types": 0.15.0
@@ -8991,12 +8958,6 @@ snapshots:
       "@lezer/common": 1.5.2
       "@lezer/highlight": 1.2.3
       "@lezer/lr": 1.4.10
-
-  "@lit-labs/ssr-dom-shim@1.6.0": {}
-
-  "@lit/reactive-element@2.1.2":
-    dependencies:
-      "@lit-labs/ssr-dom-shim": 1.6.0
 
   "@marijn/find-cluster-break@1.0.3": {}
 
@@ -9906,6 +9867,10 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  "@types/nodemailer@8.0.1":
+    dependencies:
+      "@types/node": 20.19.43
+
   "@types/pg@8.20.0":
     dependencies:
       "@types/node": 20.19.43
@@ -9920,7 +9885,8 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  "@types/trusted-types@2.0.7": {}
+  "@types/trusted-types@2.0.7":
+    optional: true
 
   "@types/unist@2.0.11": {}
 
@@ -11392,10 +11358,6 @@ snapshots:
 
   giget@3.3.1: {}
 
-  giscus@1.6.0:
-    dependencies:
-      lit: 3.3.3
-
   glob-parent@5.1.2:
     dependencies:
       is-glob: 4.0.3
@@ -11908,22 +11870,6 @@ snapshots:
   linkify-it@5.0.2:
     dependencies:
       uc.micro: 2.1.0
-
-  lit-element@4.2.2:
-    dependencies:
-      "@lit-labs/ssr-dom-shim": 1.6.0
-      "@lit/reactive-element": 2.1.2
-      lit-html: 3.3.3
-
-  lit-html@3.3.3:
-    dependencies:
-      "@types/trusted-types": 2.0.7
-
-  lit@3.3.3:
-    dependencies:
-      "@lit/reactive-element": 2.1.2
-      lit-element: 4.2.2
-      lit-html: 3.3.3
 
   locate-path@6.0.0:
     dependencies:
@@ -12470,11 +12416,13 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next-auth@5.0.0-beta.32(next@16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4):
+  next-auth@5.0.0-beta.32(next@16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(nodemailer@9.0.4)(react@19.2.4):
     dependencies:
-      "@auth/core": 0.41.3
+      "@auth/core": 0.41.3(nodemailer@9.0.4)
       next: 16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
+    optionalDependencies:
+      nodemailer: 9.0.4
 
   next@16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -12512,6 +12460,8 @@ snapshots:
   node-gyp-build@4.8.4: {}
 
   node-releases@2.0.51: {}
+
+  nodemailer@9.0.4: {}
 
   npm2url@0.2.4: {}
 

@@ -73,6 +73,8 @@ Routine 照片墙、顶部合照与日常多专栏更新包含新的 `post_daily
 
 个人资料与同行者主页更新包含迁移 `20260807090000_profile_contact_fields`。NAS 上不能只执行 `git pull`：备份 PostgreSQL 和 `UPLOAD_DIR` 后，依次执行 `pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，停止旧的 `next dev` 进程，再运行 `pnpm dev`。迁移字段均可为空，不需要额外数据回填。
 
+外部用户、站内评论和订阅功能包含迁移 `20260808100000_external_users_comments_subscriptions`，并新增 SMTP 及邮件 Outbox 处理。NAS 上不能只执行 `git pull`：备份 PostgreSQL 后执行 `pnpm install --frozen-lockfile`、`pnpm db:generate`、`pnpm db:migrate:status`、`pnpm db:migrate:deploy`，配置 SMTP 环境变量和 `EMAIL_WORKER_SECRET`，停止旧进程后重新运行应用。还需要配置 NAS 定时任务，每分钟向 `POST /api/internal/email-outbox/process` 发送 `x-email-worker-secret` 请求；不得把密钥写入 Git 或命令历史。邮件处理接口可重复调用，发送成功会去重，失败会自动重试。
+
 如果应用由 Docker Compose 构建和运行，则依赖安装、迁移、构建和重启应在对应容器或镜像流程中完成。禁止猜测服务名后直接操作生产容器。
 
 部署后至少检查：

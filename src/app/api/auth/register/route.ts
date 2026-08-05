@@ -1,82 +1,86 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { registerSchema } from "@/modules/auth/auth.schemas";
-import { hashPassword } from "@/modules/auth/server/password";
+import { verificationConfirmSchema } from "@/modules/auth/auth.schemas";
+import { consumeVerificationChallenge } from "@/modules/auth/server/verification";
 import { BadRequestError, ConflictError } from "@/server/http/errors";
 import { routeErrorResponse } from "@/server/http/response";
 import { parseJson } from "@/server/http/validation";
 
-function isRetryableTransactionError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: string }).code === "P2034"
-  );
-}
-
 export async function POST(request: Request) {
   try {
-    const input = await parseJson(request, registerSchema);
-    const passwordHash = await hashPassword(input.password);
-    let userId: string | null = null;
-
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      try {
-        userId = await prisma.$transaction(
-          async (tx) => {
-            const invitation = await tx.invitation.findUnique({
-              where: { code: input.inviteCode },
-            });
-
-            if (!invitation) throw new BadRequestError("邀请码不存在");
-            if (!invitation.isActive) throw new BadRequestError("邀请码已禁用");
-            if (invitation.expiresAt && invitation.expiresAt < new Date()) {
-              throw new BadRequestError("邀请码已过期");
-            }
-            if (invitation.usedCount >= invitation.maxUses) {
-              throw new BadRequestError("邀请码已用完");
-            }
-
-            const existing = await tx.user.findFirst({
-              where: { OR: [{ email: input.email }, { username: input.username }] },
-              select: { email: true },
-            });
-
-            if (existing) {
-              throw new ConflictError(
-                existing.email === input.email ? "邮箱已被注册" : "用户名已被占用"
-              );
-            }
-
-            const user = await tx.user.create({
-              data: {
-                email: input.email,
-                username: input.username,
-                passwordHash,
-                profile: { create: {} },
-              },
-              select: { id: true },
-            });
-
-            await tx.invitation.update({
-              where: { id: invitation.id },
-              data: { usedCount: { increment: 1 } },
-            });
-
-            return user.id;
-          },
-          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
-        );
-        break;
-      } catch (error) {
-        if (attempt < 2 && isRetryableTransactionError(error)) continue;
-        throw error;
-      }
+    const input = await parseJson(request, verificationConfirmSchema);
+    const challenge = await consumeVerificationChallenge(input.challengeId, input.code, "REGISTER");
+    if (!challenge.username || !challenge.passwordHash || !challenge.role) {
+      throw new BadRequestError("注册信息不完整");
     }
 
-    if (!userId) throw new ConflictError("注册请求发生冲突，请重试");
+    const email = challenge.email;
+    const username = challenge.username;
+    const passwordHash = challenge.passwordHash;
+    const role = challenge.role;
+
+    const userId = await prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.user.findFirst({
+          where: { OR: [{ email }, { username }] },
+          select: { email: true },
+        });
+        if (existing) {
+          throw new ConflictError(
+            existing.email === challenge.email ? "邮箱已被注册" : "用户名已被占用"
+          );
+        }
+
+        if (role === "MEMBER") {
+          if (!challenge.inviteCode) throw new BadRequestError("邀请码无效");
+          const invitation = await tx.invitation.findUnique({
+            where: { code: challenge.inviteCode },
+          });
+          if (
+            !invitation ||
+            !invitation.isActive ||
+            (invitation.expiresAt && invitation.expiresAt < new Date()) ||
+            invitation.usedCount >= invitation.maxUses
+          ) {
+            throw new BadRequestError("邀请码无效或已用完");
+          }
+
+          const user = await tx.user.create({
+            data: {
+              email,
+              username,
+              displayName: challenge.displayName,
+              passwordHash,
+              role,
+              emailVerifiedAt: new Date(),
+              profile: { create: {} },
+            },
+            select: { id: true },
+          });
+          await tx.invitation.update({
+            where: { id: invitation.id },
+            data: { usedCount: { increment: 1 } },
+          });
+          return user.id;
+        }
+
+        const user = await tx.user.create({
+          data: {
+            email,
+            username,
+            displayName: challenge.displayName,
+            passwordHash,
+            role: "GUEST",
+            emailVerifiedAt: new Date(),
+            profile: { create: {} },
+          },
+          select: { id: true },
+        });
+        return user.id;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
 
     return NextResponse.json({ success: true, userId }, { status: 201 });
   } catch (error) {

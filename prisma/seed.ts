@@ -37,6 +37,7 @@ async function main() {
       username: adminUsername,
       displayName: "管理员",
       passwordHash: adminPassword,
+      emailVerifiedAt: new Date(),
       role: "ADMIN",
       profile: {
         create: { title: "科协管理员" },

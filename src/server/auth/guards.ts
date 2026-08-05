@@ -9,7 +9,7 @@ export type AuthenticatedUser = {
   email: string;
   username: string;
   displayName: string | null;
-  role: "ADMIN" | "MEMBER";
+  role: "ADMIN" | "MEMBER" | "GUEST";
 };
 
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
@@ -30,15 +30,31 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
   });
 }
 
-export async function requireUser(): Promise<AuthenticatedUser> {
+export async function requireAnyUser(): Promise<AuthenticatedUser> {
   const user = await getCurrentUser();
   if (!user) throw new UnauthorizedError();
+  return user;
+}
+
+export async function requireUser(): Promise<AuthenticatedUser> {
+  const user = await requireAnyUser();
+  if (user.role === "GUEST") throw new ForbiddenError("游客账号不能执行内部成员操作");
   return user;
 }
 
 export async function requireAdmin(): Promise<AuthenticatedUser> {
   const user = await requireUser();
   if (user.role !== "ADMIN") throw new ForbiddenError("仅管理员可执行此操作");
+  return user;
+}
+
+export async function requireMember(): Promise<AuthenticatedUser> {
+  return requireUser();
+}
+
+export async function requireGuest(): Promise<AuthenticatedUser> {
+  const user = await requireAnyUser();
+  if (user.role !== "GUEST") throw new ForbiddenError("此页面仅供游客账号使用");
   return user;
 }
 

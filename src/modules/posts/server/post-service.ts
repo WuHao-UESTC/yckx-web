@@ -10,6 +10,7 @@ import type { CreatePostInput, UpdatePostInput } from "../posts.schemas";
 import { generateExcerpt } from "../post-text";
 import { postApiSelect } from "./post-selects";
 import { assertValidPostClassification } from "./post-classification";
+import { enqueuePostNotifications } from "@/modules/subscriptions/server/subscription-service";
 
 async function createUniqueSlug(client: Prisma.TransactionClient, title: string): Promise<string> {
   const baseSlug = createUrlSlug(title);
@@ -247,6 +248,10 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
     }
     if (input.attachmentIds !== undefined) {
       await syncPostAttachments(tx, post.id, input.attachmentIds, user.id);
+    }
+
+    if (post.status !== "PUBLISHED" && nextStatus === "PUBLISHED") {
+      await enqueuePostNotifications(tx, post.id);
     }
 
     return tx.post.findUniqueOrThrow({ where: { id: post.id }, select: postApiSelect });

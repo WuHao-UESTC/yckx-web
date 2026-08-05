@@ -12,6 +12,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const user = session.user;
+  if (user.role === "GUEST") {
+    redirect("/guest");
+  }
   const isAdmin = user.role === "ADMIN";
   const copy = HOME_CHAPTER_COPY.routine;
 

@@ -24,7 +24,6 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@giscus/react": "^3.1.0",
     "@milkdown/crepe": "^7.21.3",
     "@milkdown/kit": "^7.21.3",
     "@milkdown/react": "^7.21.3",
@@ -34,6 +33,7 @@
     "@types/d3-force": "^3.0.10",
     "@types/d3-scale": "^4.0.9",
     "@types/d3-selection": "^3.0.11",
+    "@types/nodemailer": "^8.0.1",
     "bcrypt": "^6.0.0",
     "d3-drag": "^3.0.0",
     "d3-force": "^3.0.0",
@@ -47,6 +47,7 @@
     "mermaid": "^11.16.0",
     "next": "16.2.12",
     "next-auth": "5.0.0-beta.32",
+    "nodemailer": "^9.0.4",
     "pg": "^8.22.0",
     "prisma": "^7.9.1",
     "react": "19.2.4",

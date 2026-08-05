@@ -17,7 +17,7 @@ interface Props {
 export default async function PersonalPage({ params }: Props) {
   const { username } = await params;
   const user = await prisma.user.findUnique({
-    where: { username },
+    where: { username, role: { not: "GUEST" } },
     include: {
       profile: true,
       _count: { select: { posts: { where: { status: "PUBLISHED" } } } },

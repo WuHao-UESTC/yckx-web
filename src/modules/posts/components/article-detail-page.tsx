@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArticleOutline } from "@/components/article/article-outline";
-import { GiscusComments } from "@/components/article/giscus-comments";
+import { NativeComments } from "@/components/article/native-comments";
 import { MobileTOC } from "@/components/article/mobile-toc";
 import { PostNav } from "@/components/article/post-nav";
 import { ViewTracker } from "@/components/article/view-tracker";
@@ -222,7 +222,7 @@ export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: Ar
           )}
 
           <PostNav prev={prevPost} next={nextPost} />
-          <GiscusComments />
+          <NativeComments postId={post.id} />
 
           <footer className="article-copyright">
             <p>© {authorName} · 英才科协</p>
