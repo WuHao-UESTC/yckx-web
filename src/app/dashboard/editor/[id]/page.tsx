@@ -165,6 +165,7 @@ export default function EditPostPage() {
   const typeLabels: Record<string, string> = {
     KNOWLEDGE: "知识",
     COMPETITION: "竞赛",
+    NEWS: "新闻",
     EVENT: "事件",
   };
 

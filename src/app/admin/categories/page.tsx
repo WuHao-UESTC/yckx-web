@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createUrlSlug } from "@/lib/url-slug";
 import { createCategoryFormSchema, resourceIdSchema } from "@/modules/admin/admin.schemas";
 import { requireAdmin } from "@/server/auth/guards";
+import { BadRequestError } from "@/server/http/errors";
 import { parseFormData } from "@/server/http/validation";
 
 export default async function AdminCategoriesPage() {
@@ -29,6 +30,8 @@ export default async function AdminCategoriesPage() {
     "use server";
     await requireAdmin();
     const id = resourceIdSchema.parse(formData.get("id"));
+    const category = await prisma.category.findUnique({ where: { id }, select: { slug: true } });
+    if (category?.slug === "news") throw new BadRequestError("科协新闻分类不能删除");
     await prisma.category.delete({ where: { id } });
     revalidatePath("/admin/categories");
   }
@@ -36,6 +39,7 @@ export default async function AdminCategoriesPage() {
   const typeLabels: Record<string, string> = {
     KNOWLEDGE: "知识",
     COMPETITION: "竞赛",
+    NEWS: "新闻",
     EVENT: "事件",
     COLUMN: "专栏",
     ROUTINE: "日常",
@@ -60,6 +64,7 @@ export default async function AdminCategoriesPage() {
           <select name="type" className="input-field">
             <option value="KNOWLEDGE">知识</option>
             <option value="COMPETITION">竞赛</option>
+            <option value="NEWS">新闻</option>
             <option value="EVENT">事件</option>
           </select>
         </div>
@@ -92,15 +97,19 @@ export default async function AdminCategoriesPage() {
                     {cat._count.posts} 篇
                   </span>
                 </div>
-                <form action={deleteCategory}>
-                  <input type="hidden" name="id" value={cat.id} />
-                  <button
-                    type="submit"
-                    className="text-xs text-red-500 hover:text-red-700 font-[family-name:var(--font-sans)]"
-                  >
-                    删除
-                  </button>
-                </form>
+                {cat.slug === "news" ? (
+                  <span className="text-xs text-[#60788d]">系统分类</span>
+                ) : (
+                  <form action={deleteCategory}>
+                    <input type="hidden" name="id" value={cat.id} />
+                    <button
+                      type="submit"
+                      className="text-xs text-red-500 hover:text-red-700 font-[family-name:var(--font-sans)]"
+                    >
+                      删除
+                    </button>
+                  </form>
+                )}
               </div>
             ))}
           </div>

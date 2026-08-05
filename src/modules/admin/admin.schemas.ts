@@ -1,11 +1,31 @@
 import { z } from "zod";
-import { postStatusSchema } from "@/modules/posts/posts.schemas";
+import { postStatusSchema } from "../posts/posts.schemas";
 
 export const resourceIdSchema = z.string().trim().min(1).max(191);
 
 export const createCategoryFormSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  type: z.enum(["KNOWLEDGE", "COMPETITION", "EVENT", "COLUMN", "ROUTINE"]),
+  type: z.enum(["KNOWLEDGE", "COMPETITION", "NEWS", "EVENT", "COLUMN", "ROUTINE"]),
+});
+
+const milestoneDateSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  }, "请输入有效日期")
+  .transform((value) => new Date(`${value}T00:00:00.000Z`));
+
+export const milestoneFormSchema = z.object({
+  occurredAt: milestoneDateSchema,
+  title: z.string().trim().min(1).max(120),
+  description: z.string().trim().min(1).max(500),
+});
+
+export const updateMilestoneFormSchema = milestoneFormSchema.extend({
+  id: resourceIdSchema,
 });
 
 export const invitationFormSchema = z.object({

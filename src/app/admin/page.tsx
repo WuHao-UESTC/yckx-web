@@ -75,6 +75,9 @@ export default async function AdminPage() {
         <Link href="/admin/posts" className="btn-primary">
           文章管理
         </Link>
+        <Link href="/admin/milestones" className="btn-primary">
+          大事记编辑
+        </Link>
         <Link href="/admin/config" className="btn-primary">
           站点配置
         </Link>

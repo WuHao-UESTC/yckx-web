@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { OceanHome } from "@/modules/home/components/ocean-home";
+import { generateExcerpt } from "@/modules/posts/post-text";
 import type { HomePost, OceanHomeData } from "@/modules/home/home.types";
 
 export const revalidate = 300;
 
 const EMPTY_HOME_DATA: OceanHomeData = {
   featuredPosts: [],
-  recentEvents: [],
+  newsPosts: [],
+  milestones: [],
   knowledgeCategories: [],
   competitionCategories: [],
   photos: [],
@@ -40,7 +42,8 @@ function serializePost(post: {
 async function getHomeData(): Promise<OceanHomeData> {
   const [
     featuredPosts,
-    recentEvents,
+    newsPosts,
+    milestones,
     knowledgeCategories,
     competitionCategories,
     photos,
@@ -65,18 +68,23 @@ async function getHomeData(): Promise<OceanHomeData> {
       take: 5,
     }),
     prisma.post.findMany({
-      where: { status: "PUBLISHED", category: { type: "EVENT" } },
+      where: { status: "PUBLISHED", category: { type: "NEWS" } },
       select: {
         id: true,
         title: true,
         slug: true,
         excerpt: true,
-        coverImage: true,
+        content: true,
         publishedAt: true,
-        category: { select: { name: true, slug: true, type: true } },
+        author: { select: { displayName: true, username: true } },
       },
       orderBy: { publishedAt: "desc" },
-      take: 5,
+      take: 8,
+    }),
+    prisma.milestone.findMany({
+      select: { id: true, title: true, description: true, occurredAt: true },
+      orderBy: { occurredAt: "desc" },
+      take: 7,
     }),
     prisma.category.findMany({
       where: { type: "KNOWLEDGE" },
@@ -132,7 +140,20 @@ async function getHomeData(): Promise<OceanHomeData> {
 
   return {
     featuredPosts: featuredPosts.map(serializePost),
-    recentEvents: recentEvents.map(serializePost),
+    newsPosts: newsPosts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt ?? generateExcerpt(post.content, 360),
+      publishedAt: post.publishedAt?.toISOString() ?? null,
+      authorName: post.author.displayName ?? post.author.username,
+    })),
+    milestones: milestones.map((milestone) => ({
+      id: milestone.id,
+      title: milestone.title,
+      description: milestone.description,
+      occurredAt: milestone.occurredAt.toISOString(),
+    })),
     knowledgeCategories: knowledgeCategories.map((category) => ({
       id: category.id,
       name: category.name,

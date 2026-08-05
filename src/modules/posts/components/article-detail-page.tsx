@@ -42,10 +42,17 @@ const ARTICLE_OPTIONS: Record<
     showViewCount: false,
     useCreatedAtFallback: true,
   },
+  NEWS: {
+    showAttachments: false,
+    showBottomTags: true,
+    showCategory: false,
+    showViewCount: true,
+    useCreatedAtFallback: false,
+  },
 };
 
 export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: ArticleKind }) {
-  const post = await findPublishedArticle(slug);
+  const post = await findPublishedArticle(slug, kind);
   if (!post) notFound();
 
   const [prevPost, nextPost] = await findAdjacentPosts(post, kind);

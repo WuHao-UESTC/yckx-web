@@ -1,11 +1,12 @@
 import "server-only";
 
 import type { Metadata } from "next";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SITE_NAME } from "@/lib/constants";
 import { adjacentPostSelect, articleDetailSelect, type ArticleDetailData } from "./post-selects";
 
-export type ArticleKind = "KNOWLEDGE" | "COMPETITION" | "EVENT";
+export type ArticleKind = "KNOWLEDGE" | "COMPETITION" | "NEWS" | "EVENT";
 
 export async function createArticleMetadata(slug: string): Promise<Metadata> {
   const post = await prisma.post.findUnique({
@@ -33,16 +34,18 @@ export async function createArticleMetadata(slug: string): Promise<Metadata> {
   };
 }
 
-export function findPublishedArticle(slug: string) {
-  return prisma.post.findUnique({
-    where: { slug, status: "PUBLISHED" },
+export function findPublishedArticle(slug: string, kind: ArticleKind) {
+  return prisma.post.findFirst({
+    where: { slug, status: "PUBLISHED", category: { type: kind } },
     select: articleDetailSelect,
   });
 }
 
 export async function findAdjacentPosts(post: ArticleDetailData, kind: ArticleKind) {
-  const scope =
-    kind === "EVENT" ? { category: { type: "EVENT" as const } } : { categoryId: post.categoryId };
+  const scope: Prisma.PostWhereInput =
+    kind === "EVENT" || kind === "NEWS"
+      ? { category: { type: kind } }
+      : { categoryId: post.categoryId };
 
   return Promise.all([
     post.publishedAt

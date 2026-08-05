@@ -76,6 +76,13 @@ async function main() {
   }
   console.log(`  ✓ ${knowledgeCategories.length} 个知识分类`);
 
+  await prisma.category.upsert({
+    where: { slug: "news" },
+    update: { name: "科协新闻", type: "NEWS" },
+    create: { name: "科协新闻", slug: "news", type: "NEWS" },
+  });
+  console.log("  ✓ 科协新闻分类");
+
   // 创建竞赛类分类
   const competitionCategories = [
     { name: "电子设计竞赛", slug: "electronic-design-contest", type: "COMPETITION" as const },

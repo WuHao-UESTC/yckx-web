@@ -17,6 +17,22 @@ export type HomePost = {
   categoryType: string | null;
 };
 
+export type HomeNews = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  publishedAt: string | null;
+  authorName: string;
+};
+
+export type HomeMilestone = {
+  id: string;
+  title: string;
+  description: string;
+  occurredAt: string;
+};
+
 export type HomePhoto = {
   id: string;
   imagePath: string;
@@ -39,7 +55,8 @@ export type HomeMember = {
 
 export type OceanHomeData = {
   featuredPosts: HomePost[];
-  recentEvents: HomePost[];
+  newsPosts: HomeNews[];
+  milestones: HomeMilestone[];
   knowledgeCategories: HomeCategory[];
   competitionCategories: HomeCategory[];
   photos: HomePhoto[];

@@ -16,11 +16,13 @@ import { CompetitionRadar } from "./competition-radar";
 import { DepthNavigation } from "./depth-navigation";
 import { KnowledgeTide } from "./knowledge-tide";
 import { OceanExperience } from "./ocean-experience";
+import { TimeEcho } from "./time-echo";
 
 function postHref(post: HomePost): string {
   if (post.categoryType === "COMPETITION") {
     return `/competition/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
   }
+  if (post.categoryType === "NEWS") return `/news/${post.slug}`;
   if (post.categoryType === "EVENT") return `/events/${post.slug}`;
   return `/knowledge-base/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
 }
@@ -40,8 +42,6 @@ function EmptySignal({ children }: { children: React.ReactNode }) {
 }
 
 export function OceanHome({ data }: { data: OceanHomeData }) {
-  const leadEvent = data.recentEvents[0];
-
   return (
     <OceanExperience>
       <DepthNavigation />
@@ -160,55 +160,14 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
 
       <section id="events" className="ocean-chapter ocean-events" aria-labelledby="events-title">
         <div className="ocean-events__glow" aria-hidden="true" />
-        <div className="ocean-section-layout">
-          <div className="ocean-section-copy">
+        <div className="time-echo-layout">
+          <header className="time-echo-heading">
             <ChapterLabel depth="900m">时间回声</ChapterLabel>
-            <Radio className="chapter-icon" size={34} strokeWidth={1.4} aria-hidden="true" />
             <h2 id="events-title">每一次发生，都在深处留下回声。</h2>
-            <p>最新消息是一束正在抵达的信号，历年的活动和选择则沉淀为科协共同的时间地层。</p>
-            <Link href="/events" className="ocean-button ocean-button--light">
-              打开完整日志
-              <ChevronRight size={17} aria-hidden="true" />
-            </Link>
-          </div>
+            <p>新闻写进航海日志，大事记沿着回声由远及近，标出科协一路抵达的坐标。</p>
+          </header>
 
-          <div className="event-transmissions">
-            {leadEvent ? (
-              <Link
-                href={postHref(leadEvent)}
-                className="event-transmission event-transmission--lead"
-              >
-                <span>最新信号</span>
-                <time>
-                  {leadEvent.publishedAt
-                    ? new Date(leadEvent.publishedAt).toLocaleDateString("zh-CN")
-                    : "最近"}
-                </time>
-                <h3>{leadEvent.title}</h3>
-                {leadEvent.excerpt && <p>{leadEvent.excerpt}</p>}
-                <ArrowUpRight size={18} aria-hidden="true" />
-              </Link>
-            ) : (
-              <EmptySignal>暂未接收到新的活动信号。</EmptySignal>
-            )}
-
-            <div className="event-transmission__timeline">
-              {data.recentEvents.slice(1, 5).map((event) => (
-                <Link key={event.id} href={postHref(event)}>
-                  <i aria-hidden="true" />
-                  <time>
-                    {event.publishedAt
-                      ? new Date(event.publishedAt).toLocaleDateString("zh-CN", {
-                          month: "2-digit",
-                          day: "2-digit",
-                        })
-                      : "--"}
-                  </time>
-                  <strong>{event.title}</strong>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <TimeEcho news={data.newsPosts} milestones={data.milestones} />
         </div>
       </section>
 

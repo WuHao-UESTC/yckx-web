@@ -16,6 +16,7 @@ interface SearchPost {
 function postUrl(post: SearchPost): string {
   if (post.categoryType === "COMPETITION")
     return `/competition/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
+  if (post.categoryType === "NEWS") return `/news/${post.slug}`;
   if (post.categoryType === "EVENT") return `/events/${post.slug}`;
   return `/knowledge-base/${post.categorySlug ?? "uncategorized"}/${post.slug}`;
 }

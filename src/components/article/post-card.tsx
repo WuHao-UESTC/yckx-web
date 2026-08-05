@@ -19,6 +19,7 @@ export function postUrl(post: RoutablePost): string {
   const catSlug = post.category?.slug ?? "uncategorized";
 
   if (type === "COMPETITION") return `/competition/${catSlug}/${post.slug}`;
+  if (type === "NEWS") return `/news/${post.slug}`;
   if (type === "EVENT") return `/events/${post.slug}`;
   return `/knowledge-base/${catSlug}/${post.slug}`;
 }

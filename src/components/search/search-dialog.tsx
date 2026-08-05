@@ -18,6 +18,7 @@ function resultUrl(result: SearchResult): string {
   if (result.categoryType === "COMPETITION") {
     return `/competition/${result.categorySlug ?? "uncategorized"}/${result.slug}`;
   }
+  if (result.categoryType === "NEWS") return `/news/${result.slug}`;
   if (result.categoryType === "EVENT") return `/events/${result.slug}`;
   return `/knowledge-base/${result.categorySlug ?? "uncategorized"}/${result.slug}`;
 }
@@ -119,7 +120,7 @@ export function SearchDialog() {
               setSelectedIdx(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="搜索知识、竞赛或活动"
+            placeholder="搜索知识、竞赛、新闻或活动"
             aria-label="搜索关键词"
           />
           <kbd>ESC</kbd>
