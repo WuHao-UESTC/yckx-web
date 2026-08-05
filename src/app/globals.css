@@ -54,6 +54,15 @@ body:has(.ocean-home) {
   background: var(--ocean-deep);
 }
 
+html:has(.ocean-home) {
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: var(--header-height);
+}
+
+body:has(.ocean-home) .site-footer {
+  scroll-snap-align: end;
+}
+
 h1,
 h2,
 h3,
@@ -1977,6 +1986,444 @@ code {
   box-shadow: 0 0 15px rgba(242, 198, 109, 0.11);
 }
 
+/* Continuous ocean system */
+.ocean-home {
+  overflow: clip;
+  background: transparent;
+}
+
+.ocean-environment,
+.bioluminescent-field {
+  position: fixed;
+  z-index: 0;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100dvh - var(--header-height));
+  pointer-events: none;
+}
+
+.ocean-environment {
+  overflow: hidden;
+  background: #061a3a;
+}
+
+.ocean-environment__tone {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ocean-environment__tone--surface {
+  background:
+    radial-gradient(circle at 76% 8%, rgba(119, 177, 215, 0.24), transparent 30%),
+    linear-gradient(180deg, #061a3a 0%, #073457 68%, #0b5b80 100%);
+}
+
+.ocean-environment__tone--knowledge {
+  background:
+    radial-gradient(circle at 72% 35%, rgba(61, 181, 194, 0.24), transparent 34%),
+    linear-gradient(180deg, #0a6382 0%, #07546e 47%, #064355 100%);
+}
+
+.ocean-environment__tone--competition {
+  background:
+    radial-gradient(circle at 22% 55%, rgba(22, 136, 139, 0.22), transparent 31%),
+    linear-gradient(180deg, #06495b 0%, #063849 54%, #042a3a 100%);
+}
+
+.ocean-environment__tone--events {
+  background:
+    radial-gradient(circle at 74% 38%, rgba(35, 132, 158, 0.16), transparent 32%),
+    linear-gradient(180deg, #042d3d 0%, #042331 55%, #031923 100%);
+}
+
+.ocean-environment__tone--routine {
+  background:
+    radial-gradient(circle at 78% 58%, rgba(242, 198, 109, 0.08), transparent 25%),
+    linear-gradient(180deg, #031c27 0%, #031720 56%, #03131b 100%);
+}
+
+.ocean-environment__tone--honors {
+  background:
+    radial-gradient(circle at 72% 42%, rgba(242, 198, 109, 0.08), transparent 28%),
+    linear-gradient(180deg, #03131c 0%, #020c13 58%, #01070c 100%);
+}
+
+.ocean-home[data-depth="surface"] .ocean-environment__tone--surface,
+.ocean-home[data-depth="knowledge"] .ocean-environment__tone--knowledge,
+.ocean-home[data-depth="competition"] .ocean-environment__tone--competition,
+.ocean-home[data-depth="events"] .ocean-environment__tone--events,
+.ocean-home[data-depth="routine"] .ocean-environment__tone--routine,
+.ocean-home[data-depth="honors"] .ocean-environment__tone--honors {
+  opacity: 1;
+}
+
+.ocean-environment__current {
+  position: absolute;
+  inset: -30%;
+  opacity: 0.45;
+  background: repeating-radial-gradient(
+    ellipse at 50% 12%,
+    transparent 0 58px,
+    rgba(156, 226, 237, 0.026) 60px 61px
+  );
+  transform: rotate(-7deg);
+  animation: ocean-current 24s linear infinite;
+}
+
+.bioluminescent-field {
+  z-index: 4;
+}
+
+.ocean-chapter,
+.ocean-hero,
+.ocean-routine,
+.ocean-honors {
+  z-index: 1;
+  width: 100%;
+  height: calc(100svh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
+  min-height: calc(100svh - var(--header-height));
+  min-height: calc(100dvh - var(--header-height));
+  overflow: hidden;
+  scroll-margin-top: var(--header-height);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  background: transparent;
+}
+
+.ocean-section-layout,
+.honors-layout {
+  height: 100%;
+  min-height: 0;
+  padding-top: clamp(54px, 7vh, 84px);
+  padding-bottom: clamp(100px, 13vh, 132px);
+}
+
+.ocean-hero__content {
+  height: 100%;
+  min-height: 0;
+}
+
+.ocean-chapter__image {
+  z-index: -2;
+  transition:
+    opacity 1100ms ease,
+    filter 1100ms ease,
+    transform 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ocean-hero .ocean-chapter__image {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 76%,
+    rgba(0, 0, 0, 0.68) 88%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 76%,
+    rgba(0, 0, 0, 0.68) 88%,
+    transparent 100%
+  );
+}
+
+.ocean-knowledge .ocean-chapter__image {
+  opacity: 0.72;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.72) 13%,
+    #000 28%,
+    #000 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.72) 13%,
+    #000 28%,
+    #000 78%,
+    transparent 100%
+  );
+}
+
+.ocean-honors .ocean-chapter__image {
+  opacity: 0.74;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.72) 16%,
+    #000 33%,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.72) 16%,
+    #000 33%,
+    #000 100%
+  );
+}
+
+.ocean-hero__veil,
+.ocean-knowledge__veil,
+.ocean-honors__veil {
+  z-index: -1;
+}
+
+.ocean-knowledge__veil {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(2, 43, 62, 0.74) 0%,
+      rgba(2, 52, 71, 0.42) 48%,
+      rgba(3, 41, 54, 0.15) 100%
+    ),
+    linear-gradient(180deg, transparent 0%, rgba(2, 37, 49, 0.32) 72%, rgba(2, 28, 39, 0.62) 100%);
+}
+
+.surface-dive-transition {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 24vh;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(6, 63, 88, 0.13) 42%, rgba(6, 83, 111, 0.42) 100%),
+    repeating-radial-gradient(
+      ellipse at 50% 112%,
+      transparent 0 28px,
+      rgba(202, 240, 247, 0.07) 30px 31px
+    );
+  pointer-events: none;
+}
+
+.surface-dive-transition::before {
+  position: absolute;
+  right: -10%;
+  bottom: 10%;
+  left: -10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(219, 247, 251, 0.48), transparent);
+  box-shadow: 0 0 25px rgba(166, 225, 236, 0.26);
+  content: "";
+  transform: scaleX(0.82);
+  animation: waterline-breathe 4.8s ease-in-out infinite alternate;
+}
+
+.surface-dive-transition span {
+  position: absolute;
+  bottom: -10px;
+  width: 5px;
+  height: 5px;
+  border: 1px solid rgba(211, 242, 247, 0.62);
+  border-radius: 50%;
+  opacity: 0;
+  animation: surface-bubble 5.5s ease-in infinite;
+}
+
+.surface-dive-transition span:nth-child(1) {
+  left: 35%;
+}
+
+.surface-dive-transition span:nth-child(2) {
+  left: 44%;
+  width: 8px;
+  height: 8px;
+  animation-delay: -1.4s;
+}
+
+.surface-dive-transition span:nth-child(3) {
+  left: 56%;
+  animation-delay: -2.7s;
+}
+
+.surface-dive-transition span:nth-child(4) {
+  left: 67%;
+  width: 7px;
+  height: 7px;
+  animation-delay: -3.5s;
+}
+
+.surface-dive-transition span:nth-child(5) {
+  left: 76%;
+  animation-delay: -4.6s;
+}
+
+.surface-dive-transition i {
+  position: absolute;
+  right: 8%;
+  bottom: -3%;
+  width: 38%;
+  height: 48%;
+  border-top: 1px solid rgba(213, 244, 248, 0.16);
+  border-radius: 50%;
+  transform: rotate(-5deg);
+}
+
+.ocean-home.is-enhanced .ocean-hero__content > *,
+.ocean-home.is-enhanced .ocean-section-copy > *,
+.ocean-home.is-enhanced .routine-heading > *,
+.ocean-home.is-enhanced .knowledge-constellation,
+.ocean-home.is-enhanced .competition-routes,
+.ocean-home.is-enhanced .event-transmissions,
+.ocean-home.is-enhanced .routine-station,
+.ocean-home.is-enhanced .honor-constellation,
+.ocean-home.is-enhanced .honor-wall,
+.ocean-home.is-enhanced .ocean-story-strip {
+  transition:
+    opacity 680ms ease,
+    filter 820ms ease,
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-future .ocean-hero__content > *,
+.ocean-home.is-enhanced .ocean-chapter.is-future .ocean-section-copy > *,
+.ocean-home.is-enhanced .ocean-chapter.is-future .routine-heading > *,
+.ocean-home.is-enhanced .ocean-chapter.is-future .knowledge-constellation,
+.ocean-home.is-enhanced .ocean-chapter.is-future .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-future .event-transmissions,
+.ocean-home.is-enhanced .ocean-chapter.is-future .routine-station,
+.ocean-home.is-enhanced .ocean-chapter.is-future .honor-constellation,
+.ocean-home.is-enhanced .ocean-chapter.is-future .honor-wall,
+.ocean-home.is-enhanced .ocean-chapter.is-future .ocean-story-strip {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translate3d(0, 34px, 0) scale(0.985);
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-past .ocean-hero__content > *,
+.ocean-home.is-enhanced .ocean-chapter.is-past .ocean-section-copy > *,
+.ocean-home.is-enhanced .ocean-chapter.is-past .routine-heading > *,
+.ocean-home.is-enhanced .ocean-chapter.is-past .knowledge-constellation,
+.ocean-home.is-enhanced .ocean-chapter.is-past .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-past .event-transmissions,
+.ocean-home.is-enhanced .ocean-chapter.is-past .routine-station,
+.ocean-home.is-enhanced .ocean-chapter.is-past .honor-constellation,
+.ocean-home.is-enhanced .ocean-chapter.is-past .honor-wall,
+.ocean-home.is-enhanced .ocean-chapter.is-past .ocean-story-strip {
+  opacity: 0;
+  filter: blur(7px);
+  transform: translate3d(0, -28px, 0) scale(0.99);
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-hero__content > *,
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-section-copy > *,
+.ocean-home.is-enhanced .ocean-chapter.is-active .routine-heading > *,
+.ocean-home.is-enhanced .ocean-chapter.is-active .knowledge-constellation,
+.ocean-home.is-enhanced .ocean-chapter.is-active .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-active .event-transmissions,
+.ocean-home.is-enhanced .ocean-chapter.is-active .routine-station,
+.ocean-home.is-enhanced .ocean-chapter.is-active .honor-constellation,
+.ocean-home.is-enhanced .ocean-chapter.is-active .honor-wall,
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-story-strip {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-hero__content > :nth-child(1),
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-section-copy > :nth-child(1),
+.ocean-home.is-enhanced .ocean-chapter.is-active .routine-heading > :nth-child(1) {
+  transition-delay: 60ms;
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-hero__content > :nth-child(2),
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-section-copy > :nth-child(2),
+.ocean-home.is-enhanced .ocean-chapter.is-active .routine-heading > :nth-child(2) {
+  transition-delay: 130ms;
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-hero__content > :nth-child(3),
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-section-copy > :nth-child(3),
+.ocean-home.is-enhanced .ocean-chapter.is-active .routine-heading > :nth-child(3) {
+  transition-delay: 210ms;
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-hero__content > :nth-child(4),
+.ocean-home.is-enhanced .ocean-chapter.is-active .ocean-section-copy > :nth-child(4),
+.ocean-home.is-enhanced .ocean-chapter.is-active .routine-heading > :nth-child(4) {
+  transition-delay: 290ms;
+}
+
+.ocean-home.is-enhanced .ocean-chapter.is-active .knowledge-constellation,
+.ocean-home.is-enhanced .ocean-chapter.is-active .competition-routes,
+.ocean-home.is-enhanced .ocean-chapter.is-active .event-transmissions,
+.ocean-home.is-enhanced .ocean-chapter.is-active .routine-station,
+.ocean-home.is-enhanced .ocean-chapter.is-active .honor-constellation {
+  transition-delay: 250ms;
+}
+
+.ocean-routine {
+  padding: clamp(38px, 5.5vh, 68px) 0 clamp(34px, 5vh, 60px);
+}
+
+.routine-heading {
+  margin-bottom: clamp(20px, 3vh, 38px);
+}
+
+.routine-heading > p {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+.routine-station {
+  height: clamp(330px, 50vh, 470px);
+  min-height: 0;
+}
+
+.routine-photos {
+  min-height: 0;
+}
+
+.honors-layout {
+  padding-bottom: 130px;
+}
+
+@keyframes ocean-current {
+  from {
+    transform: translate3d(-2%, -1%, 0) rotate(-7deg);
+  }
+  to {
+    transform: translate3d(2%, 1%, 0) rotate(-4deg);
+  }
+}
+
+@keyframes waterline-breathe {
+  from {
+    opacity: 0.45;
+    transform: scaleX(0.76);
+  }
+  to {
+    opacity: 0.9;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes surface-bubble {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.7);
+  }
+  20% {
+    opacity: 0.62;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(12px, -20vh, 0) scale(1.2);
+  }
+}
+
 @keyframes hero-drift {
   from {
     transform: scale(1.01) translate3d(0, 0, 0);
@@ -2086,6 +2533,10 @@ code {
     --header-height: 58px;
   }
 
+  html:has(.ocean-home) {
+    scroll-snap-type: y proximity;
+  }
+
   .site-header__inner {
     position: relative;
     width: calc(100% - 28px);
@@ -2109,11 +2560,10 @@ code {
   .ocean-hero,
   .ocean-routine,
   .ocean-honors {
-    min-height: auto;
-  }
-
-  .ocean-hero {
-    min-height: calc(100svh - var(--header-height) - 36px);
+    height: calc(100svh - var(--header-height));
+    height: calc(100dvh - var(--header-height));
+    min-height: calc(100svh - var(--header-height));
+    min-height: calc(100dvh - var(--header-height));
   }
 
   .ocean-hero__image {
@@ -2128,8 +2578,9 @@ code {
 
   .ocean-hero__content {
     width: calc(100% - 42px);
-    min-height: calc(100svh - var(--header-height) - 36px);
-    padding: 52px 0 145px;
+    height: 100%;
+    min-height: 0;
+    padding: 42px 0 118px;
   }
 
   .ocean-kicker {
@@ -2162,10 +2613,12 @@ code {
   .ocean-section-layout--reverse,
   .honors-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
     width: calc(100% - 42px);
+    height: 100%;
     min-height: 0;
-    gap: 55px;
-    padding: 88px 0 120px;
+    gap: 22px;
+    padding: 44px 0 104px;
   }
 
   .ocean-section-copy,
@@ -2176,17 +2629,26 @@ code {
 
   .ocean-section-copy h2,
   .routine-heading h2 {
-    font-size: clamp(2rem, 7vw, 3.2rem);
+    font-size: clamp(1.9rem, 6.5vw, 2.85rem);
+  }
+
+  .ocean-section-copy > p,
+  .routine-heading > p {
+    margin: 14px 0 20px;
+    font-size: 0.88rem;
+    line-height: 1.72;
   }
 
   .knowledge-constellation,
   .honor-constellation {
+    align-self: center;
     justify-self: center;
     width: min(100%, 560px);
+    max-height: 32vh;
   }
 
   .ocean-story-strip {
-    position: relative;
+    position: absolute;
     grid-template-columns: 100px 1fr;
   }
 
@@ -2195,7 +2657,7 @@ code {
   }
 
   .ocean-competition .ocean-section-layout {
-    padding-bottom: 90px;
+    padding-bottom: 48px;
   }
 
   .ocean-section-layout--reverse .competition-routes {
@@ -2206,19 +2668,36 @@ code {
     order: 1;
   }
 
+  .competition-routes {
+    align-self: center;
+    max-height: 38vh;
+    overflow: hidden;
+  }
+
   .sonar-field {
-    top: 68%;
+    top: 70%;
     left: 50%;
     width: 96vw;
   }
 
   .event-transmissions {
+    align-self: center;
     justify-self: start;
     width: min(100%, 620px);
+    max-height: 36vh;
+    overflow: hidden;
+  }
+
+  .event-transmission__timeline a {
+    min-height: 44px;
+  }
+
+  .event-transmission__timeline a:nth-child(n + 4) {
+    display: none;
   }
 
   .ocean-routine {
-    padding: 88px 0 92px;
+    padding: 38px 0 40px;
   }
 
   .routine-heading,
@@ -2226,8 +2705,29 @@ code {
     width: calc(100% - 42px);
   }
 
+  .routine-heading {
+    margin-bottom: 20px;
+  }
+
+  .routine-heading .chapter-icon {
+    margin-bottom: 8px;
+  }
+
+  .routine-heading > p {
+    margin-bottom: 0;
+  }
+
   .routine-station {
+    height: calc(100% - 244px);
+    min-height: 0;
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(145px, 42%) minmax(0, 58%);
+  }
+
+  .routine-photos,
+  .routine-console {
+    min-height: 0;
+    overflow: hidden;
   }
 
   .routine-console {
@@ -2240,13 +2740,14 @@ code {
   }
 
   .honors-layout {
-    padding-bottom: 80px;
+    padding-bottom: 112px;
   }
 
   .honor-wall {
-    position: relative;
+    position: absolute;
     grid-template-columns: 1fr auto;
-    padding: 24px 22px;
+    min-height: 92px;
+    padding: 17px 22px;
   }
 
   .honor-wall p {
@@ -2282,7 +2783,8 @@ code {
 
   .ocean-hero__content {
     justify-content: flex-end;
-    padding-bottom: 180px;
+    padding-top: 34px;
+    padding-bottom: 152px;
   }
 
   .ocean-kicker {
@@ -2329,39 +2831,41 @@ code {
   .ocean-section-layout--reverse,
   .honors-layout {
     width: calc(100% - 36px);
-    padding: 76px 0 90px;
+    gap: 16px;
+    padding: 34px 0 82px;
   }
 
   .chapter-label {
-    margin-bottom: 17px;
+    margin-bottom: 10px;
   }
 
   .chapter-icon {
-    width: 28px;
-    height: 28px;
-    margin-bottom: 16px;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 9px;
   }
 
   .ocean-section-copy h2,
   .routine-heading h2 {
-    font-size: 2.15rem;
+    font-size: clamp(1.7rem, 8.2vw, 2.05rem);
   }
 
   .ocean-section-copy > p,
   .routine-heading > p {
-    margin: 18px 0 27px;
-    font-size: 0.88rem;
-    line-height: 1.8;
+    margin: 11px 0 16px;
+    font-size: 0.78rem;
+    line-height: 1.65;
   }
 
   .knowledge-constellation {
     width: 100%;
-    min-height: 360px;
+    min-height: 0;
+    max-height: 29vh;
     aspect-ratio: 1 / 1.08;
   }
 
   .knowledge-node {
-    width: 94px;
+    width: clamp(70px, 21vw, 84px);
   }
 
   .knowledge-node--1 {
@@ -2395,12 +2899,17 @@ code {
   }
 
   .competition-route {
+    min-height: 54px;
     margin-left: calc(var(--route-index) * 3px);
   }
 
+  .competition-route:nth-of-type(n + 6) {
+    display: none;
+  }
+
   .event-transmission--lead {
-    min-height: 230px;
-    padding: 22px;
+    min-height: 156px;
+    padding: 17px;
   }
 
   .event-transmission--lead svg {
@@ -2414,15 +2923,23 @@ code {
   }
 
   .routine-heading {
-    margin-bottom: 36px;
+    margin-bottom: 14px;
   }
 
   .routine-photos {
-    min-height: 380px;
+    min-height: 0;
   }
 
   .routine-members {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .routine-members a {
+    min-height: 54px;
+  }
+
+  .routine-notes blockquote:nth-child(n + 3) {
+    display: none;
   }
 
   .honor-constellation {
@@ -2431,6 +2948,10 @@ code {
     width: 100%;
     aspect-ratio: auto;
     gap: 8px;
+  }
+
+  .honors-layout {
+    padding-bottom: 108px;
   }
 
   .honor-constellation::before,
@@ -2442,8 +2963,8 @@ code {
     position: relative;
     inset: auto;
     width: auto;
-    min-height: 148px;
-    padding: 17px;
+    min-height: 108px;
+    padding: 13px;
   }
 
   .honor-star h3 {
@@ -2451,14 +2972,17 @@ code {
   }
 
   .honor-wall {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
   }
 
-  .honor-wall p,
+  .honor-wall p {
+    display: none;
+  }
+
   .honor-wall a {
-    grid-column: 1;
-    grid-row: auto;
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .site-footer__inner {

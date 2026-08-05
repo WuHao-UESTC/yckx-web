@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { HomePost, OceanHomeData } from "../home.types";
 import { DepthNavigation } from "./depth-navigation";
+import { OceanExperience } from "./ocean-experience";
 
 function postHref(post: HomePost): string {
   if (post.categoryType === "COMPETITION") {
@@ -41,10 +42,14 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
   const leadEvent = data.recentEvents[0];
 
   return (
-    <div className="ocean-home">
+    <OceanExperience>
       <DepthNavigation />
 
-      <section id="surface" className="ocean-chapter ocean-hero" aria-labelledby="hero-title">
+      <section
+        id="surface"
+        className="ocean-chapter ocean-hero is-active"
+        aria-labelledby="hero-title"
+      >
         <Image
           src="/images/ocean/hero-whale.webp"
           alt="星空与月光下，一只座头鲸跃出海面"
@@ -55,6 +60,14 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
         />
         <div className="ocean-hero__veil" />
         <div className="ocean-hero__stars" aria-hidden="true" />
+        <div className="surface-dive-transition" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <i />
+        </div>
 
         <div className="ocean-hero__content">
           <p className="ocean-kicker">UESTC · HONORS COLLEGE · SCIENCE & TECHNOLOGY ASSOCIATION</p>
@@ -125,7 +138,7 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
             {data.knowledgeCategories.length === 0 ? (
               <EmptySignal>知识节点正在汇聚。</EmptySignal>
             ) : (
-              data.knowledgeCategories.slice(0, 8).map((category, index) => (
+              data.knowledgeCategories.slice(0, 6).map((category, index) => (
                 <Link
                   key={category.id}
                   href={`/knowledge-base/${category.slug}`}
@@ -380,6 +393,6 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
           </Link>
         </div>
       </section>
-    </div>
+    </OceanExperience>
   );
 }

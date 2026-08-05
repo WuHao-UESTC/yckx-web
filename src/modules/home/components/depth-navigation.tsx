@@ -16,17 +16,6 @@ export function DepthNavigation() {
   const [activeId, setActiveId] = useState(CHAPTERS[0].id);
 
   useEffect(() => {
-    const targetId = window.location.hash.slice(1);
-    if (!targetId) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      document.getElementById(targetId)?.scrollIntoView();
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  useEffect(() => {
     const sections = CHAPTERS.map((chapter) => document.getElementById(chapter.id)).filter(
       (section): section is HTMLElement => Boolean(section)
     );
