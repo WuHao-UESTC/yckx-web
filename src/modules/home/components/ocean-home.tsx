@@ -193,6 +193,7 @@ export function OceanHome({ data }: { data: OceanHomeData }) {
               ["协作", "让不同方向的光汇成一条航线"],
               ["创造", "把想象变成能够运行的作品"],
               ["传承", "把走过的弯路留给后来者作地图"],
+              ["热爱", "热爱世界，热爱知识"],
             ].map(([title, description], index) => (
               <article key={title} className={`honor-star honor-star--${index + 1}`}>
                 <span aria-hidden="true" />

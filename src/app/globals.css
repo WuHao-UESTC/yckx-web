@@ -4887,6 +4887,11 @@ code {
   left: 0;
 }
 
+.honor-star--5 {
+  top: 9%;
+  left: 0;
+}
+
 .honor-wall {
   position: absolute;
   z-index: 3;
@@ -6952,6 +6957,12 @@ body.ocean-immersive-fallback .ocean-fullscreen-toggle {
 
   .honor-star h3 {
     font-size: 1.12rem;
+  }
+
+  .honor-star--5 {
+    grid-column: 1 / -1;
+    width: calc(50% - 4px);
+    justify-self: center;
   }
 
   .honor-wall {
