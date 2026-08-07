@@ -24,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <SiteHeader />
+        <Suspense fallback={null}>
+          <SiteHeader />
+        </Suspense>
         <main className="flex-1">
           <Suspense fallback={<Loading />}>{children}</Suspense>
         </main>
