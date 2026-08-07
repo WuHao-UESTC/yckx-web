@@ -4493,6 +4493,7 @@ body:has(.interior-page) .site-footer {
   justify-content: center;
   margin: 0;
   background: rgba(3, 16, 18, 0.32);
+  overflow: hidden;
   padding: 0;
   scroll-snap-align: start;
 }
