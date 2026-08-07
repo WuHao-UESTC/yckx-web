@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { PostCard } from "@/components/article/post-card";
 import {
   InteriorEmpty,
@@ -16,7 +17,11 @@ interface Props {
   searchParams: Promise<{ q?: string; sort?: string; page?: string }>;
 }
 
-export default async function ColumnPage({ params, searchParams }: Props) {
+function ColumnLoading() {
+  return <div className="interior-empty">正在读取新闻专栏…</div>;
+}
+
+async function ColumnContent({ params, searchParams }: Props) {
   const [{ slug }, rawQuery] = await Promise.all([params, searchParams]);
   const query = parsePublicPostQuery(rawQuery);
   const column = await prisma.column.findFirst({
@@ -66,5 +71,13 @@ export default async function ColumnPage({ params, searchParams }: Props) {
         label="新闻专栏文章分页"
       />
     </InteriorPage>
+  );
+}
+
+export default function ColumnPage(props: Props) {
+  return (
+    <Suspense fallback={<ColumnLoading />}>
+      <ColumnContent {...props} />
+    </Suspense>
   );
 }
