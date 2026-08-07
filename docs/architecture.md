@@ -28,6 +28,19 @@ app route/page
 
 用户角色分为 `ADMIN`、`MEMBER` 和 `GUEST`。游客只允许访问游客后台、评论和订阅；内部成员写接口统一经过 `requireUser`/`requireAdmin` 服务端鉴权，游客不能通过直接调用 API 绕过页面限制。
 
+## 当前生产拓扑
+
+```text
+校园网/局域网用户
+  -> yckx.iceaxing.com
+  -> UGREEN NAS 192.168.1.120
+  -> Nginx Proxy Manager 8080/4443
+  -> Next.js 0.0.0.0:3000
+  -> PostgreSQL + UPLOAD_DIR
+```
+
+Nginx Proxy Manager 作为独立 Docker 容器运行，因此 Next.js 不能只绑定主机回环地址。NPM 的 Proxy Host 使用 `192.168.1.120:3000`，管理端口 `8181` 只允许局域网访问。证书由 Cloudflare DNS Challenge 获取，当前公网入站仍受校园网上级网络限制；未来接入 VPS + FRP 时只替换入口层，不改变 Next.js、数据库或业务模块边界。
+
 ## 数据访问
 
 - 查询使用最小 `select`，关联选择器集中复用。

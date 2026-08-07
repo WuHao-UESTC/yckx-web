@@ -1,5 +1,9 @@
 # NAS 部署
 
+首次将局域网 NAS 站点发布到公网时，按照 [NAS 公网生产部署操作手册](production-public-deployment.md) 执行。本文档保留日常版本发布和迁移更新要求。
+
+后续开发、分支协作、环境变量、Nginx Proxy Manager、邮件 worker、验收和回退统一参考 [后续开发与维护手册](maintenance-manual.md)。当前生产站点使用 `next start`，不再把 `next dev` 作为正式运行方式。
+
 生产站点位于 NAS `192.168.1.120`，代码以 GitHub `main` 分支作为唯一发布来源。本文档不保存 SSH 凭据、数据库密码或其他密钥。
 
 ## 首次部署前确认
@@ -92,3 +96,20 @@ Routine 照片墙、顶部合照与日常多专栏更新包含新的 `post_daily
 - 数据库迁移没有通用的自动向下回滚。先停止写流量，再根据该版本的迁移说明和已验证备份恢复。
 - 上传目录恢复必须与数据库恢复到同一备份时间点，避免文件记录和磁盘内容不一致。
 - 回退完成后重复部署后检查并记录原因。
+
+## 当前生产运行方式补充
+
+当前 NAS 上的 Next.js 生产进程必须监听：
+
+```bash
+pnpm exec next start -H 0.0.0.0 -p 3000
+```
+
+Nginx Proxy Manager 运行在 Docker 中，Proxy Host 目标为 `192.168.1.120:3000`。如果使用 `127.0.0.1:3000`，NPM 容器会返回 `502 Bad Gateway`。
+
+当前实测公网入站 `80/443` 在校园网外部网络不可达，因此验收暂以校园网/局域网为准；SSL 证书使用 Cloudflare DNS Challenge，邮件 worker 使用本机 URL：
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/internal/email-outbox/process \
+  -H "x-email-worker-secret: 实际密钥"
+```

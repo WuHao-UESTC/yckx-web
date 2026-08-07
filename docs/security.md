@@ -51,6 +51,15 @@
 - 确认 NAS 文件权限只授予运行应用的专用账户，并配置备份保留与恢复演练。
 - 根据实际威胁模型决定是否增加恶意文件扫描、审计日志和告警。
 
+## 当前反向代理与网络边界
+
+- Nginx Proxy Manager 运行在 NAS Docker 中，对 NAS 暴露 `8080`、`4443` 和仅供局域网管理的 `8181`。
+- NPM 只代理到 `192.168.1.120:3000`；Next.js 监听 `0.0.0.0:3000` 是为了允许本机 Docker 容器访问，路由器不得把 `3000` 转发到公网。
+- NPM 管理端口 `8181`、NAS 管理端口、SSH 和 PostgreSQL 不得暴露到公网。
+- SSL 证书使用 Cloudflare DNS Challenge。Cloudflare API Token 只授予 `iceaxing.com` 的 `Zone / DNS / Edit`，不得使用全局 API Key，不得提交到 Git。
+- 当前校园网上级网络阻止外部网络访问公网 `80/443`。证书有效只代表域名控制权验证成功，不代表公网入口已经开放。
+- 邮件 worker 从 NAS 调用 `http://127.0.0.1:3000/api/internal/email-outbox/process`，不需要公开该接口；`EMAIL_WORKER_SECRET` 泄露后必须立即轮换并同步更新任务脚本。
+
 ## 生产操作要求
 
 - 数据迁移前分别备份 PostgreSQL 和上传目录。
@@ -66,3 +75,5 @@
 - Docker Compose 项目名称、PostgreSQL 服务名和卷名。
 - 当前生产数据库是否执行过旧种子脚本。
 - 上传目录的实际位置和备份保留策略。
+- Next.js 的正式进程管理方式和 NAS 重启后的自动恢复策略。
+- 校园网上级网络能否开放标准公网 `80/443`；无法开放时使用 VPS + FRP，不开放应用、数据库或 NAS 管理端口作为替代。
