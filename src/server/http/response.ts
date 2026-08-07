@@ -24,6 +24,7 @@ export function routeErrorResponse(error: unknown) {
   if (process.env.NODE_ENV === "production") {
     console.error("Unhandled route error", {
       type: error instanceof Error ? error.name : typeof error,
+      code: error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined,
     });
   } else {
     console.error("Unhandled route error", error);

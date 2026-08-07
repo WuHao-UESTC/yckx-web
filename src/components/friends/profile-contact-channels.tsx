@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  ArrowUpRight,
   Check,
   Code2,
   Copy,
@@ -28,10 +29,12 @@ function mask(value: string) {
 }
 
 function ContactButton({
+  index,
   label,
   value,
   icon: Icon,
 }: {
+  index: string;
   label: string;
   value: string;
   icon: LucideIcon;
@@ -57,13 +60,52 @@ function ContactButton({
       onClick={() => void copyValue()}
       title="点击显示并复制"
     >
-      <Icon size={16} aria-hidden="true" />
-      <span>
+      <span className="friend-profile__contact-index" aria-hidden="true">
+        {index}
+      </span>
+      <span className="friend-profile__contact-icon">
+        <Icon size={16} aria-hidden="true" />
+      </span>
+      <span className="friend-profile__contact-copy">
         <small>{label}</small>
         <strong>{revealed ? value : mask(value)}</strong>
       </span>
-      {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+      <span className="friend-profile__contact-action" aria-label={copied ? "已复制" : "复制"}>
+        {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+      </span>
     </button>
+  );
+}
+
+function LinkedContact({
+  index,
+  label,
+  value,
+  href,
+  icon: Icon,
+}: {
+  index: string;
+  label: string;
+  value: string;
+  href: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <a className="friend-profile__contact" href={href} target="_blank" rel="noopener noreferrer">
+      <span className="friend-profile__contact-index" aria-hidden="true">
+        {index}
+      </span>
+      <span className="friend-profile__contact-icon">
+        <Icon size={16} aria-hidden="true" />
+      </span>
+      <span className="friend-profile__contact-copy">
+        <small>{label}</small>
+        <strong>{value}</strong>
+      </span>
+      <span className="friend-profile__contact-action" aria-hidden="true">
+        <ArrowUpRight size={15} />
+      </span>
+    </a>
   );
 }
 
@@ -76,72 +118,71 @@ export function ProfileContactChannels({
   qq,
   wechat,
 }: ContactChannelsProps) {
-  const hasChannels = Boolean(website || github || bilibili || contactEmail || qq || wechat);
+  const channels = [website, github, bilibili, contactEmail, qq, wechat].filter(Boolean);
+  const hasChannels = channels.length > 0;
 
   return (
     <section className="friend-profile__contacts" aria-labelledby="friend-contact-title">
       <div className="friend-profile__contacts-heading">
-        <span id="friend-contact-title">通信频道</span>
-        <small>CONTACT CHANNELS</small>
+        <div>
+          <span id="friend-contact-title">通信频道</span>
+          <small>CONTACT CHANNELS / OPEN NETWORK</small>
+        </div>
+        {hasChannels && <strong>{String(channels.length).padStart(2, "0")}</strong>}
       </div>
 
       {!hasChannels ? (
         <p className="friend-profile__contacts-empty">尚未设置公开通信频道。</p>
       ) : (
         <div className="friend-profile__contact-grid">
-          {contactEmail && <ContactButton label="公开邮箱" value={contactEmail} icon={Mail} />}
-          {qq && <ContactButton label="QQ" value={qq} icon={MessageCircle} />}
-          {wechat && <ContactButton label="微信" value={wechat} icon={MessageCircle} />}
+          {contactEmail && (
+            <ContactButton index="01" label="公开邮箱" value={contactEmail} icon={Mail} />
+          )}
+          {qq && <ContactButton index="02" label="QQ" value={qq} icon={MessageCircle} />}
+          {wechat && <ContactButton index="03" label="微信" value={wechat} icon={MessageCircle} />}
           {website &&
             (websiteHref ? (
-              <a
-                className="friend-profile__contact"
+              <LinkedContact
+                index="04"
+                label="个人网站"
+                value={website}
                 href={websiteHref}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Globe2 size={16} aria-hidden="true" />
-                <span>
+                icon={Globe2}
+              />
+            ) : (
+              <span className="friend-profile__contact friend-profile__contact--text">
+                <span className="friend-profile__contact-index" aria-hidden="true">
+                  04
+                </span>
+                <span className="friend-profile__contact-icon">
+                  <Globe2 size={16} aria-hidden="true" />
+                </span>
+                <span className="friend-profile__contact-copy">
                   <small>个人网站</small>
                   <strong>{website}</strong>
                 </span>
-              </a>
-            ) : (
-              <span className="friend-profile__contact friend-profile__contact--text">
-                <Globe2 size={16} aria-hidden="true" />
-                <span>
-                  <small>个人网站</small>
-                  <strong>{website}</strong>
+                <span className="friend-profile__contact-action" aria-hidden="true">
+                  <Globe2 size={15} />
                 </span>
               </span>
             ))}
           {github && (
-            <a
-              className="friend-profile__contact"
+            <LinkedContact
+              index="05"
+              label="GitHub"
+              value={github}
               href={`https://github.com/${encodeURIComponent(github)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Code2 size={16} aria-hidden="true" />
-              <span>
-                <small>GitHub</small>
-                <strong>{github}</strong>
-              </span>
-            </a>
+              icon={Code2}
+            />
           )}
           {bilibili && (
-            <a
-              className="friend-profile__contact"
+            <LinkedContact
+              index="06"
+              label="B 站 UID"
+              value={bilibili}
               href={`https://space.bilibili.com/${encodeURIComponent(bilibili)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <PlaySquare size={16} aria-hidden="true" />
-              <span>
-                <small>B 站 UID</small>
-                <strong>{bilibili}</strong>
-              </span>
-            </a>
+              icon={PlaySquare}
+            />
           )}
         </div>
       )}

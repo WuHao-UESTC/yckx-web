@@ -38,3 +38,9 @@ export class ConflictError extends HttpError {
     super(409, "CONFLICT", message);
   }
 }
+
+export class StorageUnavailableError extends HttpError {
+  constructor(message = "上传目录暂时不可用，请检查服务器存储配置") {
+    super(503, "STORAGE_UNAVAILABLE", message);
+  }
+}

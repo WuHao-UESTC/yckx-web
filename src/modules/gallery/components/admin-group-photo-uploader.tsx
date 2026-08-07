@@ -4,6 +4,19 @@ import { useRef, useState } from "react";
 import { ImagePlus, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+async function readApiResponse(response: Response): Promise<Record<string, unknown>> {
+  const body = await response.text();
+  try {
+    return JSON.parse(body) as Record<string, unknown>;
+  } catch {
+    throw new Error(
+      response.status === 413
+        ? "合照超过服务器允许的请求大小，请压缩后重试"
+        : `服务器返回了无效响应（HTTP ${response.status}）`
+    );
+  }
+}
+
 export function AdminGroupPhotoUploader() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,8 +39,8 @@ export function AdminGroupPhotoUploader() {
       formData.set("file", file);
       formData.set("purpose", "PHOTO");
       const uploadResponse = await fetch("/api/files/upload", { method: "POST", body: formData });
-      const uploaded = await uploadResponse.json();
-      if (!uploadResponse.ok) throw new Error(uploaded.error ?? "合照文件上传失败");
+      const uploaded = await readApiResponse(uploadResponse);
+      if (!uploadResponse.ok) throw new Error(String(uploaded.error ?? "合照文件上传失败"));
 
       const response = await fetch("/api/photos", {
         method: "POST",
@@ -39,8 +52,8 @@ export function AdminGroupPhotoUploader() {
           year: Number(year),
         }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error ?? "合照发布失败");
+      const result = await readApiResponse(response);
+      if (!response.ok) throw new Error(String(result.error ?? "合照发布失败"));
 
       setFile(null);
       setCaption("");

@@ -105,7 +105,11 @@ export async function storeUploadedFile(mimeType: string, file: File): Promise<s
   const uploadDirectory = getUploadDirectory();
   await mkdir(uploadDirectory, { recursive: true });
   const storedPath = path.join(uploadDirectory, `${uuidv4()}.${extension}`);
-  const source = Readable.fromWeb(file.stream() as unknown as import("stream/web").ReadableStream);
+  const webStream = file.stream() as unknown as import("stream/web").ReadableStream;
+  const source =
+    typeof Readable.fromWeb === "function"
+      ? Readable.fromWeb(webStream)
+      : Readable.from(webStream as unknown as AsyncIterable<Uint8Array>);
 
   try {
     await pipeline(source, createWriteStream(storedPath, { flags: "wx" }));

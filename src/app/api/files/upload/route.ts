@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_USER_STORAGE } from "@/lib/constants";
 import { requireUser } from "@/server/auth/guards";
-import { BadRequestError } from "@/server/http/errors";
+import { BadRequestError, StorageUnavailableError } from "@/server/http/errors";
 import { routeErrorResponse } from "@/server/http/response";
 import {
   removeStoredFile,
@@ -74,6 +74,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
     if (storedPath) await removeStoredFile(storedPath).catch(() => undefined);
+    const storageCode = error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
+    if (
+      storageCode === "EACCES" ||
+      storageCode === "EPERM" ||
+      storageCode === "ENOSPC" ||
+      storageCode === "EROFS" ||
+      (error instanceof Error && error.message.includes("UPLOAD_DIR"))
+    ) {
+      return routeErrorResponse(new StorageUnavailableError());
+    }
     return routeErrorResponse(error);
   }
 }

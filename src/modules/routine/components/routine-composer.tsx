@@ -5,6 +5,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, ImagePlus, MessageSquareText, NotebookPen, Upload } from "lucide-react";
 
+async function readApiResponse(response: Response): Promise<Record<string, unknown>> {
+  const body = await response.text();
+  try {
+    return JSON.parse(body) as Record<string, unknown>;
+  } catch {
+    throw new Error(
+      response.status === 413
+        ? "图片超过服务器允许的请求大小，请压缩后重试"
+        : `服务器返回了无效响应（HTTP ${response.status}）`
+    );
+  }
+}
+
 export function RoutineComposer({
   noteCount,
   photoCount,
@@ -58,16 +71,16 @@ export function RoutineComposer({
       formData.set("file", photoFile);
       formData.set("purpose", "PHOTO");
       const uploadResponse = await fetch("/api/files/upload", { method: "POST", body: formData });
-      const uploaded = await uploadResponse.json();
-      if (!uploadResponse.ok) throw new Error(uploaded.error ?? "照片上传失败");
+      const uploaded = await readApiResponse(uploadResponse);
+      if (!uploadResponse.ok) throw new Error(String(uploaded.error ?? "照片上传失败"));
 
       const response = await fetch("/api/photos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fileId: uploaded.id, caption: caption || null }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error ?? "照片发布失败");
+      const result = await readApiResponse(response);
+      if (!response.ok) throw new Error(String(result.error ?? "照片发布失败"));
 
       setPhotoFile(null);
       setCaption("");
