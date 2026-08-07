@@ -51,7 +51,7 @@ Nginx Proxy Manager 作为独立 Docker 容器运行，因此 Next.js 不能只�
 ## Cache Components 与公开内容缓存
 
 - Next.js 16 启用 `cacheComponents: true`。公开首页、成员列表、成员主页和已发布文章查询使用 `use cache`，通过 `cacheLife` 控制时间缓存，并使用 `cacheTag` 标记内容边界。
-- 文章、成员资料或头像发生写入后，服务端使用 `updateTag` 和现有 `revalidatePath` 同时失效对应缓存；草稿、私有文件和需要当前会话的工作台数据不进入公开缓存。
+- 文章、成员资料或头像发生写入后，Server Action 使用 `updateTag`，Route Handler 使用 `revalidateTag(tag, "max")`，并结合现有 `revalidatePath` 失效对应缓存；草稿、私有文件和需要当前会话的工作台数据不进入公开缓存。
 - 未缓存的请求数据必须位于页面的 Suspense/加载边界内，由 Cache Components 以静态外壳加流式内容返回。
 
 ## 公开成员资料

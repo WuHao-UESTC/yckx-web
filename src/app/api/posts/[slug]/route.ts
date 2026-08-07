@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { updatePostSchema } from "@/modules/posts/posts.schemas";
 import { deletePost, updatePost } from "@/modules/posts/server/post-service";
@@ -39,10 +39,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
     const { slug } = await params;
     const input = await parseJson(req, updatePostSchema);
     const updated = await updatePost(slug, input, user);
-    updateTag("posts");
-    updateTag(`post:${slug}`);
-    updateTag(`friend:${updated.author.username}`);
-    updateTag("friends");
+    revalidateTag("posts", "max");
+    revalidateTag(`post:${slug}`, "max");
+    revalidateTag(`friend:${updated.author.username}`, "max");
+    revalidateTag("friends", "max");
     return NextResponse.json(updated);
   } catch (error) {
     return routeErrorResponse(error);
@@ -55,10 +55,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const user = await requireUser();
     const { slug } = await params;
     const deleted = await deletePost(slug, user);
-    updateTag("posts");
-    updateTag(`post:${slug}`);
-    if (deleted) updateTag(`friend:${deleted.username}`);
-    updateTag("friends");
+    revalidateTag("posts", "max");
+    revalidateTag(`post:${slug}`, "max");
+    if (deleted) revalidateTag(`friend:${deleted.username}`, "max");
+    revalidateTag("friends", "max");
     return NextResponse.json({ success: true });
   } catch (error) {
     return routeErrorResponse(error);

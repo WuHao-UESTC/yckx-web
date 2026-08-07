@@ -128,7 +128,7 @@ chmod 600 /volume1/docker/yckx/.env
 
 - `NEXT_PUBLIC_*`：修改后必须重新 `pnpm build` 并重启。
 - `DATABASE_URL`、`AUTH_SECRET`、`AUTH_TRUST_HOST`、`SMTP_*`、`EMAIL_WORKER_SECRET`：修改后必须重启；生产发布时建议同时重新构建。
-- Next.js 16 使用 Cache Components。涉及公开文章、成员资料、头像或首页统计的写入必须保留 `updateTag`/`revalidatePath` 失效逻辑；修改 `next.config.ts` 的 `cacheComponents` 后必须重新构建并检查静态外壳与流式加载。
+- Next.js 16 使用 Cache Components。Server Action 中使用 `updateTag`，Route Handler 中使用 `revalidateTag(tag, "max")`，并结合 `revalidatePath` 失效公开文章、成员资料、头像或首页统计缓存；修改 `next.config.ts` 的 `cacheComponents` 后必须重新构建并检查静态外壳与流式加载。
 - SMTP 使用 `smtp.163.com:465`，`SMTP_PASSWORD` 是客户端授权码，不是登录密码。
 - `EMAIL_WORKER_SECRET` 曾经泄露或被写入聊天/日志时，必须生成新值，并同步更新定时任务脚本。
 
