@@ -106,7 +106,10 @@ export async function ArticleDetailPage({ slug, kind }: { slug: string; kind: Ar
   const post = await findPublishedArticle(slug, kind);
   if (!post) notFound();
 
-  const [prevPost, nextPost] = await findAdjacentPosts(post, kind);
+  const [prevPost, nextPost] = await findAdjacentPosts(
+    { publishedAt: post.publishedAt, categoryId: post.categoryId },
+    kind
+  );
   const options = ARTICLE_OPTIONS[kind];
   const presentation = ARTICLE_PRESENTATION[kind];
   const displayDate = post.publishedAt ?? (options.useCreatedAtFallback ? post.createdAt : null);

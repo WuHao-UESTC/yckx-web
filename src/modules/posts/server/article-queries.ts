@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SITE_NAME } from "@/lib/constants";
@@ -9,6 +10,10 @@ import { adjacentPostSelect, articleDetailSelect, type ArticleDetailData } from 
 export type ArticleKind = "KNOWLEDGE" | "COMPETITION" | "NEWS" | "EVENT" | "DAILY";
 
 export async function createArticleMetadata(slug: string): Promise<Metadata> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("posts", `post:${slug}`);
+
   const post = await prisma.post.findUnique({
     where: { slug, status: "PUBLISHED" },
     select: { title: true, excerpt: true, coverImage: true },
@@ -34,7 +39,11 @@ export async function createArticleMetadata(slug: string): Promise<Metadata> {
   };
 }
 
-export function findPublishedArticle(slug: string, kind: ArticleKind) {
+export async function findPublishedArticle(slug: string, kind: ArticleKind) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("posts", `post:${slug}`);
+
   const scope: Prisma.PostWhereInput =
     kind === "KNOWLEDGE" || kind === "COMPETITION"
       ? { kind: "TECHNICAL", category: { type: kind } }
@@ -50,7 +59,14 @@ export function findPublishedArticle(slug: string, kind: ArticleKind) {
   });
 }
 
-export async function findAdjacentPosts(post: ArticleDetailData, kind: ArticleKind) {
+export async function findAdjacentPosts(
+  post: Pick<ArticleDetailData, "publishedAt" | "categoryId">,
+  kind: ArticleKind
+) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("posts");
+
   const scope: Prisma.PostWhereInput =
     kind === "NEWS"
       ? { kind: "NEWS", NOT: { category: { type: "EVENT" } } }

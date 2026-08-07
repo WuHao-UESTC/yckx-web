@@ -13,8 +13,6 @@ import { PublicPostPager } from "@/modules/posts/components/public-post-pager";
 import { PublicPostToolbar } from "@/modules/posts/components/public-post-toolbar";
 import { findPublicPostPage, parsePublicPostQuery } from "@/modules/posts/server/public-post-list";
 
-export const revalidate = 300;
-
 export default async function ArchivePage({
   searchParams,
 }: {

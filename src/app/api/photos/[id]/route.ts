@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { updatePhotoSchema } from "@/modules/gallery/photos.schemas";
 import { deletePhoto } from "@/modules/gallery/server/photo-service";
@@ -27,6 +28,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         isVisible: input.isVisible,
       },
     });
+    revalidatePath("/routine");
+    updateTag("home");
     return NextResponse.json(photo);
   } catch (error) {
     return routeErrorResponse(error);
@@ -39,6 +42,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const user = await requireUser();
     const { id } = await params;
     await deletePhoto(id, user);
+    revalidatePath("/routine");
+    updateTag("home");
     return NextResponse.json({ success: true });
   } catch (error) {
     return routeErrorResponse(error);

@@ -21,7 +21,7 @@
 .friend-profile--observatory {
   position: relative;
   display: grid;
-  grid-template-columns: 164px minmax(0, 1.25fr) minmax(260px, 0.85fr);
+  grid-template-columns: 164px minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
   gap: clamp(24px, 3vw, 48px);
   overflow: hidden;
@@ -111,6 +111,7 @@
   position: relative;
   z-index: 1;
   min-width: 0;
+  grid-column: 2 / -1;
 }
 
 .friend-profile__identity-kicker,
@@ -196,8 +197,9 @@
   position: relative;
   z-index: 1;
   min-width: 0;
-  border-left: 1px solid var(--interior-line);
-  padding-left: clamp(18px, 2.5vw, 34px);
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--interior-line);
+  padding-top: 24px;
 }
 
 .friend-profile__contacts-heading small {
@@ -208,6 +210,7 @@
 
 .friend-profile__contact-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 2px;
   margin-top: 14px;
 }
@@ -323,10 +326,7 @@ button.friend-profile__contact {
   }
 
   .friend-profile__contacts {
-    grid-column: 1 / -1;
-    border-top: 1px solid var(--interior-line);
-    border-left: 0;
-    padding: 22px 0 0;
+    padding-top: 22px;
   }
 
   .friend-profile__contact-grid {
@@ -344,6 +344,10 @@ button.friend-profile__contact {
 
   .friend-profile__avatar-wrap {
     justify-self: center;
+  }
+
+  .friend-profile__identity {
+    grid-column: auto;
   }
 
   .friend-profile__identity-kicker {
@@ -375,12 +379,12 @@ button.friend-profile__contact {
 
 /* Keep every communication value readable, including long email and website text. */
 .friend-profile--observatory .friend-profile__contact-grid {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 8px;
 }
 
 .friend-profile--observatory .friend-profile__contact {
-  min-height: 62px;
+  min-height: 72px;
   align-items: flex-start;
   gap: 11px;
   border: 1px solid rgba(174, 205, 196, 0.14);
@@ -388,6 +392,11 @@ button.friend-profile__contact {
   background: rgba(7, 31, 32, 0.38);
   padding: 11px 12px;
   line-height: 1.4;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .friend-profile--observatory button.friend-profile__contact {
@@ -427,6 +436,8 @@ button.friend-profile__contact {
 .friend-profile--observatory .friend-profile__contact:focus-visible {
   border-color: rgba(237, 201, 121, 0.6);
   background: rgba(237, 201, 121, 0.08);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.14);
+  transform: translateY(-2px);
 }
 
 .friend-profile--observatory .friend-profile__contact-grid > a {

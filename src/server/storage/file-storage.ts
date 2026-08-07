@@ -1,7 +1,11 @@
 import "server-only";
 
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { createWriteStream } from "fs";
+import { mkdir, rename, stat, unlink, writeFile } from "fs/promises";
 import path from "path";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
+import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import { BadRequestError } from "@/server/http/errors";
 
@@ -94,9 +98,61 @@ export async function storeFile(mimeType: string, content: Buffer): Promise<stri
   return storedPath;
 }
 
+export async function storeUploadedFile(mimeType: string, file: File): Promise<string> {
+  const extension = MIME_EXTENSIONS[mimeType];
+  if (!extension) throw new BadRequestError("不支持的文件类型");
+
+  const uploadDirectory = getUploadDirectory();
+  await mkdir(uploadDirectory, { recursive: true });
+  const storedPath = path.join(uploadDirectory, `${uuidv4()}.${extension}`);
+  const source = Readable.fromWeb(file.stream() as unknown as import("stream/web").ReadableStream);
+
+  try {
+    await pipeline(source, createWriteStream(storedPath, { flags: "wx" }));
+    return storedPath;
+  } catch (error) {
+    await unlink(storedPath).catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function getOptimizedImagePath(storedPath: string): Promise<string> {
+  const sourcePath = resolveStoredPath(storedPath);
+  const previewPath = `${sourcePath}.display.webp`;
+
+  try {
+    await stat(previewPath);
+    return previewPath;
+  } catch {
+    // The first public request creates a reusable display-sized derivative.
+  }
+
+  const temporaryPath = `${previewPath}.${uuidv4()}.tmp`;
+  try {
+    await sharp(sourcePath)
+      .rotate()
+      .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 82, effort: 4 })
+      .toFile(temporaryPath);
+
+    await rename(temporaryPath, previewPath).catch(async (error: NodeJS.ErrnoException) => {
+      if (error.code !== "EEXIST") throw error;
+      await unlink(temporaryPath).catch(() => undefined);
+    });
+    return previewPath;
+  } catch (error) {
+    await unlink(temporaryPath).catch(() => undefined);
+    throw error;
+  }
+}
+
 export async function removeStoredFile(storedPath: string): Promise<void> {
   const resolvedPath = resolveStoredPath(storedPath);
-  await unlink(/*turbopackIgnore: true*/ resolvedPath).catch((error: NodeJS.ErrnoException) => {
-    if (error.code !== "ENOENT") throw error;
-  });
+  await Promise.all(
+    [resolvedPath, `${resolvedPath}.display.webp`].map((targetPath) =>
+      unlink(/*turbopackIgnore: true*/ targetPath).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== "ENOENT") throw error;
+      })
+    )
+  );
 }

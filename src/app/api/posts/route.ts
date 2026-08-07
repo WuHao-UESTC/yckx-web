@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { updateTag } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { POSTS_PER_PAGE } from "@/lib/constants";
@@ -58,6 +59,9 @@ export async function POST(req: NextRequest) {
     const user = await requireUser();
     const input = await parseJson(req, createPostSchema);
     const post = await createPost(input, user.id);
+    updateTag("posts");
+    updateTag(`friend:${post.author.username}`);
+    updateTag("friends");
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
     return routeErrorResponse(error);

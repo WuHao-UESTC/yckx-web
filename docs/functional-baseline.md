@@ -93,7 +93,7 @@
 | 编辑器   | `/dashboard/editor/*`、`/dashboard/editor/[id]`    | 新建、编辑、保存草稿、发布、分类/专栏、长文编辑区、带悬停说明的 Markdown 工具栏，以及图片/PDF 文件上传插入和附件管理 |
 | 日常发布 | `/dashboard/routine`                               | 发布留言、上传照片与感悟、进入日常专栏编辑器                                                                         |
 | 内容管理 | `/dashboard/posts`、`/dashboard/drafts`            | 查看、筛选、删除自己的文章，并管理技术、普通新闻和日常文章的多个专栏                                                 |
-| 文件管理 | `/dashboard/files`                                 | 上传、查看配额和删除自己的文件                                                                                       |
+| 文件管理 | `/dashboard/files`                                 | 上传、查看 5GB 配额和删除自己的文件；单文件上限 1GB                                                                  |
 | 内容组织 | `/dashboard/taxonomies`                            | 创建知识分类、竞赛类别、分类下技术专栏、新闻和日常专栏，并重命名自己创建的项目                                       |
 | 个人资料 | `/dashboard/profile`                               | 修改显示名、简介、头衔、可空年级、公开邮箱、网站自由文本、GitHub、B站、QQ、微信，上传或移除头像和修改密码            |
 

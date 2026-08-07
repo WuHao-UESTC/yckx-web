@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { movePhotoFormSchema, resourceIdSchema } from "@/modules/admin/admin.schemas";
 import { createPhotoSchema } from "@/modules/gallery/photos.schemas";
 import { AdminGroupPhotoUploader } from "@/modules/gallery/components/admin-group-photo-uploader";
@@ -35,6 +35,7 @@ export default async function AdminPhotosPage() {
     });
     revalidatePath("/admin/photos");
     revalidatePath("/routine");
+    updateTag("home");
   }
 
   async function deletePhoto(formData: FormData) {
@@ -44,6 +45,7 @@ export default async function AdminPhotosPage() {
     await deletePhotoRecord(id, user);
     revalidatePath("/admin/photos");
     revalidatePath("/routine");
+    updateTag("home");
   }
 
   async function togglePhoto(formData: FormData) {
@@ -57,6 +59,7 @@ export default async function AdminPhotosPage() {
     await prisma.photo.update({ where: { id }, data: { isVisible: !photo.isVisible } });
     revalidatePath("/admin/photos");
     revalidatePath("/routine");
+    updateTag("home");
   }
 
   async function movePhoto(formData: FormData) {
@@ -88,6 +91,7 @@ export default async function AdminPhotosPage() {
       ]);
     }
     revalidatePath("/admin/photos");
+    updateTag("home");
   }
 
   return (

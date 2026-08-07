@@ -1,14 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { cacheLife, cacheTag } from "next/cache";
 import { createHomeSiteActivity } from "@/modules/home/home-activity";
 import { OceanHome } from "@/modules/home/components/ocean-home";
 import {
   findRecentMilestones,
   isMissingMilestonesTable,
 } from "@/modules/milestones/server/milestone-service";
-import { generateExcerpt } from "@/modules/posts/post-text";
 import type { HomePost, OceanHomeData } from "@/modules/home/home.types";
-
-export const revalidate = 300;
 
 const EMPTY_HOME_DATA: OceanHomeData = {
   featuredPosts: [],
@@ -59,6 +57,10 @@ async function getHomepageMilestones() {
 }
 
 async function getHomeData(): Promise<OceanHomeData> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("home", "posts", "friends");
+
   const activityNow = new Date();
   const activitySince = new Date(activityNow.getTime() - 370 * 24 * 60 * 60 * 1000);
   const [
@@ -101,7 +103,6 @@ async function getHomeData(): Promise<OceanHomeData> {
         title: true,
         slug: true,
         excerpt: true,
-        content: true,
         publishedAt: true,
         author: { select: { displayName: true, username: true } },
       },
@@ -192,7 +193,7 @@ async function getHomeData(): Promise<OceanHomeData> {
       id: post.id,
       title: post.title,
       slug: post.slug,
-      excerpt: post.excerpt ?? generateExcerpt(post.content, 360),
+      excerpt: post.excerpt ?? "暂无摘要",
       publishedAt: post.publishedAt?.toISOString() ?? null,
       authorName: post.author.displayName ?? post.author.username,
     })),

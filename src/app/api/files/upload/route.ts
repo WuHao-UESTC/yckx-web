@@ -4,7 +4,11 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_USER_STORAGE } from "@/lib/const
 import { requireUser } from "@/server/auth/guards";
 import { BadRequestError } from "@/server/http/errors";
 import { routeErrorResponse } from "@/server/http/response";
-import { removeStoredFile, storeFile, validateFileContent } from "@/server/storage/file-storage";
+import {
+  removeStoredFile,
+  storeUploadedFile,
+  validateFileContent,
+} from "@/server/storage/file-storage";
 
 export async function POST(req: NextRequest) {
   let storedPath: string | null = null;
@@ -30,7 +34,7 @@ export async function POST(req: NextRequest) {
       throw new BadRequestError("日常照片只支持 JPEG、PNG 和 WebP");
     }
     if (file.size <= 0 || file.size > MAX_FILE_SIZE) {
-      throw new BadRequestError("文件大小必须在 1 字节到 20MB 之间");
+      throw new BadRequestError("文件大小必须在 1 字节到 1GB 之间");
     }
 
     const quota = await prisma.file.aggregate({
@@ -40,13 +44,13 @@ export async function POST(req: NextRequest) {
     const usedBytes = quota._sum.size ?? 0;
     if (usedBytes + file.size > MAX_USER_STORAGE) {
       throw new BadRequestError(
-        `存储空间不足，已使用 ${(usedBytes / 1024 / 1024).toFixed(0)}MB / 200MB`
+        `存储空间不足，已使用 ${(usedBytes / 1024 / 1024 / 1024).toFixed(2)}GB / 5GB`
       );
     }
 
-    const content = Buffer.from(await file.arrayBuffer());
-    validateFileContent(file.type, content);
-    storedPath = await storeFile(file.type, content);
+    const header = Buffer.from(await file.slice(0, 16).arrayBuffer());
+    validateFileContent(file.type, header);
+    storedPath = await storeUploadedFile(file.type, file);
 
     const record = await prisma.file.create({
       data: {

@@ -3,16 +3,29 @@ import { ArrowUpRight, Fish } from "lucide-react";
 import { InteriorEmpty, InteriorPage } from "@/components/interior/interior-page";
 import { prisma } from "@/lib/prisma";
 import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
+import { cacheLife, cacheTag } from "next/cache";
 
-export default async function FriendsPage() {
-  const users = await prisma.user.findMany({
+async function getFriends() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("friends");
+
+  return prisma.user.findMany({
     where: { role: { not: "GUEST" } },
-    include: {
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
       profile: true,
+      role: true,
       _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
     },
     orderBy: { createdAt: "desc" },
   });
+}
+
+export default async function FriendsPage() {
+  const users = await getFriends();
 
   const copy = HOME_CHAPTER_COPY.routine;
 

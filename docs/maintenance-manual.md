@@ -128,6 +128,7 @@ chmod 600 /volume1/docker/yckx/.env
 
 - `NEXT_PUBLIC_*`：修改后必须重新 `pnpm build` 并重启。
 - `DATABASE_URL`、`AUTH_SECRET`、`AUTH_TRUST_HOST`、`SMTP_*`、`EMAIL_WORKER_SECRET`：修改后必须重启；生产发布时建议同时重新构建。
+- Next.js 16 使用 Cache Components。涉及公开文章、成员资料、头像或首页统计的写入必须保留 `updateTag`/`revalidatePath` 失效逻辑；修改 `next.config.ts` 的 `cacheComponents` 后必须重新构建并检查静态外壳与流式加载。
 - SMTP 使用 `smtp.163.com:465`，`SMTP_PASSWORD` 是客户端授权码，不是登录密码。
 - `EMAIL_WORKER_SECRET` 曾经泄露或被写入聊天/日志时，必须生成新值，并同步更新定时任务脚本。
 
@@ -195,7 +196,8 @@ NAS 任务计划建议每分钟执行一次，脚本中的 secret 不得写入 G
 7. 知识库、新闻、竞赛首次发布后可生成 Outbox 记录并发送邮件。
 8. 日常文章和大事记不会触发订阅邮件。
 9. 上传目录、数据库写入和日志正常。
-10. NPM、Next.js、数据库和定时任务在 NAS 重启后能恢复。
+10. 内部成员文件库显示 5GB 总空间和 1GB 单文件上限，公开图片首次访问后能复用展示副本和 ETag。
+11. NPM、Next.js、数据库和定时任务在 NAS 重启后能恢复。
 
 ## 9. 回退和故障处理
 

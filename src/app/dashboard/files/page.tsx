@@ -22,8 +22,8 @@ export default async function FilesPage() {
 
   const usedBytes = files.reduce((sum, f) => sum + f.size, 0);
   const maxBytes = MAX_USER_STORAGE;
-  const usedMB = (usedBytes / 1024 / 1024).toFixed(1);
-  const maxMB = (maxBytes / 1024 / 1024).toFixed(0);
+  const usedGB = (usedBytes / 1024 / 1024 / 1024).toFixed(2);
+  const maxGB = (maxBytes / 1024 / 1024 / 1024).toFixed(0);
 
   async function deleteFile(formData: FormData) {
     "use server";
@@ -58,8 +58,8 @@ export default async function FilesPage() {
     <div>
       <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">文件管理</h1>
       <p className="text-sm text-[#6b6b6b] mb-6 font-[family-name:var(--font-sans)]">
-        已使用 {usedMB} MB / {maxMB} MB
-        <span className="ml-2 text-xs">（单文件上限 20MB）</span>
+        已使用 {usedGB} GB / {maxGB} GB
+        <span className="ml-2 text-xs">（单文件上限 1GB）</span>
       </p>
 
       {/* 配额进度条 */}

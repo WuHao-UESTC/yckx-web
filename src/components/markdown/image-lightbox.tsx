@@ -8,6 +8,9 @@ import { useState, useCallback, useEffect } from "react";
  */
 export function ImageLightbox({ src, alt }: { src?: string | Blob; alt?: string }) {
   const srcStr = typeof src === "string" ? src : undefined;
+  const fullSizeSrc = srcStr?.startsWith("/api/files/")
+    ? `${srcStr}${srcStr.includes("?") ? "&" : "?"}variant=original`
+    : srcStr;
   const [open, setOpen] = useState(false);
 
   const close = useCallback(() => setOpen(false), []);
@@ -28,6 +31,7 @@ export function ImageLightbox({ src, alt }: { src?: string | Blob; alt?: string 
         alt={alt}
         className="rounded-md cursor-zoom-in hover:opacity-90 transition-opacity"
         loading="lazy"
+        decoding="async"
         onClick={() => setOpen(true)}
       />
 
@@ -44,9 +48,10 @@ export function ImageLightbox({ src, alt }: { src?: string | Blob; alt?: string 
             ×
           </button>
           <img
-            src={srcStr}
+            src={fullSizeSrc}
             alt={alt}
             className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            decoding="async"
             onClick={(e) => e.stopPropagation()}
           />
         </div>

@@ -7,10 +7,10 @@ export const SITE_DESCRIPTION = "英才科协 — 技术博客、竞赛知识库
 /** 每页文章数 */
 export const POSTS_PER_PAGE = 10;
 
-/** 文件上传限制 */
-export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+/** 文件上传限制：内部成员总空间 5GB，单文件不超过 1GB。 */
+export const MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024; // 1GB
 export const MAX_AVATAR_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-export const MAX_USER_STORAGE = 200 * 1024 * 1024; // 200MB
+export const MAX_USER_STORAGE = 5 * 1024 * 1024 * 1024; // 5GB
 
 /** 允许的文件类型 */
 export const ALLOWED_MIME_TYPES = [

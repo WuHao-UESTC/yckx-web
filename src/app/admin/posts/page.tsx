@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import Link from "next/link";
 import type { Prisma } from "@/generated/prisma/client";
 import {
@@ -62,6 +62,8 @@ export default async function AdminPostsPage({
     const post = await prisma.post.findUniqueOrThrow({ where: { id }, select: { isPinned: true } });
     await prisma.post.update({ where: { id }, data: { isPinned: !post.isPinned } });
     revalidatePath("/admin/posts");
+    updateTag("home");
+    updateTag("posts");
   }
 
   async function toggleFeatured(formData: FormData) {
@@ -74,6 +76,8 @@ export default async function AdminPostsPage({
     });
     await prisma.post.update({ where: { id }, data: { isFeatured: !post.isFeatured } });
     revalidatePath("/admin/posts");
+    updateTag("home");
+    updateTag("posts");
   }
 
   async function changeStatus(formData: FormData) {
@@ -82,10 +86,14 @@ export default async function AdminPostsPage({
     const input = parseFormData(formData, changePostStatusFormSchema);
     const post = await prisma.post.findUniqueOrThrow({
       where: { id: input.id },
-      select: { slug: true },
+      select: { slug: true, author: { select: { username: true } } },
     });
     await updatePost(post.slug, { status: input.status }, user);
     revalidatePath("/admin/posts");
+    updateTag("posts");
+    updateTag(`post:${post.slug}`);
+    updateTag(`friend:${post.author.username}`);
+    updateTag("friends");
   }
 
   async function deletePosts(formData: FormData) {
@@ -99,6 +107,9 @@ export default async function AdminPostsPage({
     revalidatePath("/archive");
     revalidatePath("/routine");
     revalidatePath("/search");
+    updateTag("home");
+    updateTag("posts");
+    updateTag("friends");
   }
 
   const statusLabel: Record<string, string> = {

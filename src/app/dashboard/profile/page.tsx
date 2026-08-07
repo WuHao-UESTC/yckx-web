@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { compare } from "bcrypt";
 import { changePasswordFormSchema, profileFormSchema } from "@/modules/users/profile.schemas";
 import { hashPassword } from "@/modules/auth/server/password";
@@ -56,6 +56,8 @@ export default async function ProfilePage() {
     revalidatePath("/dashboard/profile");
     revalidatePath("/friends");
     revalidatePath(`/friends/${user.username}`);
+    updateTag(`friend:${user.username}`);
+    updateTag("friends");
     revalidatePath("/");
   }
 

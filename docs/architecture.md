@@ -48,6 +48,12 @@ Nginx Proxy Manager 作为独立 Docker 容器运行，因此 Next.js 不能只�
 - 私有查询必须从当前数据库用户派生权限，不能信任客户端传入的 `authorId` 或 `role`。
 - 页面和 API 返回 DTO，不返回 `passwordHash`、`storedPath` 等服务端字段。
 
+## Cache Components 与公开内容缓存
+
+- Next.js 16 启用 `cacheComponents: true`。公开首页、成员列表、成员主页和已发布文章查询使用 `use cache`，通过 `cacheLife` 控制时间缓存，并使用 `cacheTag` 标记内容边界。
+- 文章、成员资料或头像发生写入后，服务端使用 `updateTag` 和现有 `revalidatePath` 同时失效对应缓存；草稿、私有文件和需要当前会话的工作台数据不进入公开缓存。
+- 未缓存的请求数据必须位于页面的 Suspense/加载边界内，由 Cache Components 以静态外壳加流式内容返回。
+
 ## 公开成员资料
 
 - `User.email` 始终属于登录凭据，不进入公共成员 DTO；用户主动填写的 `Profile.contactEmail` 才是公开联系邮箱。
@@ -76,6 +82,9 @@ Nginx Proxy Manager 作为独立 Docker 容器运行，因此 Next.js 不能只�
 - 日常照片和顶部合照通过 `File` 保存 NAS 实体，`Photo.imagePath` 继续保留以兼容历史 URL 图片。
 - 公共照片墙按描述和上传日期查询 `Photo(kind = WALL)`，始终固定 `isVisible = true`，每次只读取当前照片墙的十张记录；顶部合照单独读取 `Photo(kind = GROUP)`，按管理员顺序横向展示年份档案。
 - 成员头像使用 `File(purpose = AVATAR)` 和 `User.avatarFileId` 关联，公开页面只读取受控站内预览路径。
+- 图片预览路由对公开图片按文件版本返回 ETag 和短时公共缓存，并在首次展示时生成同目录的最大 1920px WebP 展示副本；原始文件仍保留，灯箱和下载可以请求原图。私有文件继续使用 `private, no-store`。
+- 文件下载、图片预览和头像响应使用文件流，不把完整文件复制到 Node.js 内存；上传文件使用 `File.stream()` 写入 NAS，签名校验只读取文件头。
+- 内部成员文件库总空间为 5GB，单文件上限为 1GB；生产反向代理必须同步配置请求体上限、超时和持久化 `UPLOAD_DIR`。
 
 ## 永久删除边界
 

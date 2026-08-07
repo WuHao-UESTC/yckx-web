@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.120", "192.168.1.100", "localhost"],
 
+  // Next.js 16 Cache Components: public content is cached explicitly with `use cache`.
+  cacheComponents: true,
+
   // Docker standalone 部署模式
   output: "standalone",
 

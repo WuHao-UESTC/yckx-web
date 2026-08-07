@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { cacheLife } from "next/cache";
 import { SITE_NAME } from "@/lib/constants";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  "use cache";
+  cacheLife("days");
+
   const year = new Date().getFullYear();
 
   return (

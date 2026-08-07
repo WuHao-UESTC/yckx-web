@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createUploadedPhotoSchema } from "@/modules/gallery/photos.schemas";
 import { createPhotoFromUpload } from "@/modules/gallery/server/photo-service";
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
     const input = await parseJson(req, createUploadedPhotoSchema);
     const photo = await createPhotoFromUpload(input, user);
     revalidatePath("/routine");
+    updateTag("home");
 
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {

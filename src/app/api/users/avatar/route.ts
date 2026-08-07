@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { removeUserAvatar, replaceUserAvatar } from "@/modules/users/server/avatar-service";
 import { requireUser } from "@/server/auth/guards";
 import { BadRequestError } from "@/server/http/errors";
@@ -16,6 +16,8 @@ export async function POST(req: NextRequest) {
     revalidatePath("/");
     revalidatePath("/friends");
     revalidatePath(`/friends/${user.username}`);
+    updateTag(`friend:${user.username}`);
+    updateTag("friends");
     revalidatePath("/dashboard/profile");
     return NextResponse.json(avatar);
   } catch (error) {
@@ -30,6 +32,8 @@ export async function DELETE() {
     revalidatePath("/");
     revalidatePath("/friends");
     revalidatePath(`/friends/${user.username}`);
+    updateTag(`friend:${user.username}`);
+    updateTag("friends");
     revalidatePath("/dashboard/profile");
     return NextResponse.json({ success: true });
   } catch (error) {

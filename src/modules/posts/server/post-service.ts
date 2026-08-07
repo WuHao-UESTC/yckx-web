@@ -261,11 +261,12 @@ export async function updatePost(slug: string, input: UpdatePostInput, user: Aut
 export async function deletePost(slug: string, user: AuthenticatedUser) {
   const post = await prisma.post.findUnique({
     where: { slug },
-    select: { id: true, authorId: true },
+    select: { id: true, authorId: true, author: { select: { username: true } } },
   });
 
   if (!post) throw new NotFoundError("文章不存在");
   assertOwnerOrAdmin(user, post.authorId);
 
   await prisma.post.delete({ where: { id: post.id } });
+  return post.author;
 }

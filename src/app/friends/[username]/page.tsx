@@ -9,31 +9,44 @@ import { ProfileContactChannels } from "@/components/friends/profile-contact-cha
 import { prisma } from "@/lib/prisma";
 import { HOME_CHAPTER_COPY } from "@/modules/home/home-copy";
 import { safeWebsiteHref } from "@/modules/users/profile-links";
+import { postListSelect } from "@/modules/posts/server/post-selects";
+import { cacheLife, cacheTag } from "next/cache";
 
 interface Props {
   params: Promise<{ username: string }>;
 }
 
-export default async function PersonalPage({ params }: Props) {
-  const { username } = await params;
-  const user = await prisma.user.findUnique({
+async function getFriendProfile(username: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("friends", `friend:${username}`);
+
+  return prisma.user.findUnique({
     where: { username, role: { not: "GUEST" } },
-    include: {
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      avatar: true,
+      bio: true,
+      role: true,
+      createdAt: true,
       profile: true,
       _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+      posts: {
+        where: { status: "PUBLISHED" },
+        select: postListSelect,
+        orderBy: { publishedAt: "desc" },
+      },
     },
   });
-  if (!user) notFound();
+}
 
-  const posts = await prisma.post.findMany({
-    where: { authorId: user.id, status: "PUBLISHED" },
-    include: {
-      author: { select: { id: true, username: true, displayName: true, avatar: true } },
-      category: true,
-      tags: { include: { tag: true } },
-    },
-    orderBy: { publishedAt: "desc" },
-  });
+export default async function PersonalPage({ params }: Props) {
+  const { username } = await params;
+  const user = await getFriendProfile(username);
+  if (!user) notFound();
+  const posts = user.posts;
 
   const copy = HOME_CHAPTER_COPY.routine;
   const name = user.displayName ?? user.username;
