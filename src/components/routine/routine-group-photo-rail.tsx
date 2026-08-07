@@ -33,21 +33,24 @@ export function RoutineGroupPhotoRail({ photos }: { photos: GroupPhoto[] }) {
       {photos.length > 0 ? (
         <>
           <div ref={railRef} className="routine-group-photos__rail">
-            {photos.map((photo) => (
+            {photos.map((photo, index) => (
               <figure key={photo.id} className="routine-group-photos__frame">
                 <img
                   className="routine-group-photos__backdrop"
                   src={photo.imagePath}
                   alt=""
                   aria-hidden="true"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
                 />
                 <div className="routine-group-photos__shade" aria-hidden="true" />
-                <div className="routine-group-photos__surface">
-                  <img
-                    src={photo.imagePath}
-                    alt={photo.caption ?? `${photo.year ?? "科协"} 年合照`}
-                  />
-                </div>
+                <img
+                  className="routine-group-photos__image"
+                  src={photo.imagePath}
+                  alt={photo.caption ?? `${photo.year ?? "科协"} 年合照`}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
                 <figcaption>
                   <strong>{photo.year ?? new Date(photo.createdAt).getFullYear()}</strong>
                   {photo.caption && <span>{photo.caption}</span>}
